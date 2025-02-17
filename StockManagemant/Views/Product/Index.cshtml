@@ -1,0 +1,268 @@
+﻿@{
+    ViewData["Title"] = "Product List";
+}
+<link rel="stylesheet" href="~/css/Product.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/GlobalStyles.css" asp-append-version="true" />
+
+
+<h2 class="page-title">@ViewData["Title"]</h2>
+
+<!-- Filtreleme Alanı -->
+<div class="filter-container card p-4 shadow-sm">
+    <div class="row g-3">
+        <!-- Ürün Adı ile Arama -->
+        <div class="col-md-4">
+            <label for="productSearch" class="form-label">Ürün Adı:</label>
+            <input type="text" id="productSearch" class="form-control" placeholder="Ürün adını girin">
+        </div>
+
+        <!-- Fiyat Aralığı Seçimi -->
+        <div class="col-md-4">
+            <label for="priceRange" class="form-label">Fiyat Aralığı:</label>
+            <div class="d-flex align-items-center">
+                <input type="number" id="minPrice" class="form-control me-2" placeholder="Min">
+                <span class="px-2"> - </span>
+                <input type="number" id="maxPrice" class="form-control ms-2" placeholder="Max">
+            </div>
+        </div>
+
+        <!-- Filtreleme Butonu -->
+        <div class="col-md-4 d-flex align-items-end">
+            <button id="filterBtn" class="btn btn-primary ">Filtrele</button>
+        </div>
+    </div>
+</div>
+
+<!-- Ürünleri listeleyen Grid -->
+<div class="table-container mt-4">
+    <table id="productGrid"></table>
+    <div id="pager"></div>
+</div>
+
+<!-- CSV Yükleme Alanı -->
+<div class="csv-upload-container mt-3 text-center">
+    <label for="csvFileInput" class="csv-upload-label">
+        <i class="fa-solid fa-file-csv fa-2x csv-icon text-secondary" title="CSV Yükle"></i>
+    </label>
+    <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
+</div>
+
+
+<script>
+         $(document).ready(function () {
+        // Kategori dropdown verisini çekme
+        let categoryDropdown = {};
+        let categoryReverseDropdown = {};
+        let currencyDropdown = { "TL": "Türk Lirası", "USD": "Dolar" };
+
+        $.ajax({
+            url: '/Product/GetCategoryDropdown',
+            type: 'GET',
+            dataType: 'json',
+            async: false,
+            success: function (data) {
+                categoryDropdown = data;
+                Object.keys(data).forEach(key => {
+                    categoryReverseDropdown[key] = data[key];
+                });
+            }
+        });
+
+        $("#productGrid").jqGrid({
+            url: '/Product/GetProducts',
+            datatype: "json",
+            mtype: "GET",
+            colNames: ['ID', 'Name', 'Price', 'Currency', 'Category', 'Stock', 'Actions'],
+            colModel: [
+                { name: 'id', index: 'id', align: "center", sortable: true, key: true ,hidden:true },
+                { name: 'name', index: 'name', sortable: true, editable: true },
+                { name: 'price', index: 'price', align: "center", sortable: true, editable: true, formatter: formatPrice },
+                {
+                    name: 'currencyType', index: 'currencyType', sortable: true, editable: true ,  
+                    edittype: "select",
+                    formatter: currencyFormatter,
+                    editoptions: { value: "TL:Türk Lirası;USD:Dolar" }
+                },
+                {
+                    name: 'categoryId', index: 'categoryId', sortable: true, editable: true,
+                    edittype: "select",
+                    formatter: categoryFormatter,
+                    editoptions: { value: Object.entries(categoryDropdown).map(([key, value]) => `${key}:${value}`).join(";") }
+                },
+                { name: 'stock', index: 'stock', align: "center", sortable: true, editable: true },
+                {
+                    name: "actions",
+                    label: "Actions",
+                    align: "center",
+                    formatter: function (cellvalue, options, rowObject) {
+                        return `
+                            <div class="action-icons">
+                                <i class="fa-solid fa-pen text-primary fa-xl openProductEditModal"
+                                    data-id="${rowObject.id}" title="Düzenle"></i>
+                                <i class="fa-solid fa-trash text-danger fa-xl delete-btn"
+                                    data-id="${rowObject.id}" title="Sil"></i>
+                            </div>
+                        `;
+                    }
+                }
+            ],
+            pager: '#pager',
+            rowNum: 5,
+            rowList: [5, 10, 15, 20, 30, 40, 50],
+            sortname: 'id',
+            sortorder: 'asc',
+            viewrecords: true,
+            height: 'auto',
+            autowidth: true,
+            shrinkToFit: true,
+            caption: "Product List",
+            loadonce: false,
+            guiStyle: "bootstrap4",
+            jsonReader: {
+                root: "rows",
+                page: "page",
+                total: "total",
+                records: "records"
+            }
+        });
+
+        $("#productGrid").jqGrid('navGrid', '#pager',
+            { edit: false, add: true, del: false, search: false, refresh: true },
+            {},
+            { // Yeni Ürün Ekleme
+                url: '/Product/Create',
+                closeAfterAdd: true,
+                reloadAfterSubmit: true,
+                modal: true,
+                width: 600,
+                height: 400,
+                left: ($(window).width() - 600) / 2,
+                top: ($(window).height() - 400) / 2,
+                serializeEditData: function (data) {
+                    return JSON.stringify({
+                        name: data.name,
+                        price: parseFloat(data.price) || 0,
+                        categoryId: parseInt(data.categoryId) || 0,
+                        stock: parseInt(data.stock) || 0,
+                        currencyType: data.currencyType
+                    });
+                },
+                ajaxEditOptions: {
+                    contentType: "application/json",
+                    type: "POST"
+                },
+                afterSubmit: function (response, postdata) {
+                    var res = JSON.parse(response.responseText);
+                    if (res.success) {
+                        $("#productGrid").trigger("reloadGrid");
+                        return [true, "", res.id];
+                    } else {
+                        return [false, res.message, null];
+                    }
+                }
+            }
+        );
+
+     
+
+        // Silme Butonu (SweetAlert2 ile Onay Ekranı)
+        $(document).on("click", ".delete-btn", function () {
+            let id = $(this).data("id");
+
+            Swal.fire({
+                title: "Silme İşlemi",
+                text: "Bu ürünü silmek istediğinize emin misiniz?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Evet, Sil!",
+                cancelButtonText: "Hayır, İptal"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '/Product/Delete/' + id,
+                        type: 'POST',
+                        success: function (response) {
+                            Swal.fire({
+                                title: "Başarılı!",
+                                text: "Ürün başarıyla silindi.",
+                                icon: "success",
+                                confirmButtonColor: "#3085d6"
+                            });
+                            $("#productGrid").trigger("reloadGrid");
+                        },
+                        error: function (error) {
+                            Swal.fire({
+                                title: "Hata!",
+                                text: "Silme işlemi başarısız oldu!",
+                                icon: "error",
+                                confirmButtonColor: "#d33"
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
+        // Kategori ID yerine kategori ismini göstermek için özel formatter
+        function categoryFormatter(cellValue, options, rowObject) {
+            return categoryReverseDropdown[cellValue] || "Uncategorized";
+        }
+
+        // Para birimi formatlayıcı
+        function currencyFormatter(cellValue, options, rowObject) {
+            return currencyDropdown[cellValue] || cellValue;
+        }
+
+        // Fiyatları uygun formatta göstermek için özel format fonksiyonu
+        function formatPrice(cellValue, options, rowObject) {
+            if (!cellValue) return "0.00";
+            let currencySymbol = rowObject.currencyType === "TL" ? "₺" : "$";
+            return cellValue.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) + " " + currencySymbol;
+        }
+
+        // Ürünleri filtreleme fonksiyonu
+        function filterProducts() {
+            let searchName = $("#productSearch").val().trim();
+            let minPrice = $("#minPrice").val();
+            let maxPrice = $("#maxPrice").val();
+
+            $("#productGrid").jqGrid('setGridParam', {
+                url: `/Product/GetProducts?search=${searchName}&minPrice=${minPrice}&maxPrice=${maxPrice}`,
+                page: 1
+            }).trigger("reloadGrid");
+        }
+
+        // Filtreleme butonu işlemi
+        $("#filterBtn").on("click", function () {
+            filterProducts();
+        });
+
+        // jqGrid'in Refresh (Yenile) butonuna tıklanınca filtreleri sıfırla
+        $(".ui-pg-button .ui-icon-refresh").parent().on("click", function () {
+            $("#productSearch").val(""); // İsim alanını temizle
+            $("#minPrice").val(""); // Min fiyatı sıfırla
+            $("#maxPrice").val(""); // Max fiyatı sıfırla
+
+            // Orijinal URL ile tekrar veri çek
+            $("#productGrid").setGridParam({
+                url: "/Product/GetProducts",
+                page: 1
+            }).trigger("reloadGrid");
+        });
+    });
+
+        // 🔹 Dinamik Arama (Gerçek Zamanlı Filtreleme)
+    $("#productSearch").on("input", function () {
+        let searchValue = $(this).val().trim();
+
+        // jqGrid'e yeni arama parametresini ekleyerek güncelle
+        $("#productGrid").jqGrid('setGridParam', {
+            url: `/Product/GetProducts?search=${searchValue}`,
+            page: 1
+        }).trigger("reloadGrid");
+    });
+
+
+</script>

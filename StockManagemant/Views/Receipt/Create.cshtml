@@ -1,0 +1,12 @@
+﻿@model List<StockManagemant.Entities.Models.Product>
+@using System.Globalization
+@using StockManagemant.Web.Helpers;
+@{
+    ViewBag.Title = "Fiş Oluştur";
+    var TlInfo = new CultureInfo("tr-TR");
+    TlInfo.NumberFormat.CurrencySymbol = "₺";
+    var UsdInfo = new CultureInfo("en-US");
+    UsdInfo.NumberFormat.CurrencySymbol = "$";
+ 
+}
+<h1>FİŞ OLUŞTURMA</h1>

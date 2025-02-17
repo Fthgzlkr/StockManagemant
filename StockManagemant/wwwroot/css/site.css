@@ -1,0 +1,41 @@
+﻿/* Form Gölgelendirme */
+.card {
+    border-radius: 8px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Buton Hover Efekti */
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+body {
+    background-color: B2B2B2
+}
+
+/* 🔥 İkonların Satırları Büyütmesini Önleyelim 🔥 */
+.action-icons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 100%;
+}
+
+/* 🔥 İkonları Küçük ve Sabit Hale Getirme 🔥 */
+.fa-solid {
+    font-size: 14px !important;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+}
+
+    /* 🔥 Hover Efektleri 🔥 */
+.fa-pen:hover {
+    color: #007bff !important;
+    transform: scale(1.1);
+}
+
+    .delete-btn:hover {
+        color: #dc3545 !important;
+        transform: scale(1.1);
+    }

@@ -1,0 +1,92 @@
+﻿/* 🌟 Genel Sayfa Başlıkları */
+.page-title, .text-center {
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* 🌟 Tablo Konteyneri */
+.table-container {
+    max-width: 90%;
+    margin: 0 auto;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    padding: 15px;
+}
+
+/* 🌟 JQGrid Satırları */
+.ui-jqgrid tr.jqgrow td {
+    height: 30px !important;
+    padding: 3px !important;
+    vertical-align: middle;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+/* 🌟 JQGrid Başlık Satırı */
+.ui-jqgrid .ui-jqgrid-htable th {
+    height: 36px !important;
+    padding: 6px !important;
+    text-align: center;
+    background-color: #e9ecef;
+    font-size: 12px;
+}
+
+/* 🌟 İkonların Grid Yapısını Bozmasını Engelleme */
+.action-icons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 100%;
+}
+
+/* 🌟 Küçük ve Sabit Boyutlu İkonlar */
+.openProductEditModal, .delete-btn, .open-category-edit {
+    font-size: 14px !important;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+}
+
+    /* 🌟 Hover Efektleri */
+    .openProductEditModal:hover, .open-category-edit:hover {
+        color: #007bff !important;
+        transform: scale(1.1);
+    }
+
+    .delete-btn:hover {
+        color: #dc3545 !important;
+        transform: scale(1.1);
+    }
+
+/* 🌟 Sayfalama */
+#pager {
+    text-align: center;
+    margin-top: 15px;
+}
+
+/* 🌟 Genel Form Elemanları */
+input[type="text"], input[type="number"] {
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    padding: 5px;
+    width: 100%;
+}
+
+/* 🌟 Butonlar */
+.btn {
+    border-radius: 5px;
+    transition: all 0.3s ease-in-out;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.btn-danger:hover {
+    background-color: #b30000;
+}

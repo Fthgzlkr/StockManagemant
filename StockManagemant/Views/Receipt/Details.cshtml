@@ -1,0 +1,24 @@
+﻿@model Tuple<StockManagemant.Entities.Models.Receipt, List<StockManagemant.Entities.Models.ReceiptDetail>>
+@using StockManagemant.Web.Helpers;
+@using System.Globalization;
+
+@{
+    Layout = null;
+}
+
+<!-- Fiş Bilgileri -->
+<p><strong>Fiş No:</strong> @Model.Item1.Id</p>
+<p><strong>Tarih:</strong> @Model.Item1.Date.ToString("dd/MM/yyyy HH:mm")</p>
+<p><strong>Toplam Tutar:</strong> @CurrencyHelper.FormatPrice(@Model.Item1.TotalAmount, "TL")</p>
+
+<!-- Ürünleri Getir Butonu (Toplam Tutar Data-Attribute olarak eklendi) -->
+<button type="button" class="btn btn-primary" id="showProductsBtn"
+        data-receipt-id="@Model.Item1.Id"
+        data-total-amount="@CurrencyHelper.FormatPrice(@Model.Item1.TotalAmount, "TL")">
+    Fiş Ürünlerini Getir
+</button>
+
+<!-- Ürünler için jqGrid -->
+<table id="productsGrid"></table>
+<div id="pagerProducts"></div>
+

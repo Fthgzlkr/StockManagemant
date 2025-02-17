@@ -1,0 +1,83 @@
+﻿/* Sayfa Başlığı */
+.page-title {
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* Filtreleme Alanı */
+.filter-container {
+    max-width: 90%;
+    margin: 0 auto;
+    border-radius: 10px;
+    background: linear-gradient(to right, #ffffff, #f8f9fa);
+}
+
+/* Tablo Konteyneri */
+.table-container {
+    max-width: 90%;
+    margin: 0 auto;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    padding: 15px;
+}
+
+/* JQGrid Satırları */
+.ui-jqgrid tr.jqgrow td {
+    height: 30px !important;
+    padding: 3px !important;
+    vertical-align: middle;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+/* JQGrid Başlık Satırı */
+.ui-jqgrid .ui-jqgrid-htable th {
+    height: 36px !important;
+    padding: 6px !important;
+    text-align: center;
+    background-color: #e9ecef;
+    font-size: 12px;
+}
+
+/* CSV Yükleme Butonu */
+.csv-upload-label {
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+    .csv-upload-label:hover {
+        color: #007bff;
+    }
+
+
+/* 🔥 İkonların Satırları Büyütmesini Önleyelim 🔥 */
+.action-icons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 100%;
+}
+
+/* 🔥 İkonları Küçük ve Sabit Hale Getirme 🔥 */
+.openProductEditModal, .delete-btn {
+    font-size: 14px !important;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+}
+
+    /* 🔥 Hover Efektleri 🔥 */
+    .openProductEditModal:hover {
+        color: #007bff !important;
+        transform: scale(1.1);
+    }
+
+    .delete-btn:hover {
+        color: #dc3545 !important;
+        transform: scale(1.1);
+    }
