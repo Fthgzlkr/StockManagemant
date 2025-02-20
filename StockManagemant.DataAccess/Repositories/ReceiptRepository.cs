@@ -1,7 +1,7 @@
 ﻿using StockManagemant.DataAccess.Context;
 using StockManagemant.Entities.Models;
 using Microsoft.EntityFrameworkCore;
-using StockManagement.DataAccess.Filters;
+using StockManagemant.DataAccess.Filters;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 

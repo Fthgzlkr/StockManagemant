@@ -2,6 +2,7 @@
 using StockManagemant.Business.Managers;
 using StockManagemant.DataAccess.Context;
 using StockManagemant.DataAccess.Repositories;
+using StockManagemant.Business.MappingProfiles;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +26,9 @@ builder.Services.AddScoped<ReceiptDetailManager>();
 builder.Services.AddScoped<CategoryRepository>();  
 builder.Services.AddScoped<CategoryManager>();
 
+
+
+builder.Services.AddAutoMapper(typeof(GeneralMappingProfile));
 
 // Add session services
 builder.Services.AddSession(options =>

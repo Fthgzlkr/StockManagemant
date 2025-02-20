@@ -3,7 +3,7 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 
-namespace StockManagement.DataAccess.Filters
+namespace StockManagemant.DataAccess.Filters
 {
     public class ReceiptFilter
     {

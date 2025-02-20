@@ -39,13 +39,7 @@
     <div id="pager"></div>
 </div>
 
-<!-- CSV Yükleme Alanı -->
-<div class="csv-upload-container mt-3 text-center">
-    <label for="csvFileInput" class="csv-upload-label">
-        <i class="fa-solid fa-file-csv fa-2x csv-icon text-secondary" title="CSV Yükle"></i>
-    </label>
-    <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
-</div>
+
 
 
 <script>
@@ -127,43 +121,13 @@
         });
 
         $("#productGrid").jqGrid('navGrid', '#pager',
-            { edit: false, add: true, del: false, search: false, refresh: true },
-            {},
-            { // Yeni Ürün Ekleme
-                url: '/Product/Create',
-                closeAfterAdd: true,
-                reloadAfterSubmit: true,
-                modal: true,
-                width: 600,
-                height: 400,
-                left: ($(window).width() - 600) / 2,
-                top: ($(window).height() - 400) / 2,
-                serializeEditData: function (data) {
-                    return JSON.stringify({
-                        name: data.name,
-                        price: parseFloat(data.price) || 0,
-                        categoryId: parseInt(data.categoryId) || 0,
-                        stock: parseInt(data.stock) || 0,
-                        currencyType: data.currencyType
-                    });
-                },
-                ajaxEditOptions: {
-                    contentType: "application/json",
-                    type: "POST"
-                },
-                afterSubmit: function (response, postdata) {
-                    var res = JSON.parse(response.responseText);
-                    if (res.success) {
-                        $("#productGrid").trigger("reloadGrid");
-                        return [true, "", res.id];
-                    } else {
-                        return [false, res.message, null];
-                    }
-                }
-            }
-        );
+            { edit: false, add: false, del: false, search: false, refresh: true },
 
-     
+         );
+
+               $("#pager_left").append(`
+        <i class="fa-solid fa-plus fa-2xl openProductCreateModal" title="Yeni Ürün Ekle"></i>
+    `);
 
         // Silme Butonu (SweetAlert2 ile Onay Ekranı)
         $(document).on("click", ".delete-btn", function () {

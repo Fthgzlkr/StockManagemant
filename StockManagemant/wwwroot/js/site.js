@@ -282,7 +282,64 @@ function updateProduct() {
 
 
 
+function setupCreateProductEvents() {
+    console.log("🟢 Ürün ekleme modalı açıldı, eventler bağlanıyor...");
 
+    // 🔹 Kategorileri yükle
+    fetch('/Product/GetCategoryDropdown')
+        .then(response => response.json())
+        .then(categories => {
+            let categoryDropdown = document.getElementById("productCategory");
+            categoryDropdown.innerHTML = ""; // Önce temizle
+
+            for (const [id, name] of Object.entries(categories)) {
+                let option = document.createElement("option");
+                option.value = id;
+                option.textContent = name;
+                categoryDropdown.appendChild(option);
+            }
+        })
+        .catch(error => console.error("Kategori yüklenirken hata oluştu:", error));
+
+    // 🔹 Ekle Butonuna Event Bağla
+    document.getElementById("createProductBtn").addEventListener("click", function () {
+        createProduct();
+    });
+}
+
+/**
+ * ✅ Yeni Ürün Ekleme Fonksiyonu
+ */
+function createProduct() {
+    let productData = {
+        Name: document.getElementById("productName").value,
+        Price: parseFloat(document.getElementById("productPrice").value) || 0,
+        Stock: parseInt(document.getElementById("productStock").value) || 0,
+        CategoryId: parseInt(document.getElementById("productCategory").value),
+        Currency: parseInt(document.getElementById("productCurrency").value) // TL = 0, USD = 1
+    };
+
+    fetch('/Product/Create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(productData)
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Ürün başarıyla eklendi!");
+
+                // 🔹 Modalı kapat (Eğer modal içinde kullanıyorsan)
+                $('#generalModal').modal('hide');
+
+                // 🔹 Sayfayı güncelle (Gerekirse listeyi yenilemek için)
+                location.reload();
+            } else {
+                alert("Hata: " + data.message);
+            }
+        })
+        .catch(error => console.error("Ürün ekleme hatası:", error));
+}
 
 
 
@@ -306,6 +363,14 @@ $(document).on('click', '.openProductEditModal', function () {
     } else {
         alert('Lütfen bir ürün seçin.'); // Eğer ürün seçilmemişse uyarı göster
     }
+});
+
+
+$(document).on('click', '.openProductCreateModal', function () {
+    
+
+    const title = 'Ürün Oluştur';  // Başlık
+    openModal(`/Product/Create`, title, setupCreateProductEvents);  // Modalı aç ve içeriği yükle
 });
 
 

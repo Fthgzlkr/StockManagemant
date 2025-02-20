@@ -1,6 +1,8 @@
-﻿using StockManagemant.DataAccess.Repositories;
+﻿using AutoMapper;
+using StockManagemant.DataAccess.Repositories;
 using StockManagemant.Entities.Models;
-using StockManagement.DataAccess.Filters;
+using StockManagemant.Entities.DTO;
+using StockManagemant.DataAccess.Filters;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -11,51 +13,43 @@ namespace StockManagemant.Business.Managers
         private readonly ReceiptRepository _receiptRepository;
         private readonly ReceiptDetailManager _receiptDetailManager;
         private readonly ReceiptDetailRepository _receiptDetailRepository;
+        private readonly IMapper _mapper;
 
-        public ReceiptManager(ReceiptRepository receiptRepository, ReceiptDetailManager receiptDetailManager, ReceiptDetailRepository receiptDetailRepository)
+        public ReceiptManager(ReceiptRepository receiptRepository, ReceiptDetailManager receiptDetailManager, ReceiptDetailRepository receiptDetailRepository,IMapper mapper)
         {
             _receiptRepository = receiptRepository;
             _receiptDetailManager = receiptDetailManager;
             _receiptDetailRepository = receiptDetailRepository;
+            _mapper = mapper;
         }
 
-        public async Task<int> GetTotalReceiptCountAsync(DateTime? startDate = null, DateTime? endDate = null)
+        public async Task<int> GetTotalReceiptCountAsync(ReceiptFilter filter)
         {
-            var filter = new ReceiptFilter
-            {
-                StartDate = startDate,
-                EndDate = endDate
-            };
-
+          
             return await _receiptRepository.GetTotalCountAsync(filter);
         }
 
         // ✅ **Sayfalama ile fişleri getir**
-        public async Task<List<Receipt>> GetPagedReceiptAsync(int page, int pageSize, DateTime? startDate = null, DateTime? endDate = null)
+        public async Task<List<ReceiptDto>> GetPagedReceiptAsync(int page, int pageSize, ReceiptFilter filter)
         {
-            var filter = new ReceiptFilter
-            {
-                StartDate = startDate,
-                EndDate = endDate
-            };
-
             var receipts = await _receiptRepository.GetPagedReceiptsAsync(filter, page, pageSize);
-            return receipts.ToList();
+            return _mapper.Map<List<ReceiptDto>>(receipts);
         }
+
 
 
         // ✅ **Yeni fiş ekle (TotalAmount = 0 başlangıç değeri ile)**
         public async Task<int> AddReceiptAsync()
         {
-            var receipt = new Receipt
+            var receiptDto = new CreateReceiptDto
             {
-                
-                TotalAmount = 0,
-                
+                TotalAmount = 0
             };
 
+            var receipt = _mapper.Map<Receipt>(receiptDto);
             return await _receiptRepository.AddReceiptAsync(receipt);
         }
+
 
         // ✅ **Fiş güncelle (Toplam tutarı da günceller)**
         public async Task UpdateReceiptAsync(int receiptId)
@@ -63,8 +57,11 @@ namespace StockManagemant.Business.Managers
             var receipt = await _receiptRepository.GetByIdAsync(receiptId);
             if (receipt == null) throw new Exception("Fiş bulunamadı.");
 
-            // ✅ **Fişe bağlı detaylardan toplam tutarı hesapla**
+            // Fişe bağlı detaylardan toplam tutarı hesapla
             receipt.TotalAmount = await _receiptDetailRepository.GetTotalAmountByReceiptIdAsync(receiptId);
+
+            var receiptDto = _mapper.Map<UpdateReceiptDto>(receipt);
+            _mapper.Map(receiptDto, receipt);
 
             await _receiptRepository.UpdateAsync(receipt);
         }
@@ -82,15 +79,17 @@ namespace StockManagemant.Business.Managers
         }
 
         // ✅ **ID’ye göre fiş bulma**
-        public async Task<Receipt> GetReceiptByIdAsync(int receiptId)
+        public async Task<ReceiptDto> GetReceiptByIdAsync(int receiptId)
         {
-            return await _receiptRepository.GetByIdAsync(receiptId);
+            var receipt = await _receiptRepository.GetByIdAsync(receiptId);
+            return _mapper.Map<ReceiptDto>(receipt);
         }
 
         // ✅ **Fişin ürün detaylarını getirme**
-        public async Task<List<ReceiptDetail>> GetReceiptDetailsAsync(int receiptId)
+        public async Task<List<ReceiptDetailDto>> GetReceiptDetailsAsync(int receiptId)
         {
-            return await _receiptDetailManager.GetReceiptDetailsByReceiptIdAsync(receiptId);
+            var receiptDetails = await _receiptDetailManager.GetReceiptDetailsByReceiptIdAsync(receiptId);
+            return _mapper.Map<List<ReceiptDetailDto>>(receiptDetails);
         }
 
         // ✅ **Fişe ürün ekleme (Toplam tutar otomatik güncellenir)**
@@ -98,7 +97,7 @@ namespace StockManagemant.Business.Managers
         {
             await _receiptDetailManager.AddProductToReceiptAsync(receiptId, productId, quantity);
 
-            // **Fişin toplam tutarını güncelle**
+            // Fişin toplam tutarını güncelle
             await UpdateReceiptAsync(receiptId);
         }
 
@@ -126,11 +125,11 @@ namespace StockManagemant.Business.Managers
 
             await _receiptDetailManager.UpdateProductQuantityInReceiptAsync(receiptDetailId, newQuantity);
 
-            // **Fişin toplam tutarını güncelle**
             await UpdateReceiptAsync(receiptId);
         }
-    }
 
 
+
+   }
 
 }

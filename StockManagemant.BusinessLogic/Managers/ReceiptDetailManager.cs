@@ -1,8 +1,11 @@
-﻿using StockManagemant.DataAccess.Repositories;
+﻿using AutoMapper;
+using StockManagemant.DataAccess.Repositories;
 using StockManagemant.Entities.Models;
+using StockManagemant.Entities.DTO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System;
 
 namespace StockManagemant.Business.Managers
 {
@@ -11,66 +14,70 @@ namespace StockManagemant.Business.Managers
         private readonly ReceiptDetailRepository _receiptDetailRepository;
         private readonly ProductRepository _productRepository;
         private readonly ReceiptRepository _receiptRepository;
+        private readonly IMapper _mapper;
 
-        public ReceiptDetailManager(ReceiptDetailRepository receiptDetailRepository, ProductRepository productRepository, ReceiptRepository receiptRepository)
+        public ReceiptDetailManager(
+            ReceiptDetailRepository receiptDetailRepository,
+            ProductRepository productRepository,
+            ReceiptRepository receiptRepository,
+            IMapper mapper)
         {
             _receiptDetailRepository = receiptDetailRepository;
             _productRepository = productRepository;
             _receiptRepository = receiptRepository;
+            _mapper = mapper;
         }
 
-        // ✅ **Tüm aktif fiş detaylarını getir**
-        public async Task<List<ReceiptDetail>> GetAllReceiptDetailsAsync()
+        // ✅ Tüm aktif fiş detaylarını getir (DTO kullanımı)
+        public async Task<List<ReceiptDetailDto>> GetAllReceiptDetailsAsync()
         {
-            return (await _receiptDetailRepository.GetAllAsync()).ToList();
+            var receiptDetails = await _receiptDetailRepository.GetAllAsync();
+            return _mapper.Map<List<ReceiptDetailDto>>(receiptDetails);
         }
 
-        // ✅ **Belirli bir fişin aktif detaylarını getir**
-        public async Task<List<ReceiptDetail>> GetReceiptDetailsByReceiptIdAsync(int receiptId)
+        // ✅ Belirli bir fişin aktif detaylarını getir (DTO kullanımı)
+        public async Task<List<ReceiptDetailDto>> GetReceiptDetailsByReceiptIdAsync(int receiptId)
         {
-            return await _receiptDetailRepository.GetByReceiptIdAsync(receiptId);
+            var receiptDetails = await _receiptDetailRepository.GetByReceiptIdAsync(receiptId);
+            return _mapper.Map<List<ReceiptDetailDto>>(receiptDetails);
         }
 
-        // ✅ **Fişe yeni ürün ekleme (Toplam tutar otomatik güncellenir)**
+        // ✅ Fişe yeni ürün ekleme (DTO kullanımı)
         public async Task AddProductToReceiptAsync(int receiptId, int productId, int quantity)
         {
             var product = await _productRepository.GetByIdAsync(productId);
             if (product == null) throw new Exception("Ürün bulunamadı.");
 
-            // **O anki fiyatı al ve satış fiyatı olarak sabitle**
             decimal productPriceAtSale = product.Price ?? 0;
             decimal subTotal = productPriceAtSale * quantity;
 
-            var receiptDetail = new ReceiptDetail
+            var createDto = new CreateReceiptDetailDto
             {
                 ReceiptId = receiptId,
                 ProductId = productId,
                 Quantity = quantity,
                 ProductPriceAtSale = productPriceAtSale,
-                SubTotal = subTotal,
-                IsDeleted = false // **Yeni eklenen ürün aktif olmalı**
+                SubTotal = subTotal
             };
 
+            var receiptDetail = _mapper.Map<ReceiptDetail>(createDto);
             await _receiptDetailRepository.AddAsync(receiptDetail);
 
-            // ✅ **Fişin toplam tutarını güncelle**
             await _receiptDetailRepository.UpdateReceiptTotal(receiptId);
         }
 
-        // ✅ **Fişten ürün kaldırma (Soft Delete)**
+        // ✅ Fişten ürün kaldırma (Soft Delete)
         public async Task RemoveProductFromReceiptAsync(int receiptDetailId)
         {
             var receiptDetail = await _receiptDetailRepository.GetByIdAsync(receiptDetailId);
             if (receiptDetail == null) throw new Exception("Fiş detayı bulunamadı.");
 
-            // **Soft Delete işlemi**
             await _receiptDetailRepository.DeleteAsync(receiptDetailId);
 
-            // ✅ **Fişin toplam tutarını güncelle**
             await _receiptDetailRepository.UpdateReceiptTotal(receiptDetail.ReceiptId);
         }
 
-        // ✅ **Fişteki ürün miktarını güncelleme (Toplam tutar yeniden hesaplanır)**
+        // ✅ Fişteki ürün miktarını güncelleme (DTO kullanımı)
         public async Task UpdateProductQuantityInReceiptAsync(int receiptDetailId, int newQuantity)
         {
             var receiptDetail = await _receiptDetailRepository.GetByIdAsync(receiptDetailId);
@@ -78,24 +85,22 @@ namespace StockManagemant.Business.Managers
 
             int receiptId = receiptDetail.ReceiptId;
 
-            // ✅ **Yeni miktarı ve toplamı hesapla (Önceden sabitlenen fiyat kullanılıyor)**
-            receiptDetail.Quantity = newQuantity;
-            receiptDetail.SubTotal = newQuantity * receiptDetail.ProductPriceAtSale;
+            var updateDto = _mapper.Map<UpdateReceiptDetailDto>(receiptDetail);
+            updateDto.Quantity = newQuantity;
+            updateDto.SubTotal = newQuantity * receiptDetail.ProductPriceAtSale;
 
+            _mapper.Map(updateDto, receiptDetail);
             await _receiptDetailRepository.UpdateAsync(receiptDetail);
 
-            // ✅ **Fişin toplam tutarını güncelle**
             await _receiptDetailRepository.UpdateReceiptTotal(receiptId);
         }
 
-        // ✅ **Belirli fişe ait tüm detayları soft delete ile silme**
+        // ✅ Belirli fişe ait tüm detayları soft delete ile silme
         public async Task DeleteDetailsByReceiptIdAsync(int receiptId)
         {
             await _receiptDetailRepository.DeleteByReceiptIdAsync(receiptId);
 
-            // ✅ **Fişin toplam tutarını güncelle**
             await _receiptDetailRepository.UpdateReceiptTotal(receiptId);
         }
     }
-
 }

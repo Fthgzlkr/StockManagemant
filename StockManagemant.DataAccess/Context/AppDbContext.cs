@@ -25,7 +25,7 @@ namespace StockManagemant.DataAccess.Context
                 .HasForeignKey(rd => rd.ReceiptId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // 🔹 ReceiptDetail ile Product ilişkisi (Restrict KALDIRILDI!)
+            // 🔹 ReceiptDetail ile Product ilişkisi 
             modelBuilder.Entity<ReceiptDetail>()
                 .HasOne(rd => rd.Product)
                 .WithMany()

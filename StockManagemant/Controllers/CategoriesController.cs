@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using StockManagemant.Business.Managers;
 using StockManagemant.Entities.Models;
+using StockManagemant.Entities.DTO;
+using AutoMapper;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,10 +12,12 @@ namespace StockManagemant.Web.Controllers
     public class CategoriesController : Controller
     {
         private readonly CategoryManager _categoryManager;
+        private readonly IMapper _mapper;
 
-        public CategoriesController(CategoryManager categoryManager)
+        public CategoriesController(CategoryManager categoryManager,IMapper mapper)
         {
             _categoryManager = categoryManager;
+            _mapper = mapper;
         }
 
         // Kategori yönetim sayfası
@@ -54,19 +58,19 @@ namespace StockManagemant.Web.Controllers
 
         // ✅ Yeni kategori ekleme
         [HttpPost]
-        public async Task<IActionResult> AddCategory( Category category)
+        public async Task<IActionResult> AddCategory([FromBody] CreateCategoryDto createCategoryDto)
         {
-            if (category == null || string.IsNullOrEmpty(category.Name))
+            if (!ModelState.IsValid || createCategoryDto == null || string.IsNullOrEmpty(createCategoryDto.Name))
             {
                 return Json(new { success = false, message = "Geçersiz kategori bilgisi." });
             }
 
             try
             {
-                await _categoryManager.AddCategoryAsync(category);
-                return Json(new { success = true, id = category.Id }); // ✅ ID'yi döndürerek jqGrid'e gönderiyoruz
+                await _categoryManager.AddCategoryAsync(createCategoryDto);
+                return Json(new { success = true, message = "Kategori başarıyla eklendi." });
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
                 return Json(new { success = false, message = "Kategori eklenirken hata oluştu: " + ex.Message });
             }
@@ -77,27 +81,38 @@ namespace StockManagemant.Web.Controllers
 
 
         [HttpPost]
-        public async Task<IActionResult> EditCategory([FromBody] Category category)
+        public async Task<IActionResult> EditCategory([FromBody] UpdateCategoryDto updateCategoryDto)
         {
-            if (category == null || category.Id <= 0)
+            if (!ModelState.IsValid || updateCategoryDto == null || updateCategoryDto.Id <= 0)
             {
                 return BadRequest(new { success = false, message = "Geçersiz kategori verisi." });
             }
 
-            await _categoryManager.UpdateCategoryAsync(category);
-
-            return Ok(new { success = true, message = "Kategori başarıyla güncellendi." });
+            try
+            {
+                await _categoryManager.UpdateCategoryAsync(updateCategoryDto);
+                return Ok(new { success = true, message = "Kategori başarıyla güncellendi." });
+            }
+            catch (System.Exception ex)
+            {
+                return Json(new { success = false, message = "Kategori güncellenirken hata oluştu: " + ex.Message });
+            }
         }
 
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
+            if (id <= 0)
+            {
+                return BadRequest(new { success = false, message = "Geçersiz kategori ID." });
+            }
+
             try
             {
                 await _categoryManager.DeleteCategoryAsync(id);
                 return Json(new { success = true, message = "Kategori silindi." });
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
                 return Json(new { success = false, message = "Kategori silinirken hata oluştu: " + ex.Message });
             }
