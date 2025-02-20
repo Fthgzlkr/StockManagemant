@@ -9,7 +9,13 @@ namespace StockManagemant.DataAccess.Repositories
 {
     public class ReceiptDetailRepository : Repository<ReceiptDetail>
     {
-        public ReceiptDetailRepository(AppDbContext context) : base(context) { }
+
+        private readonly ProductRepository _productRepository;
+        public ReceiptDetailRepository(AppDbContext context,ProductRepository productRepository) 
+            : base(context) {
+            _productRepository = productRepository;
+        }
+
 
         // ✅ **Belirli bir fişe ait aktif fiş detaylarını getir**
         public async Task<List<ReceiptDetail>> GetByReceiptIdAsync(int receiptId)
@@ -35,9 +41,13 @@ namespace StockManagemant.DataAccess.Repositories
         // ✅ **Fiş detayını güncelle (adet değişirse subtotal hesaplanmalı)**
         public override async Task UpdateAsync(ReceiptDetail receiptDetail)
         {
+            var product = await _productRepository.GetByIdAsync(receiptDetail.ProductId);
+
             receiptDetail.SubTotal = receiptDetail.Quantity * receiptDetail.ProductPriceAtSale;
             await base.UpdateAsync(receiptDetail);
+
             await UpdateReceiptTotal(receiptDetail.ReceiptId);
+            
         }
 
         // ✅ **Belirli bir fişe ait tüm detayları soft delete ile sil**

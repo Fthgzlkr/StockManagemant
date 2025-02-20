@@ -121,9 +121,13 @@
         });
 
         $("#productGrid").jqGrid('navGrid', '#pager',
-            { edit: false, add: false, del: false, search: false, refresh: true },
+            { edit: false, add: false, del: false, search: false, refresh: false },
 
          );
+              // Özel butonu pager_left içerisine ekle
+    $("#pager_left").append(`
+        <i id="customRefreshBtn" class="fa-solid fa-arrows-rotate" title="Yenile" style="cursor: pointer; margin-left: 10px;"></i>
+    `);
 
                $("#pager_left").append(`
         <i class="fa-solid fa-plus fa-2xl openProductCreateModal" title="Yeni Ürün Ekle"></i>
@@ -204,17 +208,17 @@
         });
 
         // jqGrid'in Refresh (Yenile) butonuna tıklanınca filtreleri sıfırla
-        $(".ui-pg-button .ui-icon-refresh").parent().on("click", function () {
-            $("#productSearch").val(""); // İsim alanını temizle
-            $("#minPrice").val(""); // Min fiyatı sıfırla
-            $("#maxPrice").val(""); // Max fiyatı sıfırla
+    $("#customRefreshBtn").on("click", function () {
+        $("#productSearch").val(""); // İsim alanını temizle
+        $("#minPrice").val(""); // Min fiyatı sıfırla
+        $("#maxPrice").val(""); // Max fiyatı sıfırla
 
-            // Orijinal URL ile tekrar veri çek
-            $("#productGrid").setGridParam({
-                url: "/Product/GetProducts",
-                page: 1
-            }).trigger("reloadGrid");
-        });
+        // Orijinal URL ile tekrar veri çek
+        $("#productGrid").setGridParam({
+            url: "/Product/GetProducts",
+            page: 1
+        }).trigger("reloadGrid");
+    });
     });
 
         // 🔹 Dinamik Arama (Gerçek Zamanlı Filtreleme)

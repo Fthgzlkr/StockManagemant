@@ -83,17 +83,39 @@ namespace StockManagemant.Business.Managers
             var receiptDetail = await _receiptDetailRepository.GetByIdAsync(receiptDetailId);
             if (receiptDetail == null) throw new Exception("Fiş detayı bulunamadı.");
 
+            var product = await _productRepository.GetByIdAsync(receiptDetail.ProductId);
+            if (product == null) throw new Exception("Fişteki Ürün bulunamadı");
+
             int receiptId = receiptDetail.ReceiptId;
+
+            // Eski ve yeni quantity farkını hesapla
+            int quantityDifference = newQuantity - receiptDetail.Quantity;
+
+           
+            product.Stock -= quantityDifference;
+
+            if (product.Stock < 0)
+            {
+                throw new Exception("Yetersiz stok! Stok miktarı sıfırın altına inemez.");
+            }
 
             var updateDto = _mapper.Map<UpdateReceiptDetailDto>(receiptDetail);
             updateDto.Quantity = newQuantity;
             updateDto.SubTotal = newQuantity * receiptDetail.ProductPriceAtSale;
 
+            var updateProductDto = _mapper.Map<UpdateProductDto>(product);
+            updateProductDto.Stock = product.Stock;
+
+            // Güncellemeleri uygula
             _mapper.Map(updateDto, receiptDetail);
+            _mapper.Map(updateProductDto, product);
+
             await _receiptDetailRepository.UpdateAsync(receiptDetail);
+            await _productRepository.UpdateAsync(product); // Ürün stok güncellemesi eklendi ✅
 
             await _receiptDetailRepository.UpdateReceiptTotal(receiptId);
         }
+
 
         // ✅ Belirli fişe ait tüm detayları soft delete ile silme
         public async Task DeleteDetailsByReceiptIdAsync(int receiptId)

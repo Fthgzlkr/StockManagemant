@@ -103,6 +103,13 @@
             background-color: #0056b3;
         }
 
+
+.fa-solid {
+    font-size: 5px !important;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+}
+
     /* JQGrid Refresh Butonunu Daha Belirgin Yap */
     .receipt-page .ui-icon-refresh {
         font-size: 18px !important;

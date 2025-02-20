@@ -2,6 +2,7 @@
     ViewData["Title"] = "Fiş Listesi";
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/css/receiptlist.css" />
+    <link rel="stylesheet" href="~/css/GlobalStyles.css" asp-append-version="true" />
 }
 
 
@@ -35,11 +36,29 @@
         url: '/Receipt/GetReceipts',
         datatype: "json",
         mtype: "GET",
-        colNames: ['Fiş No', 'Tarih', 'Toplam Tutar'],
+        colNames: ['Fiş No', 'Tarih', 'Toplam Tutar','İşlemler'],
         colModel: [
-            { name: 'id', index: 'id', width: 80, align: "center", sortable: true, key: true,hidden:true },
-            { name: 'date', index: 'date', width: 150, align: "center", sortable: true },
-            { name: 'totalAmount', index: 'totalAmount', width: 100, align: "right", sortable: true },
+            { name: 'id', index: 'id', width: 50, align: "center", sortable: true, key: true,hidden:true },
+            { name: 'date', index: 'date', width: 60, align: "center", sortable: true },
+            { name: 'totalAmount', index: 'totalAmount', width: 60, align: "right", sortable: true },
+                 {
+                    name: "actions",
+                    label: "İşlemler",
+                    align: "center",
+                    width:50,
+                    align:"center",
+                      formatter: function (cellvalue, options, rowObject) {
+                        return `
+                        <div class="action-icons">
+                            <i class="fa-solid fa-pen text-primary fa-xs  open-category-edit"
+                                data-id="${rowObject.id}" data-name="${rowObject.name}" title="Düzenle"></i>
+                            <i class="fa-solid fa-trash text-danger fa-xs delete-btn"
+                                data-id="${rowObject.id}" title="Sil"></i>
+                        </div>
+                        `;
+                    }
+                 
+                }
         ],
         pager: '#receiptPager',
         rowNum: 10,
