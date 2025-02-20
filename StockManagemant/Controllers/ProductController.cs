@@ -11,10 +11,10 @@ namespace StockManagemant.Controllers
 {
     public class ProductController : Controller
     {
-        private readonly ProductManager _productManager;
-        private readonly CategoryManager _categoryManager;
+        private readonly IProductManager _productManager;
+        private readonly ICategoryManager _categoryManager;
 
-        public ProductController(ProductManager productManager, CategoryManager categoryManager)
+        public ProductController(IProductManager productManager, ICategoryManager categoryManager)
         {
             _productManager = productManager;
             _categoryManager = categoryManager;

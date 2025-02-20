@@ -8,14 +8,14 @@ using System.Threading.Tasks;
 
 namespace StockManagemant.Business.Managers
 {
-    public class ReceiptManager
+    public class ReceiptManager:IReceiptManager
     {
         private readonly ReceiptRepository _receiptRepository;
-        private readonly ReceiptDetailManager _receiptDetailManager;
+        private readonly IReceiptDetailManager _receiptDetailManager;
         private readonly ReceiptDetailRepository _receiptDetailRepository;
         private readonly IMapper _mapper;
 
-        public ReceiptManager(ReceiptRepository receiptRepository, ReceiptDetailManager receiptDetailManager, ReceiptDetailRepository receiptDetailRepository,IMapper mapper)
+        public ReceiptManager(ReceiptRepository receiptRepository, IReceiptDetailManager receiptDetailManager, ReceiptDetailRepository receiptDetailRepository,IMapper mapper)
         {
             _receiptRepository = receiptRepository;
             _receiptDetailManager = receiptDetailManager;

@@ -11,7 +11,7 @@ using System.Linq;
 
 namespace StockManagemant.Business.Managers
 {
-    public class ProductManager
+    public class ProductManager : IProductManager
     {
         private readonly ProductRepository _productRepository;
         private readonly IMapper _mapper;

@@ -26,7 +26,11 @@ builder.Services.AddScoped<ReceiptDetailManager>();
 builder.Services.AddScoped<CategoryRepository>();  
 builder.Services.AddScoped<CategoryManager>();
 
-
+//Register interface with managerr..
+builder.Services.AddScoped<ICategoryManager, CategoryManager>();
+builder.Services.AddScoped<IProductManager, ProductManager>();
+builder.Services.AddScoped<IReceiptDetailManager,ReceiptDetailManager>();
+builder.Services.AddScoped<IReceiptManager, ReceiptManager>();
 
 builder.Services.AddAutoMapper(typeof(GeneralMappingProfile));
 

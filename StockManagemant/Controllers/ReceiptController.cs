@@ -13,11 +13,11 @@ namespace StockManagemant.Controllers
 
     public class ReceiptController : Controller
     {
-        private readonly ReceiptManager _receiptManager;
-        private readonly ReceiptDetailManager _receiptDetailManager;
-        private readonly ProductManager _productManager;
+        private readonly IReceiptManager _receiptManager;
+        private readonly IReceiptDetailManager _receiptDetailManager;
+        private readonly IProductManager _productManager;
 
-        public ReceiptController(ReceiptManager receiptManager, ReceiptDetailManager receiptDetailManager, ProductManager productManager)
+        public ReceiptController(IReceiptManager receiptManager, IReceiptDetailManager receiptDetailManager, IProductManager productManager)
         {
             _receiptManager = receiptManager;
             _receiptDetailManager = receiptDetailManager;

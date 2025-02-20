@@ -9,11 +9,11 @@ using System;
 
 namespace StockManagemant.Business.Managers
 {
-    public class ReceiptDetailManager
+    public class ReceiptDetailManager :IReceiptDetailManager
     {
         private readonly ReceiptDetailRepository _receiptDetailRepository;
         private readonly ProductRepository _productRepository;
-        private readonly ReceiptRepository _receiptRepository;
+      
         private readonly IMapper _mapper;
 
         public ReceiptDetailManager(
@@ -24,7 +24,7 @@ namespace StockManagemant.Business.Managers
         {
             _receiptDetailRepository = receiptDetailRepository;
             _productRepository = productRepository;
-            _receiptRepository = receiptRepository;
+            
             _mapper = mapper;
         }
 

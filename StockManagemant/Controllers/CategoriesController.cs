@@ -11,10 +11,10 @@ namespace StockManagemant.Web.Controllers
 {
     public class CategoriesController : Controller
     {
-        private readonly CategoryManager _categoryManager;
+        private readonly ICategoryManager _categoryManager;
         private readonly IMapper _mapper;
 
-        public CategoriesController(CategoryManager categoryManager,IMapper mapper)
+        public CategoriesController(ICategoryManager categoryManager,IMapper mapper)
         {
             _categoryManager = categoryManager;
             _mapper = mapper;

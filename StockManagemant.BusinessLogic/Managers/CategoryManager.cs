@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace StockManagemant.Business.Managers
 {
-    public class CategoryManager
+    public class CategoryManager : ICategoryManager
     {
         private readonly CategoryRepository _categoryRepository;
         private readonly IMapper _mapper;
