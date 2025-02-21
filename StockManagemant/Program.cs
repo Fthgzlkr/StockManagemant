@@ -6,12 +6,40 @@ using StockManagemant.Business.MappingProfiles;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+//Önce appsetting i ardından secret ı yükle 
+builder.Configuration
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddUserSecrets<Program>(optional: true)
+    .AddEnvironmentVariables();
+
+
+// Bağlantıyı alırken, User Secrets'in de yüklenmiş olmasını sağlıyoruz
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+if (string.IsNullOrEmpty(connectionString))
+{
+    throw new Exception("Bağlantı dizesi bulunamadı! Lütfen User Secrets veya appsettings.json içinde doğru yapılandırmayı yaptığınızdan emin olun.");
+}
+
+try
+{
+    builder.Services.AddDbContext<AppDbContext>(options =>
+        options.UseSqlServer(connectionString));
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Veritabanına bağlanırken hata oluştu: {ex.Message}");
+    throw;
+}
+
+
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
 // Register DbContext with DI container
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Register repositories and managers
 builder.Services.AddScoped<ProductRepository>();

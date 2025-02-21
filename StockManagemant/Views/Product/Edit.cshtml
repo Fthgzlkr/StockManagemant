@@ -1,6 +1,5 @@
 ﻿@model StockManagemant.Entities.DTO.ProductDto
 
-
 @{
     ViewData["Title"] = "Ürün Düzenleme";
     Layout = null;
@@ -15,8 +14,8 @@
         <!-- Ürün Adı -->
         <div class="mb-3">
             <label for="productName" class="form-label">Ürün Adı:</label>
-            <input type="text" id="productName" class="form-control" value="@Model.Name" placeholder="Ürün adını girin">
-            @* @Html.TextBoxFor(x => x.Name, new { @class = "form-control" }) *@
+            <input type="text" id="productName" class="form-control" value="@Model.Name" placeholder="Ürün adını girin" required minlength="3" maxlength="100">
+            <div class="invalid-feedback">Ürün adı en az 3, en fazla 100 karakter olmalıdır.</div>
         </div>
 
         <!-- Fiyat -->
@@ -24,35 +23,39 @@
             <label for="productPrice" class="form-label">Fiyat:</label>
             <input type="number" id="productPrice" class="form-control" step="0.01"
                    value="@(Model.Price.HasValue ? Model.Price.Value.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) : "")"
-                   placeholder="Ürün fiyatını girin">
+                   placeholder="Ürün fiyatını girin" required min="0.01">
+            <div class="invalid-feedback">Geçerli bir fiyat giriniz (0.01 ve üzeri).</div>
         </div>
 
         <!-- Stok -->
         <div class="mb-3">
             <label for="productStock" class="form-label">Stok:</label>
-            <input type="number" id="productStock" class="form-control" value="@Model.Stock" placeholder="Stok miktarını girin">
+            <input type="number" id="productStock" class="form-control" value="@Model.Stock" placeholder="Stok miktarını girin" required min="10">
+            <div class="invalid-feedback">Stok miktarı negatif olamaz.</div>
         </div>
 
         <!-- Kategori -->
         <div class="mb-3">
             <label for="productCategory" class="form-label">Kategori:</label>
-            <select id="productCategory" class="form-select" data-selected="@Model.CategoryId">
+            <select id="productCategory" class="form-select" data-selected="@Model.CategoryId" required>
                 <option value="">Kategoriler yükleniyor...</option>
             </select>
+            <div class="invalid-feedback">Lütfen bir kategori seçiniz.</div>
         </div>
 
         <!-- Para Birimi -->
         <div class="mb-3">
             <label for="productCurrency" class="form-label">Para Birimi:</label>
-            <select id="productCurrency" class="form-select">
+            <select id="productCurrency" class="form-select" required>
                 <option value="@((int)CurrencyType.TL)" selected="@(Model.Currency == CurrencyType.TL ? "selected" : null)">TL</option>
                 <option value="1" selected="@(Model.Currency == CurrencyType.USD ? "selected" : null)">USD</option>
             </select>
+            <div class="invalid-feedback">Lütfen bir para birimi seçiniz.</div>
         </div>
 
         <!-- Güncelle Butonu -->
         <div class="text-center">
-            <button type="button" class="btn btn-primary px-4" id="updateProductBtn">Güncelle</button>
+            <button type="submit" class="btn btn-primary px-4" id="updateProductBtn">Güncelle</button>
         </div>
     </form>
 </div>

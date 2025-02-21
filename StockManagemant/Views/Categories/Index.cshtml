@@ -9,7 +9,7 @@
 <table id="categoryGrid"></table>
 <div id="pager"></div>
 
-    <script>
+<script>
      $(document).ready(function () {
         $("#categoryGrid").jqGrid({
             url: '/Categories/GetAllCategories',
@@ -18,7 +18,7 @@
             colNames: ['ID', 'Kategori Adı','Actions'],
             colModel: [
                 { name: 'id', index: 'id', width: 50, align: "center", sortable: true, key: true },
-                { name: 'name', index: 'name', width: 200, sortable: true, editable: true },
+                { name: 'name', index: 'name', width: 200, sortable: true, editable: true, editrules: { required: true } },
                 {
                     name: "actions",
                     label: "Actions",
@@ -62,10 +62,8 @@
             {}, {}, {}, {}
         );
 
-        // ❌ Kategori Silme (Swal2 ile)
         $(document).on("click", ".delete-btn", function () {
-            let id = $(this).data("id");
-
+            let categoryId = $(this).data("id");
             Swal.fire({
                 title: "Silme İşlemi",
                 text: "Bu kategoriyi silmek istediğinize emin misiniz?",
@@ -78,31 +76,20 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: '/Categories/Delete/' + id,
+                        url: '/Categories/Delete/' + categoryId,
                         type: 'POST',
                         success: function (response) {
-                            Swal.fire({
-                                title: "Başarılı!",
-                                text: "Kategori başarıyla silindi.",
-                                icon: "success",
-                                confirmButtonColor: "#3085d6"
-                            });
-                            $("#categoryGrid").trigger("reloadGrid"); // ✅ Grid Güncelle
+                            Swal.fire("Başarılı!", "Kategori başarıyla silindi.", "success");
+                            $("#categoryGrid").trigger("reloadGrid");
                         },
                         error: function () {
-                            Swal.fire({
-                                title: "Hata!",
-                                text: "Silme işlemi başarısız oldu!",
-                                icon: "error",
-                                confirmButtonColor: "#d33"
-                            });
+                            Swal.fire("Hata!", "Silme işlemi başarısız oldu!", "error");
                         }
                     });
                 }
             });
         });
 
-        // 🖊 Kategori Düzenleme (Swal2 ile)
         $(document).on("click", ".open-category-edit", function () {
             let categoryId = $(this).data("id");
             let categoryName = $(this).data("name");
@@ -119,11 +106,16 @@
                     if (!value) {
                         return "Kategori adı boş olamaz!";
                     }
+                    if (value.length < 3 || value.length > 50) {
+                        return "Kategori adı en az 3, en fazla 50 karakter olmalıdır!";
+                    }
+                    if (!/^[a-zA-Z0-9ğüşöçİĞÜŞÖÇ ]+$/.test(value)) {
+                        return "Kategori adı yalnızca harf, rakam ve boşluk içerebilir!";
+                    }
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
                     let newCategoryName = result.value;
-
                     $.ajax({
                         url: "/Categories/EditCategory",
                         type: "POST",
@@ -131,14 +123,8 @@
                         data: JSON.stringify({ Id: categoryId, Name: newCategoryName }),
                         success: function (response) {
                             if (response.success) {
-                                Swal.fire({
-                                    title: "Güncellendi!",
-                                    text: "Kategori başarıyla güncellendi.",
-                                    icon: "success",
-                                    timer: 1500,
-                                    showConfirmButton: false
-                                });
-                                $("#categoryGrid").trigger("reloadGrid"); // ✅ Grid Güncelle
+                                Swal.fire("Güncellendi!", "Kategori başarıyla güncellendi.", "success");
+                                $("#categoryGrid").trigger("reloadGrid");
                             } else {
                                 Swal.fire("Hata!", response.message, "error");
                             }
@@ -152,7 +138,4 @@
         });
 
     });
-
-
-    </script>
-
+</script>

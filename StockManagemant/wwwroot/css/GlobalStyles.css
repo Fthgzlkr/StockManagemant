@@ -52,6 +52,12 @@
     transition: transform 0.2s ease-in-out;
 }
 
+.openProductEditModal, .edit-btn, .open-category-edit {
+    font-size: 14px !important;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+}
+
     /* 🌟 Hover Efektleri */
     .openProductEditModal:hover, .open-category-edit:hover {
         color: #007bff !important;

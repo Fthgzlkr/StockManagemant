@@ -50,8 +50,9 @@
                       formatter: function (cellvalue, options, rowObject) {
                         return `
                         <div class="action-icons">
-                            <i class="fa-solid fa-pen text-primary fa-xs  open-category-edit"
-                                data-id="${rowObject.id}" data-name="${rowObject.name}" title="Düzenle"></i>
+    <i class="fa-solid fa-pen text-primary fa-xs open-category-edit"
+       data-id="${rowObject.id}" data-date="${rowObject.date}" title="Düzenle"></i>
+
                             <i class="fa-solid fa-trash text-danger fa-xs delete-btn"
                                 data-id="${rowObject.id}" title="Sil"></i>
                         </div>
@@ -109,7 +110,106 @@
                 page: 1
             }).trigger("reloadGrid");
         });
+
+             $(document).on("click", ".delete-btn", function () {
+            let id = $(this).data("id");
+
+            Swal.fire({
+                title: "Silme İşlemi",
+                text: "Bu fişi silmek istediğinize emin misiniz?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Evet, Sil!",
+                cancelButtonText: "Hayır, İptal"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '/Receipt/DeleteReceipt?receiptId=' + id,
+                        type: 'POST',
+                        success: function (response) {
+                            Swal.fire({
+                                title: "Başarılı!",
+                                text: "Fiş başarıyla silindi.",
+                                icon: "success",
+                                confirmButtonColor: "#3085d6"
+                            });
+                            $("#productGrid").trigger("reloadGrid");
+                        },
+                        error: function (error) {
+                            Swal.fire({
+                                title: "Hata!",
+                                text: "Silme işlemi başarısız oldu!",
+                                icon: "error",
+                                confirmButtonColor: "#d33"
+                            });
+                        }
+                    });
+                }
+            });
+        });
     });
+
+        $(document).on("click", ".open-category-edit", function () {
+        let id = $(this).data("id"); // Seçilen ID'yi al
+        let oldDate = $(this).data("date"); // Önceki tarihi al
+
+        Swal.fire({
+            title: "Fiş Güncelle",
+            html: `
+                <label>Yeni Tarih Seç:</label>
+                <input type="date" id="receiptDate" class="swal2-input" value="${oldDate}">
+            `,
+            showCancelButton: true,
+            confirmButtonText: "Güncelle",
+            cancelButtonText: "İptal",
+            preConfirm: () => {
+                let newDate = document.getElementById("receiptDate").value;
+                if (!newDate) {
+                    Swal.showValidationMessage("Lütfen bir tarih seçin!");
+                }
+                return newDate;
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                let newDate = result.value;
+
+                $.ajax({
+                    url: "/Receipt/UpdateReceipt",
+                    type: "POST",
+                    data: { receiptId: id, date: newDate },
+                    success: function (response) {
+                        if (response.success) {
+                            Swal.fire({
+                                title: "Başarılı!",
+                                text: "Fiş başarıyla güncellendi.",
+                                icon: "success",
+                                confirmButtonColor: "#3085d6"
+                            });
+                            $("#productGrid").trigger("reloadGrid");
+                        } else {
+                            Swal.fire({
+                                title: "Hata!",
+                                text: response.message || "Güncelleme işlemi başarısız oldu!",
+                                icon: "error",
+                                confirmButtonColor: "#d33"
+                            });
+                        }
+                    },
+                    error: function (error) {
+                        Swal.fire({
+                            title: "Hata!",
+                            text: "Güncelleme işlemi başarısız oldu!",
+                            icon: "error",
+                            confirmButtonColor: "#d33"
+                        });
+                    }
+                });
+            }
+        });
+    });
+
 
     // DateRangePicker aktif hale getirme
     $(function () {

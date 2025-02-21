@@ -112,8 +112,9 @@ namespace StockManagemant.Controllers
 
         // ✅ **Fiş silme (Soft Delete)**
         [HttpPost]
-        public async Task<IActionResult> DeleteReceipt( int receiptId)
+        public async Task<IActionResult> DeleteReceipt(int receiptId)
         {
+            Console.WriteLine("Silme isteği alındı, ID: " + receiptId); // Console'a yazdır
             try
             {
                 await _receiptManager.DeleteReceiptAsync(receiptId);
@@ -124,6 +125,7 @@ namespace StockManagemant.Controllers
                 return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
+
 
         // ✅ **Fişe ürün ekleme**
         [HttpPost]
@@ -200,7 +202,7 @@ namespace StockManagemant.Controllers
             try
             {
                 var receipt = await _receiptManager.GetReceiptByIdAsync(receiptId);
-                if (receipt == null) return NotFound();
+                if (receipt == null) return NotFound(new { success = false, message = "Fiş bulunamadı!" });
 
                 // DTO kullanarak güncelleme işlemi yap
                 var updateDto = new UpdateReceiptDto
@@ -210,7 +212,8 @@ namespace StockManagemant.Controllers
                     TotalAmount = receipt.TotalAmount
                 };
 
-                await _receiptManager.UpdateReceiptAsync(receiptId);
+                // ✅ Metodu doğru parametre ile çağır!
+                await _receiptManager.UpdateReceiptDateAsync(updateDto);
 
                 return Json(new { success = true });
             }
@@ -219,6 +222,7 @@ namespace StockManagemant.Controllers
                 return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
+
 
     }
 }

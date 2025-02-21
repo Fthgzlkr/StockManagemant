@@ -10,6 +10,7 @@ namespace StockManagemant.Business.Managers
         Task<int> GetTotalReceiptCountAsync(ReceiptFilter filter);
         Task<List<ReceiptDto>> GetPagedReceiptAsync(int page, int pageSize, ReceiptFilter filter);
         Task<int> AddReceiptAsync();
+        Task UpdateReceiptDateAsync(UpdateReceiptDto updateDto);
         Task UpdateReceiptAsync(int receiptId);
         Task DeleteReceiptAsync(int receiptId);
         Task<ReceiptDto> GetReceiptByIdAsync(int receiptId);

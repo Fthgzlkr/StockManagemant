@@ -5,6 +5,7 @@ using StockManagemant.Entities.DTO;
 using StockManagemant.DataAccess.Filters;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace StockManagemant.Business.Managers
 {
@@ -49,6 +50,20 @@ namespace StockManagemant.Business.Managers
             var receipt = _mapper.Map<Receipt>(receiptDto);
             return await _receiptRepository.AddReceiptAsync(receipt);
         }
+
+
+        public async Task UpdateReceiptDateAsync(UpdateReceiptDto updateDto)
+        {
+            var receipt = await _receiptRepository.GetByIdAsync(updateDto.Id);
+            if (receipt == null) throw new Exception("Fiş bulunamadı!");
+
+            // Güncelleme işlemi
+            receipt.Date = updateDto.Date;
+            receipt.TotalAmount = updateDto.TotalAmount;
+
+            await _receiptRepository.UpdateAsync(receipt);
+        }
+
 
 
         // ✅ **Fiş güncelle (Toplam tutarı da günceller)**
