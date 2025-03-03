@@ -17,7 +17,7 @@ namespace StockManagemant.DataAccess.Repositories
             _receiptDetailRepository = receiptDetailRepository;
         }
 
-        // ✅ **Filtreleme ile Toplam Fiş Sayısını Getir**
+        // Toplam Fiş sayısı 
         public async Task<int> GetTotalCountAsync(ReceiptFilter filter)
         {
             return await _context.Receipts
@@ -25,7 +25,7 @@ namespace StockManagemant.DataAccess.Repositories
                 .CountAsync();
         }
 
-        // ✅ **Sayfalama ile fişleri getir**
+        // Sayfalama ile fişler
         public async Task<IEnumerable<Receipt>> GetPagedReceiptsAsync(ReceiptFilter filter, int page, int pageSize)
         {
             return await _context.Receipts
@@ -36,19 +36,35 @@ namespace StockManagemant.DataAccess.Repositories
                 .ToListAsync();
         }
 
-        // ✅ **Yeni fiş ekleme (Toplam tutar başlangıçta 0 olmalı)**
+        // Yeni Fiş ekleme
         public async Task<int> AddReceiptAsync(Receipt receipt)
         {
-            receipt.TotalAmount = 0; // **Yeni fiş 0 TL ile başlar**
-            await _context.Receipts.AddAsync(receipt);
-            await _context.SaveChangesAsync();
-            return receipt.Id; // **Yeni fiş ID'sini geri döndür**
+            try
+            {
+                if (receipt.WarehouseId == 0)
+                {
+                    throw new Exception("Hata: Depo ID boş olamaz!");
+                }
+
+                receipt.TotalAmount = 0;
+                await _context.Receipts.AddAsync(receipt);
+                await _context.SaveChangesAsync();
+                return receipt.Id;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[AddReceiptAsync] Hata: {ex.Message}, InnerException: {ex.InnerException?.Message}");
+                throw;
+            }
         }
 
-        // ✅ **Fiş güncelleme (TotalAmount yeniden hesaplanmalı)**
+
+
+
+        // Fiş Güncelleme
         public async Task UpdateReceiptAsync(Receipt receipt)
         {
-            // **Fişe bağlı detaylardan toplam tutarı hesapla**
+           
             receipt.TotalAmount = await _receiptDetailRepository.GetTotalAmountByReceiptIdAsync(receipt.Id);
             _context.Receipts.Update(receipt);
             await _context.SaveChangesAsync();
@@ -58,7 +74,7 @@ namespace StockManagemant.DataAccess.Repositories
         {
             if (receipt.Id > 0)
             {
-                // **Fişe bağlı detaylardan toplam tutarı hesapla**
+              
                 receipt.TotalAmount = await _receiptDetailRepository.GetTotalAmountByReceiptIdAsync(receipt.Id);
                 _context.Receipts.Update(receipt);
             }
@@ -69,20 +85,26 @@ namespace StockManagemant.DataAccess.Repositories
             await _context.SaveChangesAsync();
         }
 
-        // ✅ **Fiş silme işlemi (Soft Delete)**
+        //Fiş silme işlemi (Soft Delete)
         public async Task DeleteReceiptAsync(int id)
         {
             var receipt = await GetByIdAsync(id);
             if (receipt != null)
             {
-                // **Önce fişe bağlı tüm detayları Soft Delete ile işaretle**
-                await _receiptDetailRepository.DeleteByReceiptIdAsync(id);
+                // Önce fişe bağlı tüm detayları 
+                var details = await _receiptDetailRepository.GetByReceiptIdAsync(id);
 
-                // **Fişi de Soft Delete olarak işaretle**
+                foreach (var detail in details)
+                {
+                    await _receiptDetailRepository.DeleteAsync(detail.Id); 
+                }
+
+               
                 receipt.IsDeleted = true;
                 await _context.SaveChangesAsync();
             }
         }
+
     }
 
 

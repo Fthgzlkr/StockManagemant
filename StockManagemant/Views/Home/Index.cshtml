@@ -1,5 +1,113 @@
 ﻿@{
-    ViewData["Title"] = "Ana Sayfa";
+    ViewData["Title"] = "Depo Seçimi";
 }
 
 
+
+<!-- Sayfa Arka Planı ve İçerik -->
+<div class="container-fluid d-flex justify-content-center align-items-center vh-100">
+    <div class="card custom-card text-center">
+
+        <h2 class="mb-4">Depo Seçimi</h2>
+
+        <div class="dropdown-container mt-3">
+            <select id="warehouseSelect" class="form-select form-select-lg custom-dropdown">
+                <option value="">Depo Seçiniz</option>
+            </select>
+        </div>
+
+    </div>
+</div>
+
+
+<!-- Script -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        fetch("/Warehouse/GetAllWarehouses")
+            .then(response => response.json())
+            .then(data => {
+                const warehouseSelect = document.getElementById("warehouseSelect");
+                data.data.forEach(warehouse => {
+                    let option = document.createElement("option");
+                    option.value = warehouse.id;
+                    option.textContent = warehouse.name;
+                    warehouseSelect.appendChild(option);
+                });
+
+                let selectedWarehouseId = localStorage.getItem("selectedWarehouseId");
+                if (selectedWarehouseId) {
+                    warehouseSelect.value = selectedWarehouseId;
+                    updateSidebarLinks(selectedWarehouseId);
+                }
+            });
+
+        document.getElementById("warehouseSelect").addEventListener("change", function () {
+            let selectedWarehouseId = this.value;
+            if (selectedWarehouseId) {
+                localStorage.setItem("selectedWarehouseId", selectedWarehouseId);
+                updateSidebarLinks(selectedWarehouseId);
+            }
+        });
+    });
+
+    function updateSidebarLinks(warehouseId) {
+        if (warehouseId) {
+            document.getElementById("receiptLink").href = `/Receipt/ListByWarehouse?warehouseId=${warehouseId}`;
+            document.getElementById("createReceiptLink").href = `/Receipt/Create?warehouseId=${warehouseId}`;
+            document.getElementById("warehouseProductsLink").href = `/WarehouseProduct/WarehouseProducts?warehouseId=${warehouseId}`;
+        }
+    }
+</script>
+
+
+
+<!-- Sayfaya Özel CSS -->
+<style>
+    /* Sayfanın genel arka planı */
+    body {
+        background: linear-gradient(135deg, #e3e6e8, #f8f9fa);
+    }
+
+    /* Kart Tasarımı */
+    .custom-card {
+        border-radius: 16px;
+        background: #3d4248; /* Sidebar'dan daha açık */
+        color: white;
+        box-shadow: 0px 12px 24px rgba(0, 0, 0, 0.2);
+        width: 500px;
+        padding: 40px;
+        position: relative;
+        top: -50px; /* Menü biraz daha yukarı */
+        transition: all 0.3s ease-in-out;
+    }
+
+        /* Kart Hover Efekti */
+        .custom-card:hover {
+            background: #343a40; /* Sidebar'a daha yakın ama tamamen aynı değil */
+            box-shadow: 0px 16px 32px rgba(0, 0, 0, 0.25);
+        }
+
+        /* Başlık */
+        .custom-card h2 {
+            color: #17a2b8;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+    /* Dropdown Menüsü */
+    .custom-dropdown {
+        border-radius: 8px;
+        padding: 14px;
+        border: 2px solid #17a2b8;
+        font-size: 20px;
+        background: #4a4f56; /* Sidebar'dan açık bir ton */
+        color: white;
+        transition: all 0.3s ease;
+    }
+
+        /* Dropdown Hover & Focus */
+        .custom-dropdown:focus, .custom-dropdown:hover {
+            background: #5a5f66;
+            border-color: #138496;
+        }
+</style>

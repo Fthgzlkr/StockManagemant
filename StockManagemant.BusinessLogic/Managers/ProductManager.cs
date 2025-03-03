@@ -33,23 +33,13 @@ namespace StockManagemant.Business.Managers
 
         public async Task<List<ProductDto>> GetPagedProductAsync(int page, int pageSize, ProductFilter filter)
         {
-            var products = await _productRepository.GetPagedProductsAsync(filter, page, pageSize);
-            var productDtos = _mapper.Map<List<ProductDto>>(products);
-
-            // **Kategori bilgisi eksikse, boş olarak ayarla!**
-            foreach (var dto in productDtos)
-            {
-                dto.CategoryName = dto.CategoryName ?? "Uncategorized"; // Eğer boşsa, default değer ata
-            }
-
-            return productDtos;
+            var products = await _productRepository.GetPagedProductsAsync(filter, page, pageSize); //  Sayfalama işlemi repoda yapılıyor
+            return _mapper.Map<List<ProductDto>>(products); //  DTO dönüşümü burada yapılıyor
         }
 
 
 
 
-
-        // ✅ Ürün ekleme
         public async Task<int> AddProductAsync(CreateProductDto dto)
         {
             var product = _mapper.Map<Product>(dto);
@@ -57,25 +47,19 @@ namespace StockManagemant.Business.Managers
             return product.Id; // ID otomatik olarak atanır
         }
 
+        // ✅ Ürün güncelleme (Kategori kontrolü ile)
+        public async Task UpdateProductAsync(UpdateProductDto dto)
+        {
+            var existingProduct = await _productRepository.GetByIdAsync(dto.Id);
+            if (existingProduct == null) throw new Exception("Ürün bulunamadı.");
 
+            _mapper.Map(dto, existingProduct);
 
-        // ✅ Ürün güncelleme
-     public async Task UpdateProductAsync(UpdateProductDto dto)
-{
-    var existingProduct = await _productRepository.GetByIdAsync(dto.Id);
-    if (existingProduct == null) throw new Exception("Ürün bulunamadı.");
+            existingProduct.Category = await _categoryRepository.GetByIdAsync(dto.CategoryId);
+            if (existingProduct.Category == null) throw new Exception("Geçersiz kategori.");
 
-    _mapper.Map(dto, existingProduct);
-
-    
-    existingProduct.Category = await _categoryRepository.GetByIdAsync(dto.CategoryId);
-    if (existingProduct.Category == null) throw new Exception("Geçersiz kategori.");
-
-    await _productRepository.UpdateAsync(existingProduct);
-}
-
-
-
+            await _productRepository.UpdateAsync(existingProduct);
+        }
 
         // ✅ Ürün silme (Soft Delete)
         public async Task DeleteProductAsync(int productId)
@@ -89,9 +73,6 @@ namespace StockManagemant.Business.Managers
             await _productRepository.RestoreAsync(productId);
         }
 
-
-
-
         // ✅ ID’ye göre ürün bulma (Sadece aktif ürünleri getirir)
         public async Task<ProductDto> GetProductByIdAsync(int productId)
         {
@@ -100,8 +81,6 @@ namespace StockManagemant.Business.Managers
 
             return _mapper.Map<ProductDto>(product);
         }
-
-
 
         // ✅ **ID’ye göre ürün bulma (Silinmiş ürünler dahil)**
         public async Task<ProductDto> GetProductByIdWithDeletedAsync(int productId)

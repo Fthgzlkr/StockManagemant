@@ -40,16 +40,19 @@ namespace StockManagemant.Business.Managers
 
 
         // ✅ **Yeni fiş ekle (TotalAmount = 0 başlangıç değeri ile)**
-        public async Task<int> AddReceiptAsync()
+        public async Task<int> AddReceiptAsync(CreateReceiptDto receiptDto)
         {
-            var receiptDto = new CreateReceiptDto
-            {
-                TotalAmount = 0
-            };
+            if (receiptDto == null || receiptDto.WareHouseId == 0)
+                throw new Exception("Hata: Depo ID boş olamaz!");
 
             var receipt = _mapper.Map<Receipt>(receiptDto);
+            receipt.TotalAmount = 0; // Yeni fişin toplam tutarı başlangıçta 0 olmalı
+
             return await _receiptRepository.AddReceiptAsync(receipt);
         }
+
+
+
 
 
         public async Task UpdateReceiptDateAsync(UpdateReceiptDto updateDto)
@@ -108,13 +111,28 @@ namespace StockManagemant.Business.Managers
         }
 
         // ✅ **Fişe ürün ekleme (Toplam tutar otomatik güncellenir)**
-        public async Task AddProductToReceiptAsync(int receiptId, int productId, int quantity)
+        public async Task AddProductsToReceiptAsync(int receiptId, List<dynamic> products)
         {
-            await _receiptDetailManager.AddProductToReceiptAsync(receiptId, productId, quantity);
+            if (products == null || !products.Any())
+                throw new Exception("Hata: En az bir ürün eklenmelidir!");
 
-            // Fişin toplam tutarını güncelle
+            foreach (var product in products)
+            {
+                if (product.productId == null || product.quantity == null)
+                    throw new Exception("Hata: Ürün bilgileri eksik!");
+
+                int productId = product.productId;
+                int quantity = product.quantity;
+
+                await _receiptDetailManager.AddProductToReceiptAsync(receiptId, productId, quantity);
+            }
+
             await UpdateReceiptAsync(receiptId);
         }
+
+
+
+
 
         // ✅ **Fişten ürün kaldırma (Toplam tutar güncellenir)**
         public async Task RemoveProductFromReceiptAsync(int receiptDetailId)

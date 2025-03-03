@@ -1,4 +1,4 @@
-﻿@model Tuple<StockManagemant.Entities.DTO.ReceiptDto, List<StockManagemant.Entities.DTO.ReceiptDetailDto>>
+﻿@model StockManagemant.Entities.DTO.ReceiptDto
 @using StockManagemant.Web.Helpers;
 @using System.Globalization;
 
@@ -9,14 +9,15 @@
 }
 
 <!-- Fiş Bilgileri -->
-<p><strong>Fiş No:</strong> @Model.Item1.Id</p>
-<p><strong>Tarih:</strong> @Model.Item1.Date.ToString("dd/MM/yyyy HH:mm")</p>
-<p><strong>Toplam Tutar:</strong> @CurrencyHelper.FormatPrice(@Model.Item1.TotalAmount, "TL")</p>
+<p><strong>Fiş No:</strong> @Model.Id</p>
+<p><strong>Depo No:</strong> @Model.WareHouseId</p>
+<p><strong>Tarih:</strong> @Model.FormattedDate</p>
+<p><strong>Toplam Tutar:</strong> @CurrencyHelper.FormatPrice(@Model.TotalAmount, "TL")</p>
 
 <!-- Ürünleri Getir Butonu (Toplam Tutar Data-Attribute olarak eklendi) -->
 <button type="button" class="btn btn-primary" id="showProductsBtn"
-        data-receipt-id="@Model.Item1.Id"
-        data-total-amount="@CurrencyHelper.FormatPrice(@Model.Item1.TotalAmount, "TL")">
+        data-receipt-id="@Model.Id"
+        data-total-amount="@CurrencyHelper.FormatPrice(@Model.TotalAmount, "TL")">
     Fiş Ürünlerini Getir
 </button>
 

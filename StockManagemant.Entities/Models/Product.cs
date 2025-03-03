@@ -16,12 +16,12 @@ namespace StockManagemant.Entities.Models
         [Required]
         public int CategoryId { get; set; }  // Foreign Key
         public Category Category { get; set; }
-            
-        public int Stock { get; set; }
-
         public CurrencyType Currency { get; set; }
 
+
         public bool IsDeleted { get; set; } = false; // Soft Delete için
+        public ICollection<ReceiptDetail> ReceiptDetails { get; set; }
+        public ICollection<WarehouseProduct> WarehouseProducts { get; set; } = new List<WarehouseProduct>();
     }
 
     public enum CurrencyType

@@ -15,6 +15,11 @@ namespace StockManagemant.DataAccess.Filters
 
         public Expression<Func<Product, bool>> GetFilterExpression()
         {
+
+            //if (string.IsNullOrEmpty(Search))
+            //{
+            //    product = product.Name.Contains(Search);
+            //}
             return product =>
                 (!IncludeDeleted ? !product.IsDeleted : true) &&
                 (string.IsNullOrEmpty(Search) || product.Name.Contains(Search)) &&

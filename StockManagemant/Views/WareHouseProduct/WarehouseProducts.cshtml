@@ -1,0 +1,269 @@
+﻿@{
+    ViewData["Title"] = "Depodaki Ürünler";
+}
+<link rel="stylesheet" href="~/css/Product.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/GlobalStyles.css" asp-append-version="true" />
+
+<h2 class="page-title">@ViewData["Title"]</h2>
+
+<!-- Filtreleme Alanı -->
+<div class="filter-container card p-4 shadow-sm">
+    <div class="row g-3">
+        <!-- Ürün Adı ile Arama -->
+        <div class="col-md-4">
+            <label for="productSearch" class="form-label">Ürün Adı:</label>
+            <input type="text" id="productSearch" class="form-control" placeholder="Ürün adını girin">
+        </div>
+
+        <!-- Fiyat Aralığı Seçimi -->
+        <div class="col-md-4">
+            <label for="priceRange" class="form-label">Fiyat Aralığı:</label>
+            <div class="d-flex align-items-center">
+                <input type="number" id="minPrice" class="form-control me-2" placeholder="Min">
+                <span class="px-2"> - </span>
+                <input type="number" id="maxPrice" class="form-control ms-2" placeholder="Max">
+            </div>
+        </div>
+
+        <!-- Filtreleme Butonu -->
+        <div class="col-md-4 d-flex align-items-end">
+            <button id="filterBtn" class="btn btn-primary">Filtrele</button>
+        </div>
+    </div>
+</div>
+
+<!-- Ürünleri listeleyen Grid -->
+<div class="table-container mt-4">
+    <table id="warehouseProductGrid"></table>
+    <div id="pager"></div>
+</div>
+
+<script>
+      $(document).ready(function () {
+        let warehouseId = localStorage.getItem("selectedWarehouseId") || 1;
+        let currencyDropdown = { "TL": "Türk Lirası", "USD": "Dolar" };
+
+        // jqGrid Başlat
+        $("#warehouseProductGrid").jqGrid({
+            url: `/WarehouseProduct/GetWarehouseProducts?warehouseId=${warehouseId}`,
+            datatype: "json",
+            mtype: "GET",
+            colNames: ['ID', 'Ürün Adı', 'Kategori', 'Fiyat', 'Para Birimi', 'Stok', 'İşlemler'],
+            colModel: [
+                { name: 'id', index: 'id', align: "center", sortable: true, key: true, hidden: true },
+                { name: 'name', index: 'name', sortable: true, editable: false },
+                { name: 'category', index: 'category', sortable: true, editable: false },
+                { name: 'price', index: 'price', align: "center", sortable: true, editable: false, formatter: formatPrice },
+                { name: 'currencyType', index: 'currencyType', sortable: true, editable: false, formatter: currencyFormatter },
+                { name: 'stock', index: 'stock', align: "center", sortable: true, editable: false },
+                {
+                    name: "actions",
+                    label: "İşlemler",
+                    align: "center",
+                    formatter: function (cellvalue, options, rowObject) {
+                        return `
+                            <div class="action-icons">
+                                <i class="fa-solid fa-plus text-primary fa-xl editStockBtn"
+                                    data-id="${rowObject.id}" data-stock="${rowObject.stock}" title="Stok Güncelle"></i>
+
+                                <i class="fa-solid fa-minus text-danger fa-xl decreaseStockBtn"
+                    data-id="${rowObject.id}" title="Stok Azalt"></i>
+
+                                <i class="fa-solid fa-trash text-danger fa-xl deleteWarehouseProductBtn"
+                                    data-id="${rowObject.id}" title="Depodan Kaldır"></i>
+                            </div>
+                        `;
+                    }
+                }
+            ],
+            pager: '#pager',
+            rowNum: 5,
+            rowList: [5, 10, 15, 20, 30, 40, 50],
+            sortname: 'id',
+            sortorder: 'asc',
+            viewrecords: true,
+            height: 'auto',
+            autowidth: true,
+            shrinkToFit: true,
+            caption: "Depodaki Ürünler",
+            loadonce: false,
+            guiStyle: "bootstrap4",
+            jsonReader: {
+                root: "rows",
+                page: "page",
+                total: "total",
+                records: "records"
+            }
+        });
+
+        
+        function currencyFormatter(cellValue, options, rowObject) {
+            return currencyDropdown[cellValue] || cellValue;
+        }
+
+      
+        function formatPrice(cellValue, options, rowObject) {
+            if (!cellValue) return "0.00";
+            let currencySymbol = rowObject.currencyType === "TL" ? "₺" : "$";
+            return cellValue.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) + " " + currencySymbol;
+        }
+
+        
+        function filterWarehouseProducts() {
+            let searchName = $("#productSearch").val().trim();
+            let minPrice = $("#minPrice").val();
+            let maxPrice = $("#maxPrice").val();
+
+            $("#warehouseProductGrid").jqGrid('setGridParam', {
+                url: `/WarehouseProduct/GetWarehouseProducts?warehouseId=${warehouseId}&search=${searchName}&minPrice=${minPrice}&maxPrice=${maxPrice}`,
+                page: 1
+            }).trigger("reloadGrid");
+        }
+
+        
+        $("#filterBtn").on("click", function () {
+            filterWarehouseProducts();
+        });
+
+        //  Stok Artırma Butonu
+    $(document).on("click", ".editStockBtn", function () {
+        let productId = $(this).data("id"); // Ürün ID
+        let warehouseId = localStorage.getItem("selectedWarehouseId"); // Depo ID
+        let currentStock = $(this).closest("tr").find("td:eq(5)").text().trim(); // Stok sütunundan mevcut değeri al
+
+        Swal.fire({
+            title: "Stok Güncelle",
+            input: "number",
+            inputLabel: `Mevcut Stok: ${currentStock}`,
+            inputPlaceholder: "Yeni stok miktarını giriniz",
+            inputAttributes: { min: 0, step: 1 },
+            showCancelButton: true,
+            confirmButtonText: "Güncelle",
+            cancelButtonText: "İptal",
+            preConfirm: (newStock) => {
+                if (!newStock || newStock < 0) {
+                    Swal.showValidationMessage("Geçerli bir stok miktarı giriniz!");
+                }
+                return newStock;
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                let newStock = parseInt(result.value); // Yeni stok miktarını al
+                console.log("Gönderilen JSON:", { productId, warehouseId, stockQuantity: newStock }); // ✅ Debug log
+
+                $.ajax({
+                    url: '/WarehouseProduct/UpdateStock',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        productId: productId,
+                        warehouseId: warehouseId,
+                        stockQuantity: newStock
+                    }),
+                    success: function (response) {
+                        Swal.fire("Başarılı!", "Stok güncellendi.", "success");
+                        $("#warehouseProductGrid").trigger("reloadGrid"); // Grid'i yenile
+                    },
+                    error: function (error) {
+                        console.error("Hata:", error);
+                        Swal.fire("Hata!", "Stok güncellenirken bir hata oluştu.", "error");
+                    }
+                });
+            }
+        });
+    });
+
+
+    //Stok Azaltma İşlemi
+        $(document).on("click", ".decreaseStockBtn", function () {
+        let productId = $(this).data("id");
+        let warehouseId = localStorage.getItem("selectedWarehouseId");
+
+        Swal.fire({
+            title: "Stok Azalt",
+            input: "number",
+            inputLabel: "Azaltılacak Stok Miktarı",
+            inputPlaceholder: "Miktar giriniz",
+            inputAttributes: { min: 1, step: 1 },
+            showCancelButton: true,
+            confirmButtonText: "Güncelle",
+            cancelButtonText: "İptal",
+            preConfirm: (stockAmount) => {
+                if (!stockAmount || stockAmount <= 0) {
+                    Swal.showValidationMessage("Geçerli bir miktar giriniz!");
+                }
+                return stockAmount;
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '/WarehouseProduct/DecreaseStock',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        productId: productId,
+                        warehouseId: warehouseId,
+                        stockQuantity: parseInt(result.value)
+                    }),
+                    success: function (response) {
+                        Swal.fire("Başarılı!", "Stok azaltıldı.", "success");
+                        $("#warehouseProductGrid").trigger("reloadGrid");
+                    },
+                    error: function (error) {
+                        Swal.fire("Hata!", "Stok azaltılırken hata oluştu.", "error");
+                    }
+                });
+            }
+        });
+    });
+
+
+
+        // Depodan Ürünü Kaldırma Butonu
+        $(document).on("click", ".deleteWarehouseProductBtn", function () {
+            let id = $(this).data("id");
+
+            Swal.fire({
+                title: "Ürünü Depodan Kaldır",
+                text: "Bu ürünü depodan çıkarmak istediğinize emin misiniz?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#3085d6",
+                confirmButtonText: "Evet, Kaldır!",
+                cancelButtonText: "İptal"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '/WarehouseProduct/RemoveProductFromWarehouse',
+                        type: 'POST',
+                        data: { warehouseProductId: id },
+                        success: function (response) {
+                            Swal.fire("Başarılı!", "Ürün depodan kaldırıldı.", "success");
+                            $("#warehouseProductGrid").trigger("reloadGrid");
+                        },
+                        error: function () {
+                            Swal.fire("Hata!", "Ürün kaldırılırken hata oluştu.", "error");
+                        }
+                    });
+                }
+            });
+        });
+
+        $("#pager_left").append(`
+            <i id="customRefreshBtn" class="fa-solid fa-arrows-rotate" title="Yenile" style="cursor: pointer; margin-left: 10px;"></i>
+        `);
+
+        $("#customRefreshBtn").on("click", function () {
+            $("#productSearch").val("");
+            $("#minPrice").val("");
+            $("#maxPrice").val("");
+            $("#warehouseProductGrid").setGridParam({
+                url: `/WarehouseProduct/GetWarehouseProducts?warehouseId=${warehouseId}`,
+                page: 1
+            }).trigger("reloadGrid");
+        });
+
+    });
+
+</script>

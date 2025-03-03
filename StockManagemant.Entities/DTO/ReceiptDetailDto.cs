@@ -12,10 +12,10 @@ namespace StockManagemant.Entities.DTO
         public int Id { get; set; }
         public int ReceiptId { get; set; }
         public int ProductId { get; set; }
-        public string ProductName { get; set; } // Ürünün adını direkt DTO'da gösterebiliriz.
+        public string ProductName { get; set; } 
         public int Quantity { get; set; }
-        public decimal SubTotal { get; set; }
         public decimal ProductPriceAtSale { get; set; }
+        public decimal SubTotal => ProductPriceAtSale * Quantity;
         public bool IsDeleted { get; set; }
     }
 
@@ -39,7 +39,7 @@ namespace StockManagemant.Entities.DTO
 
         [Required]
 
-        public decimal SubTotal { get; set; }
+        public decimal SubTotal => ProductPriceAtSale * Quantity;
     }
 
 
@@ -55,10 +55,9 @@ namespace StockManagemant.Entities.DTO
         public int Quantity { get; set; }
 
         [Required]
-        public decimal SubTotal { get; set; }
-
-        [Required]
         public decimal ProductPriceAtSale { get; set; }
+        [Required]
+        public decimal SubTotal => ProductPriceAtSale * Quantity;
         public bool IsDeleted { get; set; }
     }
 

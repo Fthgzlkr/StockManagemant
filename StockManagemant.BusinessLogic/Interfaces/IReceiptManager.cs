@@ -9,13 +9,13 @@ namespace StockManagemant.Business.Managers
     {
         Task<int> GetTotalReceiptCountAsync(ReceiptFilter filter);
         Task<List<ReceiptDto>> GetPagedReceiptAsync(int page, int pageSize, ReceiptFilter filter);
-        Task<int> AddReceiptAsync();
+        Task<int> AddReceiptAsync(CreateReceiptDto receiptDto);
         Task UpdateReceiptDateAsync(UpdateReceiptDto updateDto);
         Task UpdateReceiptAsync(int receiptId);
         Task DeleteReceiptAsync(int receiptId);
         Task<ReceiptDto> GetReceiptByIdAsync(int receiptId);
         Task<List<ReceiptDetailDto>> GetReceiptDetailsAsync(int receiptId);
-        Task AddProductToReceiptAsync(int receiptId, int productId, int quantity);
+        Task AddProductsToReceiptAsync(int receiptId, List<dynamic> products);
         Task RemoveProductFromReceiptAsync(int receiptDetailId);
         Task UpdateProductQuantityInReceiptAsync(int receiptDetailId, int newQuantity);
     }

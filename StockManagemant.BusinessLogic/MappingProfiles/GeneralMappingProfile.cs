@@ -26,8 +26,19 @@ namespace StockManagemant.Business.MappingProfiles
 
             // Product Mappings
             CreateMap<Product, ProductDto>().ReverseMap();
+
             CreateMap<Product, CreateProductDto>().ReverseMap();
             CreateMap<Product, UpdateProductDto>().ReverseMap();
+
+            //WareHouse Mappings
+            CreateMap<Warehouse,WareHouseDto>().ReverseMap();
+            CreateMap<Warehouse,CreateWarehouseDto>().ReverseMap();
+            CreateMap<Product, UpdateWarehouseDto>().ReverseMap();
+
+            //WareHouse Product Mappings
+            CreateMap<WarehouseProduct,WarehouseProductDto>().ReverseMap();
+            CreateMap<WarehouseProduct,UpdateWarehouseProductStockDto>().ReverseMap();
+            CreateMap< WarehouseProduct, AddExistingProductToWarehouseDto >().ReverseMap();
         }
     }
 

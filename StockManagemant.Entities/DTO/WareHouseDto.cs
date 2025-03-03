@@ -7,33 +7,38 @@ using System.Threading.Tasks;
 
 namespace StockManagemant.Entities.DTO
 {
-    public class CategoryDto
+
+    public class WareHouseDto
     {
         public int Id { get; set; }
         public string Name { get; set; }
+        public string Location { get; set; }
         public bool IsDeleted { get; set; }
+        public int TotalProducts { get; set; }
+    }   
 
-       
-        public List<ProductDto> Products { get; set; } = new List<ProductDto>();
-    }
-
-
-    public class CreateCategoryDto
+    public class CreateWarehouseDto
     {
         [Required]
         [MaxLength(100)]
         public string Name { get; set; }
+
+        [MaxLength(255)]
+        public string Location { get; set; }
     }
 
-    public class UpdateCategoryDto
+    public class UpdateWarehouseDto
     {
+        [Required]
         public int Id { get; set; }
 
         [Required]
         [MaxLength(100)]
         public string Name { get; set; }
+
+        [MaxLength(255)]
+        public string Location { get; set; }
+
         public bool IsDeleted { get; set; }
     }
-
 }
-

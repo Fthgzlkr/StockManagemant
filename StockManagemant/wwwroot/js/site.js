@@ -173,6 +173,11 @@ function bindProductGridEvents() {
             showCancelButton: true,
             confirmButtonText: "Kaydet",
             cancelButtonText: "İptal",
+            inputAttributes: {
+                min: 1, // Minimum değer (negatif değerleri engeller)
+                step: 1 // Adım aralığı (örn. 1'er 1'er artırma)
+            },
+            inputValue: 1, // Varsayılan başlangıç değeri
             inputValidator: (value) => {
                 if (!value || value <= 0) {
                     return "Geçerli bir miktar giriniz!";
@@ -253,7 +258,6 @@ function updateProduct() {
         Id: document.getElementById("productId").value,
         Name: document.getElementById("productName").value,
         Price: parseFloat(document.getElementById("productPrice").value),
-        Stock: parseInt(document.getElementById("productStock").value),
         CategoryId: parseInt(document.getElementById("productCategory").value), // Seçilen kategori
         Currency: parseInt(document.getElementById("productCurrency").value) // TL = 0, USD = 1
     };
@@ -314,7 +318,6 @@ function createProduct() {
     let productData = {
         Name: document.getElementById("productName").value,
         Price: parseFloat(document.getElementById("productPrice").value) || 0,
-        Stock: parseInt(document.getElementById("productStock").value) || 0,
         CategoryId: parseInt(document.getElementById("productCategory").value),
         Currency: parseInt(document.getElementById("productCurrency").value) // TL = 0, USD = 1
     };

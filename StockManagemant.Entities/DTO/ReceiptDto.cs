@@ -23,12 +23,16 @@ namespace StockManagemant.Entities.DTO
         public decimal TotalAmount { get; set; }
         public ICollection<ReceiptDetailDto> ReceiptDetails { get; set; }
         public bool IsDeleted { get; set; }
+        public int WareHouseId { get; set; }
+        public string WareHouseName { get; set; }
     }
 
     public class CreateReceiptDto
     {
-        public DateTime Date { get; set; }
+        public DateTime Date { get; set; } = DateTime.UtcNow;
         public decimal TotalAmount { get; set; }
+        public int WareHouseId { get; set; }
+
         public ICollection<CreateReceiptDetailDto> ReceiptDetails { get; set; }
     }
 

@@ -7,16 +7,19 @@ namespace StockManagemant.DataAccess.Filters
 {
     public class ReceiptFilter
     {
+        public int? WarehouseId { get; set; } 
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
-        public bool IncludeDeleted { get; set; } = false; // Silinmiş fişleri dahil etme
+        public bool IncludeDeleted { get; set; } = false; 
 
         public Expression<Func<Receipt, bool>> GetFilterExpression()
         {
             return receipt =>
-                (!IncludeDeleted ? !receipt.IsDeleted : true) && // Soft delete olmayanları getir
-                (!StartDate.HasValue || receipt.Date >= StartDate.Value) && // Başlangıç tarihi
-                (!EndDate.HasValue || receipt.Date <= EndDate.Value); // Bitiş tarihi
+                (!IncludeDeleted ? !receipt.IsDeleted : true) && 
+                (!StartDate.HasValue || receipt.Date >= StartDate.Value) && 
+                (!EndDate.HasValue || receipt.Date <= EndDate.Value) && 
+                (!WarehouseId.HasValue || receipt.WarehouseId == WarehouseId.Value); 
         }
     }
+
 }

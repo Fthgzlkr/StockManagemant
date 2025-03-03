@@ -26,6 +26,7 @@ namespace StockManagemant.DataAccess.Repositories
             return await _context.Products
                 .Where(filter.GetFilterExpression())
                 .Include(p => p.Category)
+                
                 .OrderBy(p => p.Id) // Varsayılan sıralama
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -37,18 +38,24 @@ namespace StockManagemant.DataAccess.Repositories
         {
             return await _context.Products
                 .Include(p => p.Category)
+                
                 .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
         }
 
-        // ✅ ID'ye göre ürünü getir (Silinmişler de dahil) bunu fiş ürünleri getirirken silinmişleride getirmek için kullan
+        //  ID'ye göre ürünü getir (Silinmişler de dahil) bunu fiş ürünleri getirirken silinmişleride getirmek için kullan
         public async Task<Product> GetByIdWithDeletedAsync(int id)
         {
             return await _context.Products
                 .IgnoreQueryFilters() // Soft delete olanları da getir
                 .Include(p => p.Category)
+                 
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
+
+    
+
+      
 
     }
 }

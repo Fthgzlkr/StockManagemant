@@ -1,0 +1,164 @@
+﻿@{
+    ViewData["Title"] = "Depodaki Fişler";
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/receiptlist.css" />
+    <link rel="stylesheet" href="~/css/GlobalStyles.css" asp-append-version="true" />
+}
+
+<div class="receipt-page">
+    <h2>@ViewData["Title"]</h2>
+
+    <div class="date-filter">
+        <span class="date-label">Fiş Tarihi Seçin: </span>
+        <input type="text" name="daterange" placeholder="Tarih aralığı" value="pickedDate" />
+    </div>
+
+    <table id="receiptGrid"></table>
+    <div id="receiptPager"></div>
+</div>
+
+<script>
+    let selectedReceiptId = null;
+    let startDate = null;
+    let endDate = null;
+
+    $(document).ready(function () {
+        let warehouseId = localStorage.getItem("selectedWarehouseId") || "";
+
+        $("#receiptGrid").jqGrid({
+            url: `/Receipt/GetReceipts?warehouseId=${warehouseId}`, // ✅ Depoya göre fişleri çekiyoruz
+            datatype: "json",
+            mtype: "GET",
+            colNames: ['Fiş No', 'Tarih', 'Toplam Tutar', 'İşlemler'],
+            colModel: [
+                { name: 'id', index: 'id', width: 50, align: "center", sortable: true, key: true, hidden: true },
+                { name: 'date', index: 'date', width: 60, align: "center", sortable: true },
+                { name: 'totalAmount', index: 'totalAmount', width: 60, align: "right", sortable: true },
+                {
+                    name: "actions",
+                    label: "İşlemler",
+                    align: "center",
+                    width: 50,
+                    formatter: function (cellvalue, options, rowObject) {
+                        return `
+                        <div class="action-icons">
+                            <i class="fa-solid fa-pen text-primary fa-xs open-category-edit"
+                               data-id="${rowObject.id}" data-date="${rowObject.date}" title="Düzenle"></i>
+                            <i class="fa-solid fa-trash text-danger fa-xs delete-btn"
+                                data-id="${rowObject.id}" title="Sil"></i>
+                        </div>
+                        `;
+                    }
+                }
+            ],
+            pager: '#receiptPager',
+            rowNum: 10,
+            rowList: [10, 20, 30, 50, 100],
+            sortname: 'id',
+            sortorder: 'asc',
+            viewrecords: true,
+            height: 'auto',
+            loadonce: false,
+            autowidth: true,
+            shrinkToFit: true,
+            guiStyle: "bootstrap4",
+            jsonReader: {
+                root: "rows",
+                page: "page",
+                total: "total",
+                records: "records"
+            },
+            onSelectRow: function (id) {
+                selectedReceiptId = id;
+            },
+            ondblClickRow: function (rowid) {
+                if (rowid) {
+                    selectedReceiptId = rowid;
+                    if (selectedReceiptId) {
+                        const title = 'Fiş Detayları';
+                        openModal(`/Receipt/Details/${selectedReceiptId}`, title, setupReceiptProductsEvents);
+                    } else {
+                        alert('Lütfen bir satır seçin.');
+                    }
+                }
+            }
+        });
+
+        // Grid Yenileme
+        $("#receiptGrid").jqGrid('navGrid', '#receiptPager', { edit: false, add: false, del: false, search: false, refresh: true });
+
+        // Depo ID değiştiğinde fiş listesini güncelle
+        function refreshReceipts() {
+            let newWarehouseId = localStorage.getItem("selectedWarehouseId") || "";
+            $("#receiptGrid").jqGrid('setGridParam', {
+                url: `/Receipt/GetReceipts?warehouseId=${newWarehouseId}`,
+                page: 1
+            }).trigger("reloadGrid");
+        }
+
+        // Eğer localStorage’da depo değişirse, fişleri yenile
+        window.addEventListener("storage", function (event) {
+            if (event.key === "selectedWarehouseId") {
+                refreshReceipts();
+            }
+        });
+
+        // Tarih Filtreleme
+        $(function () {
+            $('input[name="daterange"]').daterangepicker({
+                opens: 'center',
+                minDate: "2025/1/3",
+                locale: { format: 'YYYY-MM-DD' }
+            }, function (start, end, label) {
+                startDate = start.format('YYYY-MM-DD');
+                endDate = end.format('YYYY-MM-DD');
+
+                $("#receiptGrid").setGridParam({
+                    url: `/Receipt/GetReceipts?warehouseId=${warehouseId}&startDate=${startDate}&endDate=${endDate}`,
+                    page: 1
+                }).trigger("reloadGrid");
+            });
+        });
+
+        // Fiş Silme İşlemi
+        $(document).on("click", ".delete-btn", function () {
+            let id = $(this).data("id");
+
+            Swal.fire({
+                title: "Silme İşlemi",
+                text: "Bu fişi silmek istediğinize emin misiniz?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Evet, Sil!",
+                cancelButtonText: "Hayır, İptal"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: `/Receipt/DeleteReceipt?receiptId=${id}`,
+                        type: 'POST',
+                        success: function (response) {
+                            Swal.fire({
+                                title: "Başarılı!",
+                                text: "Fiş başarıyla silindi.",
+                                icon: "success",
+                                confirmButtonColor: "#3085d6"
+                            });
+                            $("#receiptGrid").trigger("reloadGrid");
+                        },
+                        error: function (error) {
+                            Swal.fire({
+                                title: "Hata!",
+                                text: "Silme işlemi başarısız oldu!",
+                                icon: "error",
+                                confirmButtonColor: "#d33"
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
+    });
+</script>

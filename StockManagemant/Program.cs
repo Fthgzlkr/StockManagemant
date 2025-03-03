@@ -54,11 +54,20 @@ builder.Services.AddScoped<ReceiptDetailManager>();
 builder.Services.AddScoped<CategoryRepository>();  
 builder.Services.AddScoped<CategoryManager>();
 
+builder.Services.AddScoped<WarehouseRepository>();
+builder.Services.AddScoped<WarehouseManager>();
+
+
+builder.Services.AddScoped<WarehouseProductRepository>();
+builder.Services.AddScoped<WarehouseProductRepository>();
+
 //Register interface with managerr..
 builder.Services.AddScoped<ICategoryManager, CategoryManager>();
 builder.Services.AddScoped<IProductManager, ProductManager>();
 builder.Services.AddScoped<IReceiptDetailManager,ReceiptDetailManager>();
 builder.Services.AddScoped<IReceiptManager, ReceiptManager>();
+builder.Services.AddScoped<IWarehouseManager, WarehouseManager>();
+builder.Services.AddScoped<IWarehouseProductManager, WarehouseProductManager>();
 
 builder.Services.AddAutoMapper(typeof(GeneralMappingProfile));
 

@@ -30,34 +30,24 @@
                 <li>
                     <a href="/Receipt/List" class="nav-link text-white">Fişler</a>
                 </li>
-                <li>
-                    <a href="/Receipt/Create" class="nav-link text-white ">Yeni Fiş Girişi</a>
-                </li>
+
                 <li>
                     <a href="/Categories" class="nav-link text-white open-category-modal">
                         Kategoriler
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="nav-link text-white">
-                        Customers
-                    </a>
+                    <a href="#" id="receiptLink" class="nav-link text-white">Depo Fişleri</a>
+                </li>
+                <li>
+                    <a href="#" id="createReceiptLink" class="nav-link text-white">Fiş Oluştur</a>
+                </li>
+                <li>
+                    <a href="#" id="warehouseProductsLink" class="nav-link text-white">Depo Ürünleri</a>
                 </li>
             </ul>
             <hr>
-            <div class="dropdown">
-                <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
-                    
-                    <strong>mdo</strong>
-                </a>
-                <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
-                    <li><a class="dropdown-item" href="#">New project...</a></li>
-                    <li><a class="dropdown-item" href="#">Settings</a></li>
-                    <li><a class="dropdown-item" href="#">Profile</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="#">Sign out</a></li>
-                </ul>
-            </div>
+
         </div>
 
         <!-- Main Content -->
@@ -98,5 +88,15 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let warehouseId = localStorage.getItem("selectedWarehouseId");
+            if (warehouseId) {
+                document.getElementById("receiptLink").href = `/Receipt/ListByWarehouse?warehouseId=${warehouseId}`;
+                document.getElementById("createReceiptLink").href = `/Receipt/Create?warehouseId=${warehouseId}`;        
+                document.getElementById("warehouseProductsLink").href = `/WarehouseProduct/WarehouseProducts?warehouseId=${warehouseId}`;
+            }
+        });
+    </script>
 </body>
 </html>

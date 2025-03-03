@@ -33,7 +33,6 @@ namespace StockManagemant.Controllers
                 products = sidx switch
                 {
                     "price" => sord == "asc" ? products.OrderBy(p => p.Price).ToList() : products.OrderByDescending(p => p.Price).ToList(),
-                    "stock" => sord == "asc" ? products.OrderBy(p => p.Stock).ToList() : products.OrderByDescending(p => p.Stock).ToList(),
                     _ => sord == "asc" ? products.OrderBy(p => p.Id).ToList() : products.OrderByDescending(p => p.Id).ToList()
                 };
 
@@ -49,9 +48,8 @@ namespace StockManagemant.Controllers
                         id = p.Id,
                         name = p.Name,
                         price = p.Price,
-                        category = p.CategoryName, // DTO içinde CategoryName olarak geliyor.
+                        category = p.CategoryName, 
                         categoryId = p.CategoryId,
-                        stock = p.Stock,
                         currencyType = p.Currency.ToString()
                     })
                 };

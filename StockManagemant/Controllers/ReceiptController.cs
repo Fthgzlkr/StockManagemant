@@ -16,28 +16,44 @@ namespace StockManagemant.Controllers
         private readonly IReceiptManager _receiptManager;
         private readonly IReceiptDetailManager _receiptDetailManager;
         private readonly IProductManager _productManager;
+        private readonly IWarehouseProductManager _warehouseProductManager;
 
-        public ReceiptController(IReceiptManager receiptManager, IReceiptDetailManager receiptDetailManager, IProductManager productManager)
+        public ReceiptController(IReceiptManager receiptManager, IReceiptDetailManager receiptDetailManager, IProductManager productManager, IWarehouseProductManager warehouseProductManager)
         {
             _receiptManager = receiptManager;
             _receiptDetailManager = receiptDetailManager;
             _productManager = productManager;
+            _warehouseProductManager = warehouseProductManager;
         }
 
-        // ✅ **Fişleri listeleme sayfası**
+        // Fişleri listeleme sayfası
         public IActionResult List()
         {
             return View();
         }
 
-        // ✅ **JQGrid için fişleri JSON formatında getirir**
+        //Depo Fişlerini dönen sayfa
+        [HttpGet]
+        public IActionResult ListByWarehouse(int warehouseId)
+        {
+            if (warehouseId <= 0)
+            {
+                return BadRequest("Geçersiz depo ID!");
+            }
+
+            ViewData["WarehouseId"] = warehouseId; 
+            return View("ListByWarehouse"); 
+        }
+
+
+        // JQGrid için fişleri JSON formatında getirir
         [HttpGet]
         public async Task<IActionResult> GetReceipts([FromQuery] ReceiptFilter filter, int page = 1, int rows = 10, string sidx = "id", string sord = "asc")
         {
             var totalReceipts = await _receiptManager.GetTotalReceiptCountAsync(filter);
             var receipts = await _receiptManager.GetPagedReceiptAsync(page, rows, filter);
 
-            // 🚀 **İyileştirme:** Dinamik sıralamayı LINQ ile sunucu tarafında yapalım.
+            // 
             receipts = sidx switch
             {
                 "id" => sord == "asc" ? receipts.OrderBy(r => r.Id).ToList() : receipts.OrderByDescending(r => r.Id).ToList(),
@@ -64,26 +80,19 @@ namespace StockManagemant.Controllers
         }
 
 
-        // ✅ **Fiş detaylarını görüntüleme**
+        // Fiş detaylarını görüntüleme
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
             var receipt = await _receiptManager.GetReceiptByIdAsync(id);
             if (receipt == null) return NotFound(new { success = false, message = "Fiş bulunamadı." });
 
-            var filteredDetails = await _receiptManager.GetReceiptDetailsAsync(id);
-
-            if (filteredDetails == null || !filteredDetails.Any())
-            {
-                return NotFound(new { success = false, message = "Fiş detayları bulunamadı." });
-            }
-
-            var model = new Tuple<ReceiptDto, List<ReceiptDetailDto>>(receipt, filteredDetails);
-            return View("Details", model);
+            return View("Details", receipt); // ✅ Sadece `ReceiptDto` gönderiliyor
         }
 
 
-        // ✅ **Seçilen fişin ürünlerini JSON olarak getirir**
+
+        // Seçilen fişin ürünlerini JSON olarak getirir
         [HttpGet]
         public async Task<IActionResult> GetReceiptDetails(int receiptId)
         {
@@ -110,7 +119,7 @@ namespace StockManagemant.Controllers
         }
 
 
-        // ✅ **Fiş silme (Soft Delete)**
+        // Fiş silme (Soft Delete)
         [HttpPost]
         public async Task<IActionResult> DeleteReceipt(int receiptId)
         {
@@ -127,22 +136,11 @@ namespace StockManagemant.Controllers
         }
 
 
-        // ✅ **Fişe ürün ekleme**
-        [HttpPost]
-        public async Task<IActionResult> AddProductToReceipt(int receiptId, int productId, int quantity)
-        {
-            try
-            {
-                await _receiptManager.AddProductToReceiptAsync(receiptId, productId, quantity);
-                return Json(new { success = true });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { success = false, message = ex.Message });
-            }
-        }
+    
 
-        // ✅ **Fişten ürün kaldırma (Soft Delete)**
+
+
+        // Fişten ürün kaldırma (Soft Delete)
         [HttpPost]
         public async Task<IActionResult> RemoveProductFromReceipt( int receiptDetailId)
         {
@@ -159,13 +157,13 @@ namespace StockManagemant.Controllers
 
         }
 
-        // ✅ **Fişteki ürün miktarını güncelleme**
+        // Fişteki ürün miktarını güncelleme
         [HttpPost]
         public async Task<IActionResult> UpdateProductQuantityInReceipt(int receiptDetailId, int newQuantity)
         {
             try
             {
-                await _receiptManager.UpdateProductQuantityInReceiptAsync(receiptDetailId, newQuantity);
+                await _receiptDetailManager.UpdateProductQuantityInReceiptAsync(receiptDetailId, newQuantity);
                 return Json(new { success = true });
             }
             catch (Exception ex)
@@ -176,26 +174,73 @@ namespace StockManagemant.Controllers
 
 
 
-        public IActionResult Create()
+        [HttpGet]
+        public IActionResult Create(int warehouseId)
         {
-            return View();
+            if (warehouseId <= 0)
+            {
+                return BadRequest("Geçersiz depo ID!");
+            }
+
+            ViewData["WarehouseId"] = warehouseId;
+            return View("Create");
         }
-        // ✅ **Yeni fiş oluşturma**
+
+        public class ProductModel
+        {
+            public int ProductId { get; set; }
+            public int Quantity { get; set; }
+        }
+
         [HttpPost]
-        public async Task<IActionResult> CreateReceipt()
+        public async Task<IActionResult> CreateReceipt([FromBody] CreateReceiptDto receiptDto)
         {
             try
             {
-                int newReceiptId = await _receiptManager.AddReceiptAsync();
+                if (receiptDto == null || receiptDto.WareHouseId == 0)
+                {
+                    return BadRequest(new { success = false, message = "Geçersiz veri: Depo ID boş olamaz!" });
+                }
+
+                int newReceiptId = await _receiptManager.AddReceiptAsync(receiptDto);
                 return Json(new { success = true, receiptId = newReceiptId });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, message = ex.Message });
+                Console.WriteLine($"[CreateReceipt] Hata: {ex.Message}, InnerException: {ex.InnerException?.Message}");
+                return StatusCode(500, new { success = false, message = $"Hata oluştu: {ex.Message}" });
             }
         }
 
-        // ✅ **Fiş güncelleme (Tarih güncelleme)**
+        [HttpPost]
+        public async Task<IActionResult> AddProductsToReceipt(int receiptId, [FromBody] List<ProductModel> products)
+        {
+            try
+            {
+                if (receiptId == 0 || products == null || !products.Any())
+                {
+                    return BadRequest(new { success = false, message = "Eksik veya geçersiz veri!" });
+                }
+
+                foreach (var product in products)
+                {
+                    await _receiptDetailManager.AddProductToReceiptAsync(receiptId, product.ProductId, product.Quantity);
+                }
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[AddProductsToReceipt] Hata: {ex.Message}");
+                return StatusCode(500, new { success = false, message = $"Ürün ekleme hatası: {ex.Message}" });
+            }
+        }
+
+
+
+
+
+        //Fiş güncelleme (Tarih güncelleme)
         [HttpPost]
         public async Task<IActionResult> UpdateReceipt(int receiptId, DateTime date)
         {
@@ -204,7 +249,7 @@ namespace StockManagemant.Controllers
                 var receipt = await _receiptManager.GetReceiptByIdAsync(receiptId);
                 if (receipt == null) return NotFound(new { success = false, message = "Fiş bulunamadı!" });
 
-                // DTO kullanarak güncelleme işlemi yap
+               
                 var updateDto = new UpdateReceiptDto
                 {
                     Id = receiptId,
@@ -212,7 +257,7 @@ namespace StockManagemant.Controllers
                     TotalAmount = receipt.TotalAmount
                 };
 
-                // ✅ Metodu doğru parametre ile çağır!
+                
                 await _receiptManager.UpdateReceiptDateAsync(updateDto);
 
                 return Json(new { success = true });
@@ -222,6 +267,32 @@ namespace StockManagemant.Controllers
                 return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
+
+
+        [HttpGet]
+        public async Task<IActionResult> GetWarehouseProduct(int warehouseId, int productId)
+        {
+            if (warehouseId <= 0 || productId <= 0)
+            {
+                return BadRequest(new { success = false, message = "Geçersiz depo veya ürün ID!" });
+            }
+
+            try
+            {
+                var warehouseProduct = await _warehouseProductManager.GetProductInWarehouseByIdAsync(warehouseId, productId);
+                if (warehouseProduct == null)
+                {
+                    return NotFound(new { success = false, message = "Ürün bu depoda bulunamadı!" });
+                }
+
+                return Ok(new { success = true, data = warehouseProduct });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = $"Depo ürünü getirilirken hata oluştu: {ex.Message}" });
+            }
+        }
+
 
 
     }

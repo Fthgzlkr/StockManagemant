@@ -11,13 +11,14 @@ namespace StockManagemant.Entities.DTO
     public class ProductDto
     {
         public int Id { get; set; }
+        //[StringLength(maximumLength:2, MinimumLength = 100, ErrorMessage = "hatalı mesaj")]
         public string Name { get; set; }
         public decimal? Price { get; set; }
         public int CategoryId { get; set; }
         public string CategoryName { get; set; } 
-        public int Stock { get; set; }
         public CurrencyType Currency { get; set; }
         public bool IsDeleted { get; set; }
+
     }
 
     public class CreateProductDto
@@ -29,7 +30,6 @@ namespace StockManagemant.Entities.DTO
         [Required]
         public int CategoryId { get; set; }
 
-        public int Stock { get; set; }
         public CurrencyType Currency { get; set; }
     }
 
@@ -44,7 +44,6 @@ namespace StockManagemant.Entities.DTO
         [Required]
         public int CategoryId { get; set; }
 
-        public int Stock { get; set; }
         public CurrencyType Currency { get; set; }
         public bool IsDeleted { get; set; }
     }
