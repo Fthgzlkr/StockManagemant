@@ -1,27 +1,27 @@
 ﻿using AutoMapper;
-using StockManagemant.DataAccess.Repositories;
 using StockManagemant.Entities.Models;
 using StockManagemant.Entities.DTO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System;
+using StockManagemant.DataAccess.Repositories.Interfaces;
 
 namespace StockManagemant.Business.Managers
 {
     public class ReceiptDetailManager :IReceiptDetailManager
     {
-        private readonly ReceiptDetailRepository _receiptDetailRepository;
-        private readonly ProductRepository _productRepository;
-        private readonly WarehouseProductRepository _warehouseProductRepository;
+        private readonly IReceiptDetailRepository _receiptDetailRepository;
+        private readonly IProductRepository _productRepository;
+        private readonly IWarehouseProductRepository _warehouseProductRepository;
       
         private readonly IMapper _mapper;
 
         public ReceiptDetailManager(
-            ReceiptDetailRepository receiptDetailRepository,
-            ProductRepository productRepository,
-            ReceiptRepository receiptRepository,
-            WarehouseProductRepository warehouseProductRepository,
+            IReceiptDetailRepository receiptDetailRepository,
+            IProductRepository productRepository,
+            IReceiptRepository receiptRepository,
+            IWarehouseProductRepository warehouseProductRepository,
             IMapper mapper)
         {
             _receiptDetailRepository = receiptDetailRepository;
@@ -109,10 +109,10 @@ namespace StockManagemant.Business.Managers
             receiptDetail.Quantity = newQuantity;
             receiptDetail.SubTotal = newQuantity * receiptDetail.ProductPriceAtSale;
 
-           
-            var updateWarehouseProductDto = _mapper.Map<UpdateWarehouseProductStockDto>(warehouseProduct);
 
-          
+            var updateWarehouseProductDto = _mapper.Map<WarehouseProductDto>(warehouseProduct);
+
+
             await _receiptDetailRepository.UpdateAsync(receiptDetail);
             await _warehouseProductRepository.UpdateAsync(warehouseProduct); 
 

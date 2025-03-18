@@ -4,18 +4,20 @@ using Microsoft.EntityFrameworkCore;
 using StockManagemant.DataAccess.Filters;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using StockManagemant.DataAccess.Repositories.Interfaces;
 
 namespace StockManagemant.DataAccess.Repositories
 {
-    public class ReceiptRepository : Repository<Receipt>
+    public class ReceiptRepository : Repository<Receipt>, IReceiptRepository
     {
-        private readonly ReceiptDetailRepository _receiptDetailRepository;
+        private readonly IReceiptDetailRepository _receiptDetailRepository;
 
-        public ReceiptRepository(AppDbContext context, ReceiptDetailRepository receiptDetailRepository)
+        public ReceiptRepository(AppDbContext context, IReceiptDetailRepository receiptDetailRepository)
             : base(context)
         {
             _receiptDetailRepository = receiptDetailRepository;
         }
+
 
         // Toplam Fiş sayısı 
         public async Task<int> GetTotalCountAsync(ReceiptFilter filter)

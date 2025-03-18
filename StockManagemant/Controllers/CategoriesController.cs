@@ -56,18 +56,17 @@ namespace StockManagemant.Web.Controllers
             }
         }
 
-        // ✅ Yeni kategori ekleme
         [HttpPost]
-        public async Task<IActionResult> AddCategory([FromBody] CreateCategoryDto createCategoryDto)
+        public async Task<IActionResult> AddCategory([FromBody] GeneralDto categoryDto)
         {
-            if (!ModelState.IsValid || createCategoryDto == null || string.IsNullOrEmpty(createCategoryDto.Name))
+            if (!ModelState.IsValid || categoryDto == null || string.IsNullOrEmpty(categoryDto.Name))
             {
                 return Json(new { success = false, message = "Geçersiz kategori bilgisi." });
             }
 
             try
             {
-                await _categoryManager.AddCategoryAsync(createCategoryDto);
+                await _categoryManager.AddCategoryAsync(categoryDto);
                 return Json(new { success = true, message = "Kategori başarıyla eklendi." });
             }
             catch (System.Exception ex)
@@ -81,16 +80,16 @@ namespace StockManagemant.Web.Controllers
 
 
         [HttpPost]
-        public async Task<IActionResult> EditCategory([FromBody] UpdateCategoryDto updateCategoryDto)
+        public async Task<IActionResult> EditCategory([FromBody] GeneralDto categoryDto)
         {
-            if (!ModelState.IsValid || updateCategoryDto == null || updateCategoryDto.Id <= 0)
+            if (!ModelState.IsValid || categoryDto == null || categoryDto.Id <= 0)
             {
                 return BadRequest(new { success = false, message = "Geçersiz kategori verisi." });
             }
 
             try
             {
-                await _categoryManager.UpdateCategoryAsync(updateCategoryDto);
+                await _categoryManager.UpdateCategoryAsync(categoryDto);
                 return Ok(new { success = true, message = "Kategori başarıyla güncellendi." });
             }
             catch (System.Exception ex)

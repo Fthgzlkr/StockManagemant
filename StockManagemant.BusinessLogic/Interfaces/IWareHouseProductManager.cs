@@ -10,9 +10,9 @@ namespace StockManagemant.Business.Managers
     {
         Task<List<WarehouseProductDto>> GetProductsByWarehouseIdAsync(int warehouseId);
         Task<int> GetTotalStockByProductIdAsync(int productId);
-        Task İncreaseStockAsync(UpdateWarehouseProductStockDto dto);
-        Task DecreaseStockAsync(UpdateWarehouseProductStockDto dto);
-        Task AddProductToWarehouseAsync(AddExistingProductToWarehouseDto dto);
+        Task IncreaseStockAsync(WarehouseProductDto dto);
+        Task DecreaseStockAsync(WarehouseProductDto dto);
+        Task AddProductToWarehouseAsync(WarehouseProductDto dto);
         Task RemoveProductFromWarehouseAsync(int warehouseProductId);
         Task RestoreWarehouseProductAsync(int warehouseProductId);
         Task<List<WarehouseProductDto>> GetPagedWarehouseProductsAsync(WarehouseProductFilter filter, int warehouseId, int page, int pageSize);

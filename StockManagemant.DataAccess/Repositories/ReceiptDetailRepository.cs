@@ -4,14 +4,14 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using StockManagemant.DataAccess.Repositories.Interfaces;
 
 namespace StockManagemant.DataAccess.Repositories
 {
-    public class ReceiptDetailRepository : Repository<ReceiptDetail>
+    public class ReceiptDetailRepository : Repository<ReceiptDetail>, IReceiptDetailRepository
     {
         public ReceiptDetailRepository(AppDbContext context) : base(context) { }
 
-        // ✅ **Belirli bir fişe ait aktif fiş detaylarını getir**
         public async Task<List<ReceiptDetail>> GetByReceiptIdAsync(int receiptId)
         {
             return await _dbSet
@@ -19,7 +19,7 @@ namespace StockManagemant.DataAccess.Repositories
                 .ToListAsync();
         }
 
-        // ✅ **Fişe bağlı detaylardan toplam tutarı hesapla ve fişi güncelle**
+        
         public async Task UpdateReceiptTotal(int receiptId)
         {
             var total = await GetTotalAmountByReceiptIdAsync(receiptId);
@@ -31,7 +31,7 @@ namespace StockManagemant.DataAccess.Repositories
             }
         }
 
-        // ✅ **Fişin toplam tutarını getir (Soft delete yapılmışları hariç tutar)**
+        
         public async Task<decimal> GetTotalAmountByReceiptIdAsync(int receiptId)
         {
             return await _dbSet

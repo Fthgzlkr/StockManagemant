@@ -9,8 +9,8 @@ namespace StockManagemant.Business.Managers
     {
         Task<int> GetTotalProductCountAsync(ProductFilter filter);
         Task<List<ProductDto>> GetPagedProductAsync(int page, int pageSize, ProductFilter filter);
-        Task<int> AddProductAsync(CreateProductDto dto);
-        Task UpdateProductAsync(UpdateProductDto dto);
+        Task<int> AddProductAsync(ProductDto productDto);
+        Task UpdateProductAsync(ProductDto productDto);
         Task DeleteProductAsync(int productId);
         Task RestoreProductAsync(int productId);
         Task<ProductDto> GetProductByIdAsync(int productId);

@@ -1,0 +1,51 @@
+﻿@{
+    ViewData["Title"] = "Ürün Stok Yönetimi";
+    Layout = null;
+}
+
+<div class="container mt-4">
+    <h3>📦 Ürün Stok Yönetimi</h3>
+
+    <!-- Ürün Arama -->
+    <div class="card p-3 mb-3">
+        <h5>🔍 Ürün Ara</h5>
+        <div class="input-group">
+            <input type="number" id="productIdInput" class="form-control" placeholder="Ürün ID Girin">
+            <button class="btn btn-primary" id="searchProductBtn">Ara</button>
+        </div>
+    </div>
+
+    <!-- Ürün Detayları -->
+    <div class="card p-3">
+        <h5>📜 Ürün Detayları</h5>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Ürün Adı</th>
+                    <th>Kategori</th>
+                    <th>Fiyat</th>
+                </tr>
+            </thead>
+            <tbody id="productDetailsTable">
+                <!-- Ürün bilgileri buraya eklenecek -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Stok Ekleme -->
+    <div class="card p-3">
+        <h5>➕ Depoya Stok Ekle</h5>
+        <div class="mb-2">
+            <label>Depo ID:</label>
+            <input type="number" id="warehouseIdInput" class="form-control" disabled>
+        </div>
+        <div class="mb-2">
+            <label>Stok Miktarı:</label>
+            <input type="number" id="stockQuantityInput" class="form-control" placeholder="Stok Miktarı Girin">
+        </div>
+        <button class="btn btn-success" id="addStockBtn">Stok Ekle</button>
+        <div id="stockMessage" class="mt-2"></div>
+    </div>
+</div>
+

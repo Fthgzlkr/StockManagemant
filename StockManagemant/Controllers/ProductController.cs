@@ -64,6 +64,22 @@ namespace StockManagemant.Controllers
 
 
         [HttpGet]
+        public async Task<IActionResult> GetProductById(int id)
+        {
+            var product = await _productManager.GetProductByIdAsync(id);
+
+            if (product == null)
+            {
+                return NotFound(new { message = "Ürün bulunamadı." });
+            }
+
+            return Json(product);
+        }
+
+
+
+
+        [HttpGet]
         public async Task<IActionResult> GetCategoryDropdown()
         {
             var categories = await _categoryManager.GetAllCategoriesAsync();
@@ -88,20 +104,32 @@ namespace StockManagemant.Controllers
         }
 
         [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateProductDto dto)
-    {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        public async Task<IActionResult> Create([FromBody] ProductDto productDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState
+                    .Where(x => x.Value.Errors.Any())
+                    .ToDictionary(
+                        k => k.Key,
+                        v => v.Value.Errors.Select(e => e.ErrorMessage).FirstOrDefault()
+                    );
 
-        try
-        {
-            int newProductId = await _productManager.AddProductAsync(dto);
-            return Json(new { success = true, productId = newProductId });
+                return Json(new { success = false, errors });
+            }
+
+            try
+            {
+                int newProductId = await _productManager.AddProductAsync(productDto);
+                return Json(new { success = true, productId = newProductId });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Ürün eklenirken hata oluştu: {ex.Message}" });
+            }
         }
-        catch (Exception ex)
-        {
-            return Json(new { success = false, message = $"Ürün eklenirken hata oluştu: {ex.Message}" });
-        }
-    }
+
+
 
 
 
@@ -120,7 +148,7 @@ namespace StockManagemant.Controllers
 
         // ✅ **Ürün düzenleme işlemi (DTO Kullanımı)**
         [HttpPost]
-        public async Task<IActionResult> Edit([FromBody] UpdateProductDto dto)
+        public async Task<IActionResult> Edit([FromBody] ProductDto productDto)
         {
             if (!ModelState.IsValid)
             {
@@ -129,8 +157,8 @@ namespace StockManagemant.Controllers
 
             try
             {
-                await _productManager.UpdateProductAsync(dto);
-                return Json(new { success = true, message = "Ürün başarıyla güncellendi.", id = dto.Id });
+                await _productManager.UpdateProductAsync(productDto);
+                return Json(new { success = true, message = "Ürün başarıyla güncellendi.", id = productDto.Id });
             }
             catch (Exception ex)
             {

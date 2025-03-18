@@ -1,22 +1,22 @@
 ﻿using AutoMapper;
-using StockManagemant.DataAccess.Repositories;
 using StockManagemant.Entities.Models;
 using StockManagemant.Entities.DTO;
 using StockManagemant.DataAccess.Filters;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using StockManagemant.DataAccess.Repositories.Interfaces;
 
 namespace StockManagemant.Business.Managers
 {
     public class ReceiptManager:IReceiptManager
     {
-        private readonly ReceiptRepository _receiptRepository;
+        private readonly IReceiptRepository _receiptRepository;
         private readonly IReceiptDetailManager _receiptDetailManager;
-        private readonly ReceiptDetailRepository _receiptDetailRepository;
+        private readonly IReceiptDetailRepository _receiptDetailRepository;
         private readonly IMapper _mapper;
 
-        public ReceiptManager(ReceiptRepository receiptRepository, IReceiptDetailManager receiptDetailManager, ReceiptDetailRepository receiptDetailRepository,IMapper mapper)
+        public ReceiptManager(IReceiptRepository receiptRepository, IReceiptDetailManager receiptDetailManager, IReceiptDetailRepository receiptDetailRepository,IMapper mapper)
         {
             _receiptRepository = receiptRepository;
             _receiptDetailManager = receiptDetailManager;
@@ -39,14 +39,14 @@ namespace StockManagemant.Business.Managers
 
 
 
-        // ✅ **Yeni fiş ekle (TotalAmount = 0 başlangıç değeri ile)**
-        public async Task<int> AddReceiptAsync(CreateReceiptDto receiptDto)
+        public async Task<int> AddReceiptAsync(ReceiptDto receiptDto)
         {
             if (receiptDto == null || receiptDto.WareHouseId == 0)
                 throw new Exception("Hata: Depo ID boş olamaz!");
 
             var receipt = _mapper.Map<Receipt>(receiptDto);
             receipt.TotalAmount = 0; // Yeni fişin toplam tutarı başlangıçta 0 olmalı
+            receipt.IsDeleted = false;
 
             return await _receiptRepository.AddReceiptAsync(receipt);
         }
@@ -55,9 +55,11 @@ namespace StockManagemant.Business.Managers
 
 
 
-        public async Task UpdateReceiptDateAsync(UpdateReceiptDto updateDto)
+
+
+        public async Task UpdateReceiptDateAsync(ReceiptDto updateDto)
         {
-            var receipt = await _receiptRepository.GetByIdAsync(updateDto.Id);
+            var receipt = await _receiptRepository.GetByIdAsync(updateDto.Id ?? 0);
             if (receipt == null) throw new Exception("Fiş bulunamadı!");
 
             // Güncelleme işlemi
@@ -66,6 +68,8 @@ namespace StockManagemant.Business.Managers
 
             await _receiptRepository.UpdateAsync(receipt);
         }
+
+
 
 
 
@@ -78,11 +82,13 @@ namespace StockManagemant.Business.Managers
             // Fişe bağlı detaylardan toplam tutarı hesapla
             receipt.TotalAmount = await _receiptDetailRepository.GetTotalAmountByReceiptIdAsync(receiptId);
 
-            var receiptDto = _mapper.Map<UpdateReceiptDto>(receipt);
+            var receiptDto = _mapper.Map<ReceiptDto>(receipt);
             _mapper.Map(receiptDto, receipt);
 
             await _receiptRepository.UpdateAsync(receipt);
         }
+
+
 
         // ✅ **Fiş silme (Önce detayları soft delete yapar, sonra fişi soft delete yapar)**
         public async Task DeleteReceiptAsync(int receiptId)

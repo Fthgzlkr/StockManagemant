@@ -1,21 +1,20 @@
-﻿
-using StockManagemant.DataAccess.Repositories;
-using StockManagemant.Entities.Models;
+﻿using StockManagemant.Entities.Models;
 using StockManagemant.Entities.DTO;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using StockManagemant.DataAccess.Repositories.Interfaces;
 
 namespace StockManagemant.Business.Managers
 {
     public class WarehouseManager : IWarehouseManager
     {
-        private readonly WarehouseRepository _warehouseRepository;
+        private readonly IWarehouseRepository _warehouseRepository;
         private readonly IMapper _mapper;
 
-        public WarehouseManager(WarehouseRepository warehouseRepository, IMapper mapper)
+        public WarehouseManager(IWarehouseRepository warehouseRepository, IMapper mapper)
         {
             _warehouseRepository = warehouseRepository;
             _mapper = mapper;
@@ -45,23 +44,24 @@ namespace StockManagemant.Business.Managers
 
 
         //Yeni Depo oluşturma 
-        public async Task<int> AddWarehouseAsync(CreateWarehouseDto dto)
+        public async Task<int> AddWarehouseAsync(WareHouseDto warehouseDto)
         {
-            var warehouse = _mapper.Map<Warehouse>(dto);
+            var warehouse = _mapper.Map<Warehouse>(warehouseDto);
             await _warehouseRepository.AddAsync(warehouse);
             return warehouse.Id;
         }
 
 
         //Depoyu güncelle
-        public async Task UpdateWarehouseAsync(UpdateWarehouseDto dto)
+        public async Task UpdateWarehouseAsync(WareHouseDto warehouseDto)
         {
-            var existingWarehouse = await _warehouseRepository.GetByIdAsync(dto.Id);
+            var existingWarehouse = await _warehouseRepository.GetByIdAsync(warehouseDto.Id ?? 0);
             if (existingWarehouse == null) throw new Exception("Depo bulunamadı.");
 
-            _mapper.Map(dto, existingWarehouse);
+            _mapper.Map(warehouseDto, existingWarehouse);
             await _warehouseRepository.UpdateAsync(existingWarehouse);
         }
+
 
 
         //Depoyu sil (Kullanırken Dikkatli ol)

@@ -70,7 +70,7 @@ namespace StockManagemant.Controllers
 
         //  Yeni depo ekleme
         [HttpPost]
-        public async Task<IActionResult> AddWarehouse([FromBody] CreateWarehouseDto dto)
+        public async Task<IActionResult> AddWarehouse([FromBody] WareHouseDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -87,7 +87,7 @@ namespace StockManagemant.Controllers
 
         //  Depo güncelleme
         [HttpPost]
-        public async Task<IActionResult> UpdateWarehouse([FromBody] UpdateWarehouseDto dto)
+        public async Task<IActionResult> UpdateWarehouse([FromBody] WareHouseDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 

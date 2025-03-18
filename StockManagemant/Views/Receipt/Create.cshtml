@@ -6,118 +6,137 @@
     ViewData["Title"] = "Fiş Oluşturma";
 }
 
-<h2>Fiş Oluştur</h2>
+<h2 class="text-center my-3 fs-5">Fiş Oluştur</h2>
 
-<!-- Ürün Arama Alanı -->
-<div class="product-search-container">
-    <label for="productIdInput">Ürün ID:</label>
-    <input type="number" id="productIdInput" class="form-control" placeholder="Ürün ID girin">
-    <button id="searchProductBtn" class="btn btn-primary">Ürünü Getir</button>
+<div class="container">
+    <div class="row">
+        <!-- Sol Sütun: Ürün Arama ve Gelen Ürün -->
+        <div class="col-md-6">
+            <!-- Ürün Arama Alanı -->
+            <div class="p-2 border rounded">
+                <label for="productIdInput" class="form-label small">Ürün ID:</label>
+                <div class="input-group input-group-sm">
+                    <input type="number" id="productIdInput" class="form-control" placeholder="Ürün ID girin">
+                    <button id="searchProductBtn" class="btn btn-primary">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Aranan Ürün -->
+            <div id="searchedProduct" class="mt-3 p-2 border rounded d-none">
+                <h6 class="text-center">Aranan Ürün</h6>
+                <p class="mb-1 small"><strong>Adı:</strong> <span id="productName"></span></p>
+                <p class="mb-1 small"><strong>Kategori:</strong> <span id="productCategory"></span></p>
+                <p class="mb-1 small"><strong>Fiyat:</strong> <span id="productPrice"></span> TL</p>
+                <p class="mb-1 small"><strong>Stok:</strong> <span id="productStock"></span></p>
+
+                <!-- Adet Seçme Alanı -->
+                <label for="productQuantity" class="form-label small">Miktar:</label>
+                <input type="number" id="productQuantity" class="form-control form-control-sm" min="1" value="1">
+
+                <button id="addProductBtn" class="btn btn-success btn-sm w-100 mt-2">Fişe Ekle</button>
+            </div>
+        </div>
+
+        <!-- Sağ Sütun: Fiş Görüntüsü -->
+        <div class="col-md-6">
+            <div class="p-3 border rounded bg-light shadow-sm" id="receiptContainer">
+                <h6 class="text-center">Fiş</h6>
+                <div id="receiptItems" class="small">
+                    <!-- Dinamik olarak ürünler buraya eklenecek -->
+                </div>
+                <hr>
+                <h5 class="text-end"><strong>Toplam:</strong> <span id="totalAmount">0.00 TL</span></h5>
+                <button id="createReceiptBtn" class="btn btn-dark btn-sm w-100 mt-2">Fişi Tamamla</button>
+            </div>
+        </div>
+    </div>
 </div>
-
-<!-- Seçilen Ürünleri Gösteren Tablo -->
-<table class="table mt-4">
-    <thead>
-        <tr>
-            <th>Ürün Adı</th>
-            <th>Kategori</th>
-            <th>Fiyat</th>
-            <th>Stok</th>
-            <th>Miktar</th>
-            <th>Toplam</th>
-            <th>İşlemler</th>
-        </tr>
-    </thead>
-    <tbody id="receiptItems">
-        <!-- Dinamik olarak eklenen ürünler buraya gelecek -->
-    </tbody>
-</table>
-
-<!-- Toplam Tutar -->
-<h4>Toplam: <span id="totalAmount">0.00 TL</span></h4>
-
-<!-- Fişi Tamamla Butonu -->
-<button id="createReceiptBtn" class="btn btn-success mt-3">Fişi Oluştur</button>
 
 <script>
     let warehouseId = new URLSearchParams(window.location.search).get("warehouseId");
     let receiptItems = [];
 
     // Ürün Arama Butonu
-    $("#searchProductBtn").click(function() {
+    $("#searchProductBtn").click(function () {
         let productId = $("#productIdInput").val();
         if (!productId) {
             Swal.fire("Hata!", "Lütfen geçerli bir ürün ID girin!", "error");
             return;
         }
 
-        $.get(`/Receipt/GetWarehouseProduct?warehouseId=${warehouseId}&productId=${productId}`, function(response) {
+        $.get(`/Receipt/GetWarehouseProduct?warehouseId=${warehouseId}&productId=${productId}`, function (response) {
             if (response.success) {
-                addProductToReceipt(response.data);
+                showSearchedProduct(response.data);
             } else {
                 Swal.fire("Hata!", response.message, "error");
             }
-        }).fail(function(xhr) {
+        }).fail(function () {
             Swal.fire("Hata!", "Ürün getirilirken bir hata oluştu!", "error");
-            console.log("Hata:", xhr.responseText);
         });
     });
 
-    // Ürünü Fişe Ekleme
-    function addProductToReceipt(product) {
+    // Aranan Ürünü Gösterme
+    function showSearchedProduct(product) {
         if (!product || !product.productId) {
-            Swal.fire("Hata!", "Geçerli bir ürün bilgisi alınamadı!", "error");
+            Swal.fire("Hata!", "Geçerli bir ürün bulunamadı!", "error");
             return;
         }
 
+        $("#productName").text(product.productName);
+        $("#productCategory").text(product.categoryName);
+        $("#productPrice").text(product.price);
+        $("#productStock").text(product.stockQuantity);
+        $("#productQuantity").attr("max", product.stockQuantity);
+        $("#searchedProduct").removeClass("d-none");
+
+        $("#addProductBtn").off("click").on("click", function () {
+            let quantity = parseInt($("#productQuantity").val());
+            if (quantity < 1 || quantity > product.stockQuantity) {
+                Swal.fire("Hata!", "Geçerli bir miktar girin!", "error");
+                return;
+            }
+            addProductToReceipt(product, quantity);
+        });
+    }
+
+    // Ürünü Fişe Ekleme
+    function addProductToReceipt(product, quantity) {
         let existingProduct = receiptItems.find(item => item.productId === product.productId);
         if (existingProduct) {
             Swal.fire("Hata!", "Bu ürün zaten fişe eklenmiş!", "error");
             return;
         }
 
-        let newRow = `
-            <tr data-id="${product.productId}">
-                <td>${product.productName}</td>
-                <td>${product.categoryName}</td>
-                <td>${product.price} TL</td>
-                <td>${product.stockQuantity}</td>
-                <td><input type="number" class="form-control quantity-input" value="1" min="1" max="${product.stockQuantity}"></td>
-                <td class="subtotal">${product.price} TL</td>
-                <td><button class="btn btn-danger remove-product">Sil</button></td>
-            </tr>
+        let newItem = `
+            <div class="d-flex justify-content-between mb-1">
+                <div>
+                    <span class="fw-bold">${product.productName}</span>
+                    <span class="small text-muted">(${product.categoryName})</span>
+                    <span class="small">x ${quantity}</span>
+                </div>
+                <div>
+                    <span>${(product.price * quantity).toFixed(2)} TL</span>
+                    <button class="btn btn-danger btn-sm ms-2 remove-product">X</button>
+                </div>
+            </div>
         `;
 
-        $("#receiptItems").append(newRow);
+        $("#receiptItems").append(newItem);
 
         receiptItems.push({
             productId: product.productId,
-            quantity: 1,
+            quantity: quantity,
             price: product.price
         });
 
         updateTotal();
     }
 
-    // Ürün Miktarı Değişince Toplamı Güncelle
-    $(document).on("input", ".quantity-input", function() {
-        let row = $(this).closest("tr");
-        let productId = row.data("id");
-        let quantity = parseInt($(this).val());
-        let price = parseFloat(row.find(".subtotal").text().split(" ")[0]);
-
-        let product = receiptItems.find(p => p.productId === productId);
-        if (product) {
-            product.quantity = quantity;
-            row.find(".subtotal").text((product.price * quantity).toFixed(2) + " TL");
-        }
-
-        updateTotal();
-    });
-
-    // Ürünü Fişten Sil
-    $(document).on("click", ".remove-product", function() {
-        let row = $(this).closest("tr");
+    // Ürünü Fişten Silme
+    $(document).on("click", ".remove-product", function () {
+        let row = $(this).parent().parent();
         let productId = row.data("id");
 
         receiptItems = receiptItems.filter(p => p.productId !== productId);
@@ -131,51 +150,7 @@
         let total = receiptItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         $("#totalAmount").text(total.toFixed(2) + " TL");
     }
-
-          $("#createReceiptBtn").click(function () {
-        if (receiptItems.length === 0) {
-            Swal.fire("Hata!", "Lütfen en az bir ürün ekleyin!", "error");
-            return;
-        }
-
-        $.ajax({
-            url: "/Receipt/CreateReceipt",
-            type: "POST",
-            contentType: "application/json",
-            data: JSON.stringify({ warehouseId: warehouseId }),
-            success: function (response) {
-                if (response.success) {
-                    let receiptId = response.receiptId;
-
-                    // JSON verisini ProductId ve Quantity formatına uygun hale getiriyoruz
-                    let products = receiptItems.map(item => ({
-                        ProductId: item.productId,  // Büyük harf!
-                        Quantity: item.quantity    // Büyük harf!
-                    }));
-
-                    $.ajax({
-                        url: `/Receipt/AddProductsToReceipt?receiptId=${receiptId}`,
-                        type: "POST",
-                        contentType: "application/json",
-                        data: JSON.stringify(products),
-                        success: function (response) {
-                            Swal.fire("Başarılı!", "Fiş başarıyla oluşturuldu!", "success").then(() => {
-                                window.location.href = "/Receipt/List";
-                            });
-                        },
-                        error: function () {
-                            Swal.fire("Hata!", "Ürünleri fişe eklerken bir hata oluştu!", "error");
-                        }
-                    });
-                } else {
-                    Swal.fire("Hata!", response.message, "error");
-                }
-            },
-            error: function (xhr) {
-                Swal.fire("Hata!", "Fiş oluşturulurken hata oluştu: " + xhr.responseText, "error");
-            }
-        });
-    });
-
-
 </script>
+
+<!-- FontAwesome CDN (İkonlar İçin) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">

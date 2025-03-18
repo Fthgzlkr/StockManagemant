@@ -26,4 +26,8 @@
     <ProjectReference Include="..\StockManagemant.DataAccess\StockManagemant.DataAccess.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\images\" />
+  </ItemGroup>
+
 </Project>

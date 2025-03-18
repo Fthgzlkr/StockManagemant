@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Ürün Oluşturma";
     Layout = null;
+
 }
 
 
@@ -14,24 +15,22 @@
     <form id="createProductForm" class="card p-4 shadow-sm">
         <!-- Ürün Adı -->
         <div class="mb-3">
-            <label for="newProductName" class="form-label">Ürün Adı:</label>
-            <input type="text" id="newProductName" class="form-control" placeholder="Ürün adını girin" required minlength="3" maxlength="100">
+            <label for="productName" class="form-label">Ürün Adı:</label>
+            <input type="text" id="productName" name="Name" class="form-control" placeholder="Ürün adını girin" required minlength="3" maxlength="100">
             <div class="invalid-feedback">Ürün adı en az 3, en fazla 100 karakter olmalıdır.</div>
         </div>
 
         <!-- Fiyat -->
         <div class="mb-3">
-            <label for="newProductPrice" class="form-label">Fiyat:</label>
-            <input type="number" id="newProductPrice" class="form-control" step="0.01" placeholder="Ürün fiyatını girin" required min="10.00">
+            <label for="productPrice" class="form-label">Fiyat:</label>
+            <input type="number" id="productPrice" name="Price" class="form-control" step="0.01" placeholder="Ürün fiyatını girin" required min="10.00" inputmode="decimal">
             <div class="invalid-feedback">Geçerli bir fiyat giriniz (0.01 ve üzeri).</div>
         </div>
 
-  
-       
         <!-- Kategori -->
         <div class="mb-3">
             <label for="productCategory" class="form-label">Kategori:</label>
-            <select id="productCategory" class="form-select" data-selected="" required>
+            <select id="productCategory" name="CategoryId" class="form-select" data-selected="" required>
                 <option value="">Kategoriler yükleniyor...</option>
             </select>
             <div class="invalid-feedback">Lütfen bir kategori seçiniz.</div>
@@ -39,8 +38,8 @@
 
         <!-- Para Birimi -->
         <div class="mb-3">
-            <label for="newProductCurrency" class="form-label">Para Birimi:</label>
-            <select id="newProductCurrency" class="form-select" required>
+            <label for="productCurrency" class="form-label">Para Birimi:</label>
+            <select id="productCurrency" name="Currency" class="form-select" required>
                 <option value="0">TL</option>
                 <option value="1">USD</option>
             </select>
@@ -52,4 +51,6 @@
             <button type="button" class="btn btn-success px-4" id="createProductBtn">Ekle</button>
         </div>
     </form>
+
+
 </div>

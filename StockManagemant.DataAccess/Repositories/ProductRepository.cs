@@ -5,10 +5,11 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
+using StockManagemant.DataAccess.Repositories.Interfaces;
 
 namespace StockManagemant.DataAccess.Repositories
 {
-    public class ProductRepository : Repository<Product>
+    public class ProductRepository : Repository<Product>, IProductRepository
     {
         public ProductRepository(AppDbContext context) : base(context) { }
 

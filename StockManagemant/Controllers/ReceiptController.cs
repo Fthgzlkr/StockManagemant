@@ -193,7 +193,7 @@ namespace StockManagemant.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateReceipt([FromBody] CreateReceiptDto receiptDto)
+        public async Task<IActionResult> CreateReceipt([FromBody] ReceiptDto receiptDto)
         {
             try
             {
@@ -211,6 +211,7 @@ namespace StockManagemant.Controllers
                 return StatusCode(500, new { success = false, message = $"Hata oluştu: {ex.Message}" });
             }
         }
+
 
         [HttpPost]
         public async Task<IActionResult> AddProductsToReceipt(int receiptId, [FromBody] List<ProductModel> products)
@@ -249,15 +250,13 @@ namespace StockManagemant.Controllers
                 var receipt = await _receiptManager.GetReceiptByIdAsync(receiptId);
                 if (receipt == null) return NotFound(new { success = false, message = "Fiş bulunamadı!" });
 
-               
-                var updateDto = new UpdateReceiptDto
+                var updateDto = new ReceiptDto
                 {
                     Id = receiptId,
                     Date = date,
                     TotalAmount = receipt.TotalAmount
                 };
 
-                
                 await _receiptManager.UpdateReceiptDateAsync(updateDto);
 
                 return Json(new { success = true });
@@ -267,6 +266,7 @@ namespace StockManagemant.Controllers
                 return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
+
 
 
         [HttpGet]

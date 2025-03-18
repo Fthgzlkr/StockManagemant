@@ -5,11 +5,12 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using StockManagemant.DataAccess.Context;
 using StockManagemant.DataAccess.Repositories.Filters;
+using StockManagemant.DataAccess.Repositories.Interfaces;
 using StockManagemant.Entities.Models;
 
 namespace StockManagemant.DataAccess.Repositories
 {
-    public class WarehouseProductRepository : Repository<WarehouseProduct>
+    public class WarehouseProductRepository : Repository<WarehouseProduct>, IWarehouseProductRepository
     {
         public WarehouseProductRepository(AppDbContext context) : base(context) { }
 

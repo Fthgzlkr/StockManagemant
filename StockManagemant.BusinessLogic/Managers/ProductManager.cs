@@ -1,5 +1,4 @@
-﻿using StockManagemant.DataAccess.Repositories;
-using StockManagemant.Entities.Models;
+﻿using StockManagemant.Entities.Models;
 using StockManagemant.Entities.DTO;
 using StockManagemant.DataAccess.Filters;
 using System;
@@ -7,17 +6,18 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoMapper;
 using System.Linq;
+using StockManagemant.DataAccess.Repositories.Interfaces;
 
 
 namespace StockManagemant.Business.Managers
 {
     public class ProductManager : IProductManager
     {
-        private readonly ProductRepository _productRepository;
+        private readonly IProductRepository _productRepository;
         private readonly IMapper _mapper;
-        private readonly CategoryRepository _categoryRepository;
+        private readonly ICategoryRepository _categoryRepository;
 
-        public ProductManager(ProductRepository productRepository,IMapper mapper, CategoryRepository categoryRepository)
+        public ProductManager(IProductRepository productRepository,IMapper mapper, ICategoryRepository categoryRepository)
         {
             _productRepository = productRepository;
             _mapper = mapper;
@@ -40,22 +40,22 @@ namespace StockManagemant.Business.Managers
 
 
 
-        public async Task<int> AddProductAsync(CreateProductDto dto)
+        public async Task<int> AddProductAsync(ProductDto productDto)
         {
-            var product = _mapper.Map<Product>(dto);
+            var product = _mapper.Map<Product>(productDto);
             await _productRepository.AddAsync(product);
             return product.Id; // ID otomatik olarak atanır
         }
 
         // ✅ Ürün güncelleme (Kategori kontrolü ile)
-        public async Task UpdateProductAsync(UpdateProductDto dto)
+        public async Task UpdateProductAsync(ProductDto productDto)
         {
-            var existingProduct = await _productRepository.GetByIdAsync(dto.Id);
+            var existingProduct = await _productRepository.GetByIdAsync(productDto.Id);
             if (existingProduct == null) throw new Exception("Ürün bulunamadı.");
 
-            _mapper.Map(dto, existingProduct);
+            _mapper.Map(productDto, existingProduct);
 
-            existingProduct.Category = await _categoryRepository.GetByIdAsync(dto.CategoryId);
+            existingProduct.Category = await _categoryRepository.GetByIdAsync(productDto.CategoryId);
             if (existingProduct.Category == null) throw new Exception("Geçersiz kategori.");
 
             await _productRepository.UpdateAsync(existingProduct);

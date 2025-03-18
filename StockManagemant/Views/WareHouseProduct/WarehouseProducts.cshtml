@@ -32,69 +32,114 @@
     </div>
 </div>
 
-<!-- Ürünleri listeleyen Grid -->
+
 <div class="table-container mt-4">
     <table id="warehouseProductGrid"></table>
     <div id="pager"></div>
 </div>
 
+
+
 <script>
-      $(document).ready(function () {
-        let warehouseId = localStorage.getItem("selectedWarehouseId") || 1;
-        let currencyDropdown = { "TL": "Türk Lirası", "USD": "Dolar" };
+    $(document).ready(function () {
+       let warehouseId = localStorage.getItem("selectedWarehouseId") || 1;
+       let currencyDropdown = { "TL": "Türk Lirası", "USD": "Dolar" };
 
-        // jqGrid Başlat
-        $("#warehouseProductGrid").jqGrid({
-            url: `/WarehouseProduct/GetWarehouseProducts?warehouseId=${warehouseId}`,
-            datatype: "json",
-            mtype: "GET",
-            colNames: ['ID', 'Ürün Adı', 'Kategori', 'Fiyat', 'Para Birimi', 'Stok', 'İşlemler'],
-            colModel: [
-                { name: 'id', index: 'id', align: "center", sortable: true, key: true, hidden: true },
-                { name: 'name', index: 'name', sortable: true, editable: false },
-                { name: 'category', index: 'category', sortable: true, editable: false },
-                { name: 'price', index: 'price', align: "center", sortable: true, editable: false, formatter: formatPrice },
-                { name: 'currencyType', index: 'currencyType', sortable: true, editable: false, formatter: currencyFormatter },
-                { name: 'stock', index: 'stock', align: "center", sortable: true, editable: false },
-                {
-                    name: "actions",
-                    label: "İşlemler",
-                    align: "center",
-                    formatter: function (cellvalue, options, rowObject) {
-                        return `
-                            <div class="action-icons">
-                                <i class="fa-solid fa-plus text-primary fa-xl editStockBtn"
-                                    data-id="${rowObject.id}" data-stock="${rowObject.stock}" title="Stok Güncelle"></i>
+       // jqGrid Başlat
+       $("#warehouseProductGrid").jqGrid({
+           url: `/WarehouseProduct/GetWarehouseProducts?warehouseId=${warehouseId}`,
+           datatype: "json",
+           mtype: "GET",
+           colNames: ['ID', 'Ürün Adı', 'Kategori', 'Fiyat', 'Para Birimi', 'Stok', 'İşlemler'],
+           colModel: [
+               { name: 'id', index: 'id', align: "center", sortable: true, key: true, hidden: true },
+               { name: 'name', index: 'name', sortable: true, editable: false },
+               { name: 'category', index: 'category', sortable: true, editable: false },
+               { name: 'price', index: 'price', align: "center", sortable: true, editable: false, formatter: formatPrice },
+               { name: 'currencyType', index: 'currencyType', sortable: true, editable: false, formatter: currencyFormatter },
+               {
+                   name: 'stock',
+                   index: 'stock',
+                   align: "center",
+                   sortable: true,
+                   editable: false,
+                   formatter: function (cellvalue, options, rowObject) {
+                       return `
+                           <div class="stock-container" style="display: flex; align-items: center; justify-content: center;">
+                               <input type="number" class="stock-input" value="${cellvalue}" disabled
+                                   style="width: 40px; height: 25px; text-align: center; border: 1px solid #ccc; border-radius: 3px; font-size: 12px;">
+                               <div class="stock-controls" style="display: flex; flex-direction: column; margin-left: 3px;">
+                                   <button class="İncreaseStockBtn" data-id="${rowObject.id}" title="Stok Artır"
+                                       style="border: none; background: transparent; cursor: pointer; font-size: 10px; padding: 2px;">
+                                       ▲
+                                   </button>
+                                   <button class="decreaseStockbtn" data-id="${rowObject.id}" title="Stok Azalt"
+                                       style="border: none; background: transparent; cursor: pointer; font-size: 10px; padding: 2px;">
+                                       ▼
+                                   </button>
+                               </div>
+                           </div>
+                       `;
+                   }
+               },
+               {
+                   name: "actions",
+                   label: "İşlemler",
+                   align: "center",
+                   formatter: function (cellvalue, options, rowObject) {
+                       return `
+                           <div class="action-icons">
+                               <i class="fa-solid fa-plus text-primary fa-xl editStockBtn"
+                                   data-id="${rowObject.id}" data-stock="${rowObject.stock}" title="Stok Güncelle"></i>
 
-                                <i class="fa-solid fa-minus text-danger fa-xl decreaseStockBtn"
-                    data-id="${rowObject.id}" title="Stok Azalt"></i>
+                               <i class="fa-solid fa-minus text-danger fa-xl DecreaseStockBtn"
+                                   data-id="${rowObject.id}" title="Stok Azalt"></i>
 
-                                <i class="fa-solid fa-trash text-danger fa-xl deleteWarehouseProductBtn"
-                                    data-id="${rowObject.id}" title="Depodan Kaldır"></i>
-                            </div>
-                        `;
-                    }
-                }
-            ],
-            pager: '#pager',
-            rowNum: 5,
-            rowList: [5, 10, 15, 20, 30, 40, 50],
-            sortname: 'id',
-            sortorder: 'asc',
-            viewrecords: true,
-            height: 'auto',
-            autowidth: true,
-            shrinkToFit: true,
-            caption: "Depodaki Ürünler",
-            loadonce: false,
-            guiStyle: "bootstrap4",
-            jsonReader: {
-                root: "rows",
-                page: "page",
-                total: "total",
-                records: "records"
+                               <i class="fa-solid fa-trash text-danger fa-xl deleteWarehouseProductBtn"
+                                   data-id="${rowObject.id}" title="Depodan Kaldır"></i>
+                           </div>
+                       `;
+                   }
+               }
+           ],
+           pager: '#pager',
+           rowNum: 5,
+           rowList: [5, 10, 15, 20, 30, 40, 50],
+           sortname: 'id',
+           sortorder: 'asc',
+           viewrecords: true,
+           height: 'auto',
+           autowidth: true,
+           shrinkToFit: true,
+           caption: "Depodaki Ürünler",
+           loadonce: false,
+           guiStyle: "bootstrap4",
+           jsonReader: {
+               root: "rows",
+               page: "page",
+               total: "total",
+               records: "records"
+           },
+
+          
+           rowattr: function (rowObject) {
+               if (rowObject.stock < 15) {
+                   return { "class": "low-stock-row" };
+               }
+           },
+
+
+
+
+       });
+           $("<style>")
+        .prop("type", "text/css")
+        .html(`
+            .low-stock-row td {
+                background-color: #ffcccc !important;
             }
-        });
+        `)
+        .appendTo("head");
 
         
         function currencyFormatter(cellValue, options, rowObject) {
@@ -175,7 +220,7 @@
 
 
     //Stok Azaltma İşlemi
-        $(document).on("click", ".decreaseStockBtn", function () {
+        $(document).on("click", ".DecreaseStockBtn", function () {
         let productId = $(this).data("id");
         let warehouseId = localStorage.getItem("selectedWarehouseId");
 
@@ -250,10 +295,45 @@
             });
         });
 
+            $(document).on("click", ".İncreaseStockBtn", function () {
+        let productId = $(this).data("id");
+        updateStock(productId, 1);
+    });
+
+    $(document).on("click", ".decreaseStockbtn", function () {
+        let productId = $(this).data("id");
+        updateStock(productId, -1);
+    });
+
+    function updateStock(productId, change) {
+        let warehouseId = localStorage.getItem("selectedWarehouseId");
+        $.ajax({
+            url: change > 0 ? '/WarehouseProduct/UpdateStock' : '/WarehouseProduct/DecreaseStock',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                productId: productId,
+                warehouseId: warehouseId,
+                stockQuantity: 1 // Her seferinde sadece 1 artır veya azalt
+            }),
+            success: function () {
+                $("#warehouseProductGrid").trigger("reloadGrid");
+            },
+            error: function () {
+                Swal.fire("Hata!", "Stok güncellenirken bir hata oluştu.", "error");
+            }
+        });
+    }
+
         $("#pager_left").append(`
             <i id="customRefreshBtn" class="fa-solid fa-arrows-rotate" title="Yenile" style="cursor: pointer; margin-left: 10px;"></i>
         `);
 
+                    $("#pager_left").append(`
+        <i class="fa-solid fa-plus fa-2xl openProductaddModal" title="Yeni Ürün Ekle" style="cursor: pointer; margin-left: 10px;"></i>
+    `);
+
+            
         $("#customRefreshBtn").on("click", function () {
             $("#productSearch").val("");
             $("#minPrice").val("");

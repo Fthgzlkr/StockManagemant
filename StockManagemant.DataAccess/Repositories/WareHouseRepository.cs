@@ -4,10 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using StockManagemant.DataAccess.Context;
+using StockManagemant.DataAccess.Repositories.Interfaces;
 
 namespace StockManagemant.DataAccess.Repositories
 {
-    public class WarehouseRepository : Repository<Warehouse>
+    public class WarehouseRepository : Repository<Warehouse>, IWarehouseRepository
     {
         public WarehouseRepository(AppDbContext context) : base(context) { }
 

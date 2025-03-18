@@ -30,6 +30,12 @@ namespace StockManagemant.Controllers
             return View("WarehouseProducts", warehouseId); 
         }
 
+
+        public IActionResult AddProduct()
+        {
+            return View();
+        }
+
         // Sayfalı depo ürünleri
         [HttpGet]
         public async Task<IActionResult> GetWarehouseProducts([FromQuery] WarehouseProductFilter filter, int warehouseId, int page = 1, int rows = 5)
@@ -77,7 +83,7 @@ namespace StockManagemant.Controllers
 
         // Yeni Ürün ekleme depoya 
         [HttpPost]
-        public async Task<IActionResult> AddProductToWarehouse([FromBody] AddExistingProductToWarehouseDto dto)
+        public async Task<IActionResult> AddProductToWarehouse([FromBody] WarehouseProductDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -94,13 +100,13 @@ namespace StockManagemant.Controllers
 
         //Depo ürünü stok yönetimi 
         [HttpPost]
-        public async Task<IActionResult> UpdateStock([FromBody] UpdateWarehouseProductStockDto dto)
+        public async Task<IActionResult> UpdateStock([FromBody] WarehouseProductDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             try
             {
-                await _warehouseProductManager.İncreaseStockAsync(dto);
+                await _warehouseProductManager.IncreaseStockAsync(dto);
                 return Ok(new { success = true, message = "Ürün stoğu başarıyla güncellendi." });
             }
             catch (Exception ex)
@@ -110,7 +116,7 @@ namespace StockManagemant.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> DecreaseStock([FromBody] UpdateWarehouseProductStockDto dto)
+        public async Task<IActionResult> DecreaseStock([FromBody] WarehouseProductDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 

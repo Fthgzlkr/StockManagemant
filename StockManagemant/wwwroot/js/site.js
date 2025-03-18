@@ -26,7 +26,7 @@ function openModal(url, title, pageEventBinder = null) {
         .then(data => {
             modalContent.innerHTML = data;
 
-     
+
 
             // Sayfaya özel eventleri bağla
             if (typeof pageEventBinder === "function") {
@@ -55,8 +55,8 @@ function setupReceiptProductsEvents() {
                 mtype: "GET",
                 colNames: ['Detay ID', 'Ürün ID', 'Ürün Adı', 'Miktar', 'Birim Fiyat', 'Ara Toplam', 'Actions'],
                 colModel: [
-                    { name: 'id', index: 'id', key: true, width: 80, align: "center",hidden:true },
-                    { name: 'productId', index: 'productId', width: 80, align: "center", hidden:true },
+                    { name: 'id', index: 'id', key: true, width: 80, align: "center", hidden: true },
+                    { name: 'productId', index: 'productId', width: 80, align: "center", hidden: true },
                     { name: 'productName', index: 'productName', width: 200, align: "left" },
                     { name: 'quantity', index: 'quantity', width: 100, align: "center", editable: true },
                     { name: 'unitPrice', index: 'unitPrice', width: 120, align: "right" },
@@ -250,17 +250,14 @@ function setupEditProductEvents() {
     });
 }
 
-/**
- * ✅ Ürün Güncelleme Fonksiyonu
- */
+
 function updateProduct() {
-    let productData = {
-        Id: document.getElementById("productId").value,
-        Name: document.getElementById("productName").value,
-        Price: parseFloat(document.getElementById("productPrice").value),
-        CategoryId: parseInt(document.getElementById("productCategory").value), // Seçilen kategori
-        Currency: parseInt(document.getElementById("productCurrency").value) // TL = 0, USD = 1
-    };
+    let formData = new FormData(document.getElementById("editProductForm"));
+
+  
+    let productData = Object.fromEntries([...formData.entries()].map(([key, value]) => {
+        return (!isNaN(value) && value.trim() !== "") ? [key, Number(value)] : [key, value];
+    }));
 
     fetch('/Product/Edit', {
         method: 'POST',
@@ -272,17 +269,21 @@ function updateProduct() {
             if (data.success) {
                 alert("Ürün başarıyla güncellendi!");
 
-                // 🔹 Modalı kapat
+                
                 $('#generalModal').modal('hide');
 
-                // 🔹 Sayfayı güncelle (gerekirse listeyi yenilemek için)
+                
                 location.reload();
             } else {
-                alert("Hata: " + data.message);
+                alert("Hata: " + (data.message || "Bilinmeyen bir hata oluştu."));
             }
         })
-        .catch(error => console.error("Güncelleme hatası:", error));
+        .catch(error => {
+            console.error("Güncelleme hatası:", error);
+            alert("Ürün güncellenirken bir hata oluştu!");
+        });
 }
+
 
 
 
@@ -311,16 +312,18 @@ function setupCreateProductEvents() {
     });
 }
 
-/**
- * ✅ Yeni Ürün Ekleme Fonksiyonu
- */
+
 function createProduct() {
-    let productData = {
-        Name: document.getElementById("productName").value,
-        Price: parseFloat(document.getElementById("productPrice").value) || 0,
-        CategoryId: parseInt(document.getElementById("productCategory").value),
-        Currency: parseInt(document.getElementById("productCurrency").value) // TL = 0, USD = 1
-    };
+    let formData = new FormData(document.getElementById("createProductForm"));
+
+    
+    let productData = Object.fromEntries([...formData.entries()].map(([key, value]) => {
+     
+        if (!isNaN(value) && value.trim() !== "") {
+            return [key, Number(value)];
+        }
+        return [key, value]; 
+    }));
 
     fetch('/Product/Create', {
         method: 'POST',
@@ -332,20 +335,121 @@ function createProduct() {
             if (data.success) {
                 alert("Ürün başarıyla eklendi!");
 
-                // 🔹 Modalı kapat (Eğer modal içinde kullanıyorsan)
+                
                 $('#generalModal').modal('hide');
 
-                // 🔹 Sayfayı güncelle (Gerekirse listeyi yenilemek için)
+
                 location.reload();
             } else {
-                alert("Hata: " + data.message);
+                alert("Hata: " + (data.message || "Bilinmeyen bir hata oluştu."));
             }
         })
-        .catch(error => console.error("Ürün ekleme hatası:", error));
+        .catch(error => {
+            console.error("Ürün ekleme hatası:", error);
+            alert("Ürün eklenirken bir hata oluştu!");
+        });
 }
 
 
 
+
+function setupAddProductEvents() {
+    console.log("🟢 Ürün depoya ekleme modalı açıldı, eventler bağlanıyor...");
+
+    // 🔹 URL'den depo ID'yi al
+    const urlParams = new URLSearchParams(window.location.search);
+    const warehouseId = urlParams.get("warehouseId");
+
+    if (!warehouseId) {
+        console.error("⚠️ Hata: Depo ID bulunamadı!");
+        $("#stockMessage").html('<div class="alert alert-danger">Hata: Depo ID bulunamadı!</div>');
+        return;
+    }
+
+    console.log(`📦 Depo ID bulundu: ${warehouseId}`);
+
+    // 🔹 Depo ID'yi input içine yaz ve değiştirilemez yap
+    $("#warehouseIdInput").val(warehouseId).prop("disabled", true);
+
+    // 📌 Ürün Arama Butonuna Event Bağlama
+    $("#searchProductBtn").off("click").on("click", searchProductById);
+
+    // 📌 Stok Ekleme Butonuna Event Bağlama
+    $("#addStockBtn").off("click").on("click", function () {
+        addProductToWarehouse(warehouseId);
+    });
+}
+
+
+
+// İd ye göre ürün arama kısmı
+function searchProductById() {
+    let productId = $("#productIdInput").val();
+    if (!productId) {
+        alert("Lütfen bir ürün ID giriniz.");
+        return;
+    }
+
+    $.ajax({
+        url: `/Product/GetProductById?id=${productId}`,
+        type: "GET",
+        success: function (response) {
+            let currencyLabel = response.currency === 0 ? "TL" : "USD";
+
+            let productRow = `
+                <tr>
+                    <td>${response.id}</td>
+                    <td>${response.name}</td>
+                    <td>${response.categoryName}</td>
+                    <td>${response.price} ${currencyLabel}</td>
+                </tr>
+            `;
+
+            $("#productDetailsTable").html(productRow);
+        },
+        error: function () {
+            $("#productDetailsTable").html('<tr><td colspan="4" class="text-danger">Ürün bulunamadı!</td></tr>');
+        }
+    });
+}
+
+
+
+// Stok ekleme işlemleri
+function addProductToWarehouse(warehouseId) {
+    let productId = $("#productIdInput").val();
+    let stockQuantity = $("#stockQuantityInput").val();
+
+    if (!productId || !stockQuantity) {
+        alert("Lütfen tüm alanları doldurun.");
+        return;
+    }
+
+    let productData = {
+        productId: parseInt(productId),
+        warehouseId: parseInt(warehouseId),
+        stockQuantity: parseInt(stockQuantity)
+    };
+
+    $.ajax({
+        url: `/WarehouseProduct/AddProductToWarehouse`,
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(productData),
+        success: function (response) {
+            $("#stockMessage").html(`<div class="alert alert-success">${response.message}</div>`);
+
+            // 🔹 Modalı kapat ve sayfayı yenile
+            setTimeout(() => {
+                $('#generalModal').modal('hide');
+                location.reload();
+            }, 1000);
+        },
+        error: function () {
+            $("#stockMessage").html('<div class="alert alert-danger">Stok eklenirken hata oluştu!</div>');
+        }
+    });
+}
 
 
 // SAYFALARI MODAL OLARAK BUTONLAR SAYESİNDE AÇMAYA YARAYAN KISIM
@@ -370,21 +474,12 @@ $(document).on('click', '.openProductEditModal', function () {
 
 
 $(document).on('click', '.openProductCreateModal', function () {
-    
+
 
     const title = 'Ürün Oluştur';  // Başlık
     openModal(`/Product/Create`, title, setupCreateProductEvents);  // Modalı aç ve içeriği yükle
 });
 
-
-//Fiş Oluşturma 
-document.querySelectorAll('.open-create-modal').forEach(button => {
-    button.addEventListener('click', function () {
-       
-        const title = 'Fiş Oluştur';  // Başlık
-        openModal(`/Receipt/Create`, title);  // Modalı aç ve içeriği yükle
-    });
-});
 
 
 
@@ -397,4 +492,16 @@ document.querySelectorAll('.open-category-edit-modal').forEach(button => {
 });
 
 
+document.querySelectorAll('.openProductaddModal').forEach(button => {
+    button.addEventListener('click', function () {
 
+        const title = 'Depoya Ürün Ekle';  // Başlık
+        openModal(`WarehouseProduct/AddProduct`, title);  // Modalı aç ve içeriği yükle
+    });
+});
+
+
+$(document).on('click', '.openProductaddModal', function () {
+    const title = 'Ürünü Depoya Ekle';
+    openModal(`/WarehouseProduct/AddProduct`, title, setupAddProductEvents);
+});

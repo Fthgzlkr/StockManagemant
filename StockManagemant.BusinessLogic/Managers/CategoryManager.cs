@@ -1,23 +1,22 @@
 ﻿using AutoMapper;
 using StockManagemant.Entities.DTO;
-using StockManagemant.DataAccess.Repositories;
 using StockManagemant.Entities.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using StockManagemant.DataAccess.Repositories.Interfaces;
 
 namespace StockManagemant.Business.Managers
 {
     public class CategoryManager : ICategoryManager
     {
-        private readonly CategoryRepository _categoryRepository;
+        private readonly ICategoryRepository _categoryRepository; 
         private readonly IMapper _mapper;
 
-        public CategoryManager(CategoryRepository categoryRepository,IMapper mapper)
+        public CategoryManager(ICategoryRepository categoryRepository, IMapper mapper)
         {
             _categoryRepository = categoryRepository;
             _mapper = mapper;
         }
-
 
         public async Task<int> GetTotalCategoryCountAsync()
         {
@@ -25,30 +24,31 @@ namespace StockManagemant.Business.Managers
         }
 
         // ✅ Tüm kategorileri getir
-        public async Task<List<CategoryDto>> GetAllCategoriesAsync()
+        public async Task<List<GeneralDto>> GetAllCategoriesAsync()
         {
             var categories = await _categoryRepository.GetAllAsync();
-            return _mapper.Map<List<CategoryDto>>(categories);
+            return _mapper.Map<List<GeneralDto>>(categories);
         }
 
         // ✅ ID'ye göre kategori getir (DTO kullanımı)
-        public async Task<CategoryDto> GetCategoryByIdAsync(int id)
+        public async Task<GeneralDto> GetCategoryByIdAsync(int id)
         {
             var category = await _categoryRepository.GetByIdAsync(id);
-            return _mapper.Map<CategoryDto>(category);
+            return _mapper.Map<GeneralDto>(category);
         }
 
         // ✅ Yeni kategori ekle (DTO kullanımı)
-        public async Task AddCategoryAsync(CreateCategoryDto createCategoryDto)
+        public async Task AddCategoryAsync(GeneralDto categoryDto)
         {
-            var category = _mapper.Map<Category>(createCategoryDto);
+            var category = _mapper.Map<Category>(categoryDto);
             await _categoryRepository.AddAsync(category);
         }
 
+
         // ✅ Kategori güncelle (DTO kullanımı)
-        public async Task UpdateCategoryAsync(UpdateCategoryDto updateCategoryDto)
+        public async Task UpdateCategoryAsync(GeneralDto categoryDto)
         {
-            var category = _mapper.Map<Category>(updateCategoryDto);
+            var category = _mapper.Map<Category>(categoryDto);
             await _categoryRepository.UpdateAsync(category);
         }
 
@@ -59,10 +59,10 @@ namespace StockManagemant.Business.Managers
         }
 
         // ✅ Kategori ismine göre getir (DTO kullanımı)
-        public async Task<CategoryDto> GetCategoryByNameAsync(string name)
+        public async Task<GeneralDto> GetCategoryByNameAsync(string name)
         {
             var category = await _categoryRepository.GetByNameAsync(name);
-            return _mapper.Map<CategoryDto>(category);
+            return _mapper.Map<GeneralDto>(category);
         }
 
     }

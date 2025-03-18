@@ -8,18 +8,18 @@ using StockManagemant.DataAccess.Repositories.Filters;
 using StockManagemant.Entities.Models;
 using StockManagemant.Entities.DTO;
 using AutoMapper;
-using StockManagemant.DataAccess.Repositories;
+using StockManagemant.DataAccess.Repositories.Interfaces;
 
 namespace StockManagemant.Business.Managers
 {
     public class WarehouseProductManager : IWarehouseProductManager
     {
-        private readonly WarehouseProductRepository _warehouseProductRepository;
-        private readonly ProductRepository _productRepository;
+        private readonly IWarehouseProductRepository _warehouseProductRepository;
+        private readonly IProductRepository _productRepository;
         private readonly IMapper _mapper;
 
-        public WarehouseProductManager(WarehouseProductRepository warehouseProductRepository,
-                                       ProductRepository productRepository,
+        public WarehouseProductManager(IWarehouseProductRepository warehouseProductRepository,
+                                       IProductRepository productRepository,
                                        IMapper mapper)
         {
             _warehouseProductRepository = warehouseProductRepository;
@@ -38,7 +38,7 @@ namespace StockManagemant.Business.Managers
             return await _warehouseProductRepository.GetTotalStockByProductIdAsync(productId);
         }
 
-        public async Task İncreaseStockAsync(UpdateWarehouseProductStockDto dto)
+        public async Task IncreaseStockAsync(WarehouseProductDto dto)
         {
             var warehouseProduct = await _warehouseProductRepository
                 .FindAsync(wp => wp.ProductId == dto.ProductId && wp.WarehouseId == dto.WarehouseId);
@@ -46,6 +46,7 @@ namespace StockManagemant.Business.Managers
             if (!warehouseProduct.Any()) throw new Exception("Ürün bu depoda bulunamadı.");
 
             var entity = warehouseProduct.FirstOrDefault();
+
             if (dto.StockQuantity < 0 && entity.StockQuantity < Math.Abs(dto.StockQuantity))
                 throw new Exception("Yetersiz stok!");
 
@@ -53,7 +54,8 @@ namespace StockManagemant.Business.Managers
             await _warehouseProductRepository.UpdateAsync(entity);
         }
 
-        public async Task DecreaseStockAsync(UpdateWarehouseProductStockDto dto)
+
+        public async Task DecreaseStockAsync(WarehouseProductDto dto)
         {
             var warehouseProduct = await _warehouseProductRepository
                 .FindAsync(wp => wp.ProductId == dto.ProductId && wp.WarehouseId == dto.WarehouseId);
@@ -70,7 +72,7 @@ namespace StockManagemant.Business.Managers
             await _warehouseProductRepository.UpdateAsync(entity);
         }
 
-        public async Task AddProductToWarehouseAsync(AddExistingProductToWarehouseDto dto)
+        public async Task AddProductToWarehouseAsync(WarehouseProductDto dto)
         {
             var product = await _productRepository.GetByIdAsync(dto.ProductId);
             if (product == null) throw new Exception("Ürün bulunamadı.");
