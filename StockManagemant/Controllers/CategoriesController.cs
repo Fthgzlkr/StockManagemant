@@ -57,7 +57,7 @@ namespace StockManagemant.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddCategory([FromBody] GeneralDto categoryDto)
+        public async Task<IActionResult> AddCategory([FromBody] CategoryDto categoryDto)
         {
             if (!ModelState.IsValid || categoryDto == null || string.IsNullOrEmpty(categoryDto.Name))
             {
@@ -80,7 +80,7 @@ namespace StockManagemant.Web.Controllers
 
 
         [HttpPost]
-        public async Task<IActionResult> EditCategory([FromBody] GeneralDto categoryDto)
+        public async Task<IActionResult> EditCategory([FromBody] CategoryDto categoryDto)
         {
             if (!ModelState.IsValid || categoryDto == null || categoryDto.Id <= 0)
             {

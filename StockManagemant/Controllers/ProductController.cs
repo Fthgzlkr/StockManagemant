@@ -104,7 +104,7 @@ namespace StockManagemant.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] ProductDto productDto)
+        public async Task<IActionResult> Create([FromBody] ProductDto productDto, [FromServices] ILogger<ProductController> logger)
         {
             if (!ModelState.IsValid)
             {
@@ -115,16 +115,26 @@ namespace StockManagemant.Controllers
                         v => v.Value.Errors.Select(e => e.ErrorMessage).FirstOrDefault()
                     );
 
+                logger.LogWarning("ModelState geçerli değil. Hatalar: {Errors}", string.Join(", ", errors.Select(e => $"{e.Key}: {e.Value}")));
+
                 return Json(new { success = false, errors });
             }
 
             try
             {
+                logger.LogInformation("Yeni ürün ekleniyor: {@ProductDto}", productDto);
+
                 int newProductId = await _productManager.AddProductAsync(productDto);
+
+                logger.LogInformation("Ürün başarıyla eklendi. ID: {ProductId}", newProductId);
+
                 return Json(new { success = true, productId = newProductId });
             }
             catch (Exception ex)
             {
+                logger.LogError(ex, "Ürün eklenirken hata oluştu. Hata mesajı: {Message}, InnerException: {InnerException}",
+                    ex.Message, ex.InnerException?.Message);
+
                 return Json(new { success = false, message = $"Ürün eklenirken hata oluştu: {ex.Message}" });
             }
         }

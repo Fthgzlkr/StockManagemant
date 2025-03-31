@@ -266,6 +266,8 @@ function updateProduct() {
     })
         .then(response => response.json())
         .then(data => {
+            debugger;
+
             if (data.success) {
                 alert("Ürün başarıyla güncellendi!");
 
@@ -279,6 +281,7 @@ function updateProduct() {
             }
         })
         .catch(error => {
+            debugger;
             console.error("Güncelleme hatası:", error);
             alert("Ürün güncellenirken bir hata oluştu!");
         });

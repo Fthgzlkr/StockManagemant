@@ -18,7 +18,7 @@ namespace StockManagemant.Entities.DTO
         [StringLength(100, MinimumLength = 2, ErrorMessage = "Ürün adı 2 ile 100 karakter arasında olmalıdır.")]
         public string Name { get; set; }
 
-        [Range(0.01, 100000, ErrorMessage = "Fiyat 0.01 ile 100000 arasında olmalıdır.")]
+        
         public decimal? Price { get; set; }
 
         [Required(ErrorMessage = "Kategori seçilmelidir.")]

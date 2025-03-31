@@ -15,7 +15,9 @@ namespace StockManagemant.Entities.Models
 
         [Required]
         public int CategoryId { get; set; }  // Foreign Key
-        public Category Category { get; set; }
+        
+        public virtual Category Category { get; set; } 
+
         public CurrencyType Currency { get; set; }
 
 

@@ -9,7 +9,7 @@ namespace StockManagemant.Business.Managers
 {
     public class CategoryManager : ICategoryManager
     {
-        private readonly ICategoryRepository _categoryRepository; 
+        private readonly ICategoryRepository _categoryRepository;
         private readonly IMapper _mapper;
 
         public CategoryManager(ICategoryRepository categoryRepository, IMapper mapper)
@@ -23,47 +23,45 @@ namespace StockManagemant.Business.Managers
             return await _categoryRepository.GetTotalCategoryCountAsync();
         }
 
-        // ✅ Tüm kategorileri getir
-        public async Task<List<GeneralDto>> GetAllCategoriesAsync()
+       
+        public async Task<List<CategoryDto>> GetAllCategoriesAsync()
         {
             var categories = await _categoryRepository.GetAllAsync();
-            return _mapper.Map<List<GeneralDto>>(categories);
+            return _mapper.Map<List<CategoryDto>>(categories);
         }
 
-        // ✅ ID'ye göre kategori getir (DTO kullanımı)
-        public async Task<GeneralDto> GetCategoryByIdAsync(int id)
+      
+        public async Task<CategoryDto> GetCategoryByIdAsync(int id)
         {
             var category = await _categoryRepository.GetByIdAsync(id);
-            return _mapper.Map<GeneralDto>(category);
+            return _mapper.Map<CategoryDto>(category);
         }
 
-        // ✅ Yeni kategori ekle (DTO kullanımı)
-        public async Task AddCategoryAsync(GeneralDto categoryDto)
+      
+        public async Task AddCategoryAsync(CategoryDto categoryDto)
         {
             var category = _mapper.Map<Category>(categoryDto);
             await _categoryRepository.AddAsync(category);
         }
 
-
-        // ✅ Kategori güncelle (DTO kullanımı)
-        public async Task UpdateCategoryAsync(GeneralDto categoryDto)
+       
+        public async Task UpdateCategoryAsync(CategoryDto categoryDto)
         {
             var category = _mapper.Map<Category>(categoryDto);
             await _categoryRepository.UpdateAsync(category);
         }
 
-        // ✅ Kategori silme
+        
         public async Task DeleteCategoryAsync(int id)
         {
             await _categoryRepository.DeleteAsync(id);
         }
 
-        // ✅ Kategori ismine göre getir (DTO kullanımı)
-        public async Task<GeneralDto> GetCategoryByNameAsync(string name)
+   
+        public async Task<CategoryDto> GetCategoryByNameAsync(string name)
         {
             var category = await _categoryRepository.GetByNameAsync(name);
-            return _mapper.Map<GeneralDto>(category);
+            return _mapper.Map<CategoryDto>(category);
         }
-
     }
 }

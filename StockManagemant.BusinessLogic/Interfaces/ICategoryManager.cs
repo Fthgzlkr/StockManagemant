@@ -7,11 +7,11 @@ namespace StockManagemant.Business.Managers
     public interface ICategoryManager
     {
         Task<int> GetTotalCategoryCountAsync();
-        Task<List<GeneralDto>> GetAllCategoriesAsync();
-        Task<GeneralDto> GetCategoryByIdAsync(int id);
-        Task AddCategoryAsync(GeneralDto categoryDto);
-        Task UpdateCategoryAsync(GeneralDto categoryDto);
+        Task<List<CategoryDto>> GetAllCategoriesAsync();
+        Task<CategoryDto> GetCategoryByIdAsync(int id);
+        Task AddCategoryAsync(CategoryDto categoryDto);
+        Task UpdateCategoryAsync(CategoryDto categoryDto);
         Task DeleteCategoryAsync(int id);
-        Task<GeneralDto> GetCategoryByNameAsync(string name);
+        Task<CategoryDto> GetCategoryByNameAsync(string name);
     }
 }

@@ -10,7 +10,7 @@ namespace StockManagemant.Business.MappingProfiles
         public GeneralMappingProfile()
         {
             // Category Mappings
-            CreateMap<Category, GeneralDto>().ReverseMap();
+            CreateMap<Category, CategoryDto>().ReverseMap();
           
 
             // Receipt Mappings
@@ -22,7 +22,9 @@ namespace StockManagemant.Business.MappingProfiles
 
 
             // Product Mappings
-            CreateMap<Product, ProductDto>().ReverseMap();
+            CreateMap<Product, ProductDto>().ReverseMap()
+     .ForMember(dest => dest.Category, opt => opt.Ignore()); 
+
 
 
             //WareHouse Mappings

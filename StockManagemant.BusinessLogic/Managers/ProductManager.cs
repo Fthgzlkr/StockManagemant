@@ -24,7 +24,7 @@ namespace StockManagemant.Business.Managers
             _categoryRepository = categoryRepository;
         }
 
-        // ✅ Toplam ürün sayısını getir (Silinmemiş olanlar)
+        //  Toplam ürün sayısını getir (Silinmemiş olanlar)
         public async Task<int> GetTotalProductCountAsync(ProductFilter filter)
         {
         
@@ -43,14 +43,23 @@ namespace StockManagemant.Business.Managers
         public async Task<int> AddProductAsync(ProductDto productDto)
         {
             var product = _mapper.Map<Product>(productDto);
+
+            // ✅ Category nesnesini manuel yükleyelim
+            product.Category = await _categoryRepository.GetByIdAsync(productDto.CategoryId);
+            if (product.Category == null)
+            {
+                throw new Exception($"Kategori ID {productDto.CategoryId} ile kategori bulunamadı.");
+            }
+
             await _productRepository.AddAsync(product);
-            return product.Id; // ID otomatik olarak atanır
+            return product.Id;
         }
 
-        // ✅ Ürün güncelleme (Kategori kontrolü ile)
+
+
         public async Task UpdateProductAsync(ProductDto productDto)
         {
-            var existingProduct = await _productRepository.GetByIdAsync(productDto.Id);
+            var existingProduct = await _productRepository.GetByIdAsync(productDto.Id ?? 0);
             if (existingProduct == null) throw new Exception("Ürün bulunamadı.");
 
             _mapper.Map(productDto, existingProduct);
@@ -61,19 +70,20 @@ namespace StockManagemant.Business.Managers
             await _productRepository.UpdateAsync(existingProduct);
         }
 
-        // ✅ Ürün silme (Soft Delete)
+
+       
         public async Task DeleteProductAsync(int productId)
         {
             await _productRepository.DeleteAsync(productId);
         }
 
-        // ✅ Soft Delete olan ürünü geri getirme (Restore)
+        //  Soft Delete olan ürünü geri getirme (Restore)
         public async Task RestoreProductAsync(int productId)
         {
             await _productRepository.RestoreAsync(productId);
         }
 
-        // ✅ ID’ye göre ürün bulma (Sadece aktif ürünleri getirir)
+        //  ID’ye göre ürün bulma (Sadece aktif ürünleri getirir)
         public async Task<ProductDto> GetProductByIdAsync(int productId)
         {
             var product = await _productRepository.GetByIdAsync(productId);
@@ -82,7 +92,7 @@ namespace StockManagemant.Business.Managers
             return _mapper.Map<ProductDto>(product);
         }
 
-        // ✅ **ID’ye göre ürün bulma (Silinmiş ürünler dahil)**
+        // ID’ye göre ürün bulma (Silinmiş ürünler dahil)
         public async Task<ProductDto> GetProductByIdWithDeletedAsync(int productId)
         {
             var product = await _productRepository.GetByIdWithDeletedAsync(productId);
