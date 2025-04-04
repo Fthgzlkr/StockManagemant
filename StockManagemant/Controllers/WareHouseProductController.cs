@@ -99,35 +99,20 @@ namespace StockManagemant.Controllers
         }
 
         //Depo ürünü stok yönetimi 
-        [HttpPost]
+            [HttpPost]
         public async Task<IActionResult> UpdateStock([FromBody] WarehouseProductDto dto)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
             try
             {
-                await _warehouseProductManager.IncreaseStockAsync(dto);
-                return Ok(new { success = true, message = "Ürün stoğu başarıyla güncellendi." });
+                await _warehouseProductManager.UpdateStockAsync(dto);
+                return Ok(new { success = true, message = "Stok başarıyla güncellendi." });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, message = $"Ürün stoğu güncellenirken hata oluştu: {ex.Message}" });
-            }
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> DecreaseStock([FromBody] WarehouseProductDto dto)
-        {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-
-            try
-            {
-                await _warehouseProductManager.DecreaseStockAsync(dto);
-                return Ok(new { success = true, message = "Ürün stoğu başarıyla azaltıldı." });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { success = false, message = $"Ürün stoğu azaltılırken hata oluştu: {ex.Message}" });
+                return StatusCode(500, new { success = false, message = $"Stok güncellenirken hata oluştu: {ex.Message}" });
             }
         }
 

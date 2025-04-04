@@ -1,14 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using StockManagemant.Business.Managers;
 using StockManagemant.Entities.DTO;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+
+
 
 namespace StockManagemant.Controllers
 {
     
-    public class WarehouseController : ControllerBase
+    public class WarehouseController : Controller
     {
         private readonly IWarehouseManager _warehouseManager;
 
@@ -16,6 +15,7 @@ namespace StockManagemant.Controllers
         {
             _warehouseManager = warehouseManager;
         }
+
 
       
         [HttpGet]
@@ -149,5 +149,12 @@ namespace StockManagemant.Controllers
                 return StatusCode(500, new { success = false, message = $"Depo ve ürünler getirilirken hata oluştu: {ex.Message}" });
             }
         }
+
+         [HttpGet]
+public async Task<IActionResult> Manage()
+{
+    var warehouses = await _warehouseManager.GetAllWarehousesAsync();
+    return View(warehouses);
+}
     }
 }
