@@ -1,4 +1,5 @@
 ﻿using StockManagemant.Entities.DTO;
+using StockManagemant.DataAccess.Filters;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 

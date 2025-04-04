@@ -7,18 +7,16 @@ using StockManagemant.DataAccess.Repositories.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
 builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddUserSecrets<Program>(optional: true)
-    .AddEnvironmentVariables();
+    .AddEnvironmentVariables(); // UserSecrets iptal edildi
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 if (string.IsNullOrEmpty(connectionString))
 {
-    throw new Exception("Bağlantı dizesi bulunamadı! Lütfen User Secrets veya appsettings.json içinde doğru yapılandırmayı yaptığınızdan emin olun.");
+    throw new Exception("Bağlantı dizesi bulunamadı! Lütfen appsettings.json içinde doğru yapılandırmayı yaptığınızdan emin olun.");
 }
 
 try
@@ -31,6 +29,7 @@ catch (Exception ex)
     Console.WriteLine($"Veritabanına bağlanırken hata oluştu: {ex.Message}");
     throw;
 }
+
 
 
 // ✅ Generic Repository Bağımlılığını Ekleme
