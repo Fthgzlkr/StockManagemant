@@ -24,6 +24,12 @@ namespace StockManagemant.Entities.DTO
 
         [Required(ErrorMessage = "Para birimi seçilmelidir.")]
         public CurrencyType Currency { get; set; }
+        public string? Barcode { get; set; }
+
+        public string? ImageUrl { get; set; }
+
+        public string? Description { get; set; }
+    
 
         public bool? IsDeleted { get; set; } // Create işlemi için null olabilir, Update işlemi için kullanılabilir
     }

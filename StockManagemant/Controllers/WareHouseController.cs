@@ -1,19 +1,24 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using StockManagemant.Business.Managers;
+using StockManagemant.BusinessLogic.Managers.Interfaces;
 using StockManagemant.Entities.DTO;
+using AutoMapper;
 
 
 
-namespace StockManagemant.Controllers
+namespace StockManagemant.Web.Controllers
 {
     
     public class WarehouseController : Controller
     {
-        private readonly IWarehouseManager _warehouseManager;
+         private readonly IWarehouseManager _warehouseManager;
+         private readonly IMapper _mapper;
 
-        public WarehouseController(IWarehouseManager warehouseManager)
+        public WarehouseController(IWarehouseManager warehouseManager ,IMapper mapper )
         {
             _warehouseManager = warehouseManager;
+           
+            _mapper = mapper;
         }
 
 
@@ -151,10 +156,22 @@ namespace StockManagemant.Controllers
         }
 
          [HttpGet]
-public async Task<IActionResult> Manage()
+      public async Task<IActionResult> Manage()
+    {
+        var warehouses = await _warehouseManager.GetAllWarehousesAsync();
+        return View(warehouses);
+    }
+
+
+      [HttpGet]
+     public IActionResult Locations(int id)
 {
-    var warehouses = await _warehouseManager.GetAllWarehousesAsync();
-    return View(warehouses);
+    ViewBag.WarehouseId = id;
+    return View();
 }
+  
+  
+
+
     }
 }

@@ -1,0 +1,140 @@
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ürün Detayı</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <style>
+    body {
+      background: linear-gradient(120deg, #f9f9f9, #e3e6ea);
+      font-family: 'Segoe UI', sans-serif;
+      padding: 50px 0;
+    }
+
+    .product-detail-wrapper {
+      max-width: 1200px;
+      margin: auto;
+      background-color: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .product-image-side {
+      flex: 1 1 50%;
+      background-color: #f0f2f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+    }
+
+    .product-image-side img {
+      max-width: 100%;
+      max-height: 500px;
+      border-radius: 12px;
+    }
+
+    .product-info-side {
+      flex: 1 1 50%;
+      padding: 40px;
+    }
+
+    .product-info-side h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .price {
+      font-size: 2rem;
+      color: #28a745;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .meta {
+      font-size: 1rem;
+      margin-bottom: 10px;
+      color: #666;
+    }
+
+    .description {
+      margin-top: 30px;
+      font-size: 1.1rem;
+      line-height: 1.7;
+      color: #444;
+    }
+
+    @@media (max-width: 768px) {
+      .product-detail-wrapper {
+        flex-direction: column;
+      }
+
+      .product-image-side, .product-info-side {
+        flex: 1 1 100%;
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div id="loadingText" class="text-center mt-5">
+  <p>Ürün bilgisi yükleniyor...</p>
+</div>
+
+<div class="product-detail-wrapper" id="productDetailContainer" style="display:none;">
+  <div class="product-image-side">
+    <img id="productImage" src="" alt="Ürün Görseli">
+  </div>
+
+  <div class="product-info-side">
+    <h1 id="productName">Ürün Adı</h1>
+    <div class="price" id="productPrice">₺0.00</div>
+    <div class="meta"><strong>Barkod:</strong> <span id="productBarcode">-</span></div>
+    <div class="meta"><strong>Kategori:</strong> <span id="productCategory">-</span></div>
+    <div class="meta"><strong>Para Birimi:</strong> <span id="productCurrency">-</span></div>
+    <div class="description" id="productDescription">Açıklama bulunmamaktadır.</div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const url = new URL(window.location.href);
+    const id = url.pathname.split("/").pop();
+
+    fetch(`/Product/GetProductById?id=${id}`)
+      .then(response => {
+        if (!response.ok) throw new Error("Ürün bulunamadı");
+        return response.json();
+      })
+      .then(product => {
+        document.getElementById("productName").innerText = product.name || "—";
+        document.getElementById("productCategory").innerText = product.categoryName || "—";
+        document.getElementById("productPrice").innerText = (product.price || 0) + " " + (product.currency === 1 ? "USD" : "TL");
+        document.getElementById("productBarcode").innerText = product.barcode || "Yok";
+        document.getElementById("productCurrency").innerText = product.currency === 1 ? "USD" : "TL";
+        document.getElementById("productDescription").innerText = product.description || "Açıklama girilmemiş";
+
+        const imageUrl = product.imageUrl ? `/uploads/${product.imageUrl}` : "/uploads/default-placeholder.png";
+        document.getElementById("productImage").src = imageUrl;
+
+        document.getElementById("loadingText").style.display = "none";
+        document.getElementById("productDetailContainer").style.display = "flex";
+      })
+      .catch(error => {
+        document.getElementById("loadingText").innerText = "Ürün bulunamadı.";
+        console.error("Ürün detay hatası:", error);
+      });
+  });
+</script>
+
+</body>
+</html>

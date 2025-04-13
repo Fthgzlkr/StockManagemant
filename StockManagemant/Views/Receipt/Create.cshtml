@@ -110,7 +110,7 @@
         }
 
         let newItem = `
-            <div class="d-flex justify-content-between mb-1">
+            <div class="d-flex justify-content-between mb-1" data-id="${product.productId}">
                 <div>
                     <span class="fw-bold">${product.productName}</span>
                     <span class="small text-muted">(${product.categoryName})</span>
@@ -136,8 +136,8 @@
 
     // Ürünü Fişten Silme
     $(document).on("click", ".remove-product", function () {
-        let row = $(this).parent().parent();
-        let productId = row.data("id");
+        let row = $(this).closest("div[data-id]");
+        let productId = parseInt(row.attr("data-id"));
 
         receiptItems = receiptItems.filter(p => p.productId !== productId);
         row.remove();
@@ -150,6 +150,57 @@
         let total = receiptItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         $("#totalAmount").text(total.toFixed(2) + " TL");
     }
+
+    // ✅ Fişi Tamamla
+    $("#createReceiptBtn").click(function () {
+        if (receiptItems.length === 0) {
+            Swal.fire("Hata!", "Fişe en az bir ürün eklemelisiniz!", "warning");
+            return;
+        }
+
+        // Adım 1: Fiş oluştur
+        $.ajax({
+            url: "/Receipt/CreateReceipt",
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({
+                 wareHouseId: parseInt(warehouseId),
+                    totalAmount: receiptItems.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+                    date: new Date().toISOString()
+            }),
+            success: function (res) {
+                if (!res.success) {
+                    Swal.fire("Hata!", res.message, "error");
+                    return;
+                }
+
+                const receiptId = res.receiptId;
+
+                // Adım 2: Ürünleri fişe ekle
+                $.ajax({
+                    url: `/Receipt/AddProductsToReceipt?receiptId=${receiptId}`,
+                    method: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(receiptItems),
+                    success: function (res2) {
+                        if (res2.success) {
+                            Swal.fire("Başarılı!", "Fiş başarıyla oluşturuldu.", "success").then(() => {
+                                window.location.href = `/Receipt/ListByWarehouse?warehouseId=${warehouseId}`;
+                            });
+                        } else {
+                            Swal.fire("Hata!", res2.message, "error");
+                        }
+                    },
+                    error: function () {
+                        Swal.fire("Hata!", "Ürünler fişe eklenemedi!", "error");
+                    }
+                });
+            },
+            error: function () {
+                Swal.fire("Hata!", "Fiş oluşturulamadı!", "error");
+            }
+        });
+    });
 </script>
 
 <!-- FontAwesome CDN (İkonlar İçin) -->

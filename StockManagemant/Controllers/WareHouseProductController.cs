@@ -60,12 +60,18 @@ namespace StockManagemant.Controllers
                     records = totalProducts,
                     rows = products.Select(p => new
                     {
-                        id = p.ProductId,
+                        id = p.WarehouseProductId,
+                        product_id = p.ProductId,
                         name = p.ProductName,
                         price = p.Price,
                         category = p.CategoryName,
-                        currencyType = p.Currency.ToString(),
-                        stock = p.StockQuantity
+                        currencyType = p.Currency?.ToString(),
+                        stock = p.StockQuantity,
+                        location = p.LocationDisplay,
+                        stockcode=p.StockCode,
+                        barcode = p.Barcode,
+                        image_url =p.ImageUrl,
+                        description= p.Description,
                     })
                 };
 
@@ -100,7 +106,7 @@ namespace StockManagemant.Controllers
 
         //Depo ürünü stok yönetimi 
             [HttpPost]
-        public async Task<IActionResult> UpdateStock([FromBody] WarehouseProductDto dto)
+        public async Task<IActionResult> UpdateStock([FromBody] UpdateStockDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);

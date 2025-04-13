@@ -29,6 +29,8 @@ namespace StockManagemant.DataAccess.Repositories
                 .Where(wp => wp.WarehouseId == warehouseId && !wp.IsDeleted)
                 .Include(wp => wp.Product)
                 .ThenInclude(p => p.Category) // Ürün bilgilerini yükle ve kategorisini de dahil et
+                .Include(wp => wp.Warehouse)
+                .Include(wp => wp.WarehouseLocation) // Lokasyon bilgisi dahil edildi
                 .ToListAsync();
         }
 
@@ -49,33 +51,16 @@ namespace StockManagemant.DataAccess.Repositories
         public async Task<IEnumerable<WarehouseProduct>> GetPagedWarehouseProductsWithStockAsync(WarehouseProductFilter filter, int warehouseId, int page, int pageSize)
         {
             return await _context.WarehouseProducts
-                .Where(wp => wp.WarehouseId == warehouseId) // ✅ Depo ID'ye göre filtreleme eklendi
+                .Where(wp => wp.WarehouseId == warehouseId)
                 .Where(filter.GetFilterExpression())
+                .Include(wp => wp.Product).ThenInclude(p => p.Category)
+                .Include(wp => wp.Warehouse)
+                .Include(wp => wp.WarehouseLocation)
                 .OrderBy(wp => wp.Id)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(wp => new WarehouseProduct
-                {
-                    ProductId = wp.ProductId,
-                    Product = new Product
-                    {
-                        Name = wp.Product.Name,
-                        Price = wp.Product.Price,   
-                        Category = new Category
-                        {
-                            Name = wp.Product.Category.Name
-                        }
-                    },
-                    WarehouseId = wp.WarehouseId,
-                    Warehouse = new Warehouse
-                    {
-                        Name = wp.Warehouse.Name
-                    },
-                    StockQuantity = wp.StockQuantity
-                })
                 .ToListAsync();
         }
-
 
         
         public override async Task<WarehouseProduct> GetByIdAsync(int id)

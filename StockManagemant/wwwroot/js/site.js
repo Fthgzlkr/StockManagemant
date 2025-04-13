@@ -41,6 +41,8 @@ function openModal(url, title, pageEventBinder = null) {
 
 
 
+
+
 //Fiş ürünlerini göstermek için eventler
 function setupReceiptProductsEvents() {
     console.log("🟢 Fiş Ürünleri eventleri bağlanıyor...");
@@ -256,7 +258,10 @@ function updateProduct() {
 
   
     let productData = Object.fromEntries([...formData.entries()].map(([key, value]) => {
-        return (!isNaN(value) && value.trim() !== "") ? [key, Number(value)] : [key, value];
+        if (["Price", "CategoryId", "Currency", "Id"].includes(key)) {
+            return [key, Number(value)];
+        }
+        return [key, value]; // string kalsın
     }));
 
     fetch('/Product/Edit', {
@@ -321,11 +326,10 @@ function createProduct() {
 
     
     let productData = Object.fromEntries([...formData.entries()].map(([key, value]) => {
-     
-        if (!isNaN(value) && value.trim() !== "") {
+        if (["Price", "CategoryId", "Currency", "Id"].includes(key)) {
             return [key, Number(value)];
         }
-        return [key, value]; 
+        return [key, value];
     }));
 
     fetch('/Product/Create', {
@@ -359,7 +363,6 @@ function createProduct() {
 function setupAddProductEvents() {
     console.log("🟢 Ürün depoya ekleme modalı açıldı, eventler bağlanıyor...");
 
-    // 🔹 URL'den depo ID'yi al
     const urlParams = new URLSearchParams(window.location.search);
     const warehouseId = urlParams.get("warehouseId");
 
@@ -370,22 +373,29 @@ function setupAddProductEvents() {
     }
 
     console.log(`📦 Depo ID bulundu: ${warehouseId}`);
-
-    // 🔹 Depo ID'yi input içine yaz ve değiştirilemez yap
     $("#warehouseIdInput").val(warehouseId).prop("disabled", true);
 
-    // 📌 Ürün Arama Butonuna Event Bağlama
     $("#searchProductBtn").off("click").on("click", searchProductById);
 
-    // 📌 Stok Ekleme Butonuna Event Bağlama
     $("#addStockBtn").off("click").on("click", function () {
         addProductToWarehouse(warehouseId);
+    });
+
+    loadCorridors(warehouseId);
+
+    $("#corridorSelect").on("change", function () {
+        const corridorId = $(this).val();
+        loadShelves(warehouseId, corridorId);
+    });
+
+    $("#shelfSelect").on("change", function () {
+        const corridorId = $("#corridorSelect").val();
+        const shelfId = $(this).val();
+        loadBins(warehouseId, corridorId, shelfId);
     });
 }
 
 
-
-// İd ye göre ürün arama kısmı
 function searchProductById() {
     let productId = $("#productIdInput").val();
     if (!productId) {
@@ -398,7 +408,6 @@ function searchProductById() {
         type: "GET",
         success: function (response) {
             let currencyLabel = response.currency === 0 ? "TL" : "USD";
-
             let productRow = `
                 <tr>
                     <td>${response.id}</td>
@@ -407,7 +416,6 @@ function searchProductById() {
                     <td>${response.price} ${currencyLabel}</td>
                 </tr>
             `;
-
             $("#productDetailsTable").html(productRow);
         },
         error: function () {
@@ -416,14 +424,19 @@ function searchProductById() {
     });
 }
 
-
-
-// Stok ekleme işlemleri
 function addProductToWarehouse(warehouseId) {
     let productId = $("#productIdInput").val();
     let stockQuantity = $("#stockQuantityInput").val();
+    let stockCode = $("#stockCodeInput").val();
 
-    if (!productId || !stockQuantity) {
+    let binId = $("#binSelect").val();
+    let shelfId = $("#shelfSelect").val();
+    let corridorId = $("#corridorSelect").val();
+
+    // Hiyerarşi: bin > shelf > corridor
+    let locationId = binId || shelfId || corridorId;
+
+    if (!productId || !stockQuantity || !locationId) {
         alert("Lütfen tüm alanları doldurun.");
         return;
     }
@@ -431,7 +444,9 @@ function addProductToWarehouse(warehouseId) {
     let productData = {
         productId: parseInt(productId),
         warehouseId: parseInt(warehouseId),
-        stockQuantity: parseInt(stockQuantity)
+        stockQuantity: parseInt(stockQuantity),
+        warehouseLocationId: parseInt(locationId),
+        stockCode: stockCode 
     };
 
     $.ajax({
@@ -441,8 +456,6 @@ function addProductToWarehouse(warehouseId) {
         data: JSON.stringify(productData),
         success: function (response) {
             $("#stockMessage").html(`<div class="alert alert-success">${response.message}</div>`);
-
-            // 🔹 Modalı kapat ve sayfayı yenile
             setTimeout(() => {
                 $('#generalModal').modal('hide');
                 location.reload();
@@ -454,6 +467,44 @@ function addProductToWarehouse(warehouseId) {
     });
 }
 
+function loadCorridors(warehouseId) {
+    $.get(`/WarehouseLocation/GetCorridors?warehouseId=${warehouseId}`, function (data) {
+        const select = $("#corridorSelect");
+        select.empty().append('<option value="">Koridor Seçin</option>');
+        data.forEach(item => {
+            select.append(`<option value="${item.id}" data-name="${item.name}">${item.name}</option>`);
+        });
+    });
+}
+
+function loadShelves(warehouseId) {
+    const corridorName = $("#corridorSelect option:selected").data("name");
+    if (!corridorName) return;
+
+    $.get(`/WarehouseLocation/GetShelves?warehouseId=${warehouseId}&corridor=${corridorName}`, function (data) {
+        const select = $("#shelfSelect");
+        $("#shelfSelectContainer").show();
+        select.empty().append('<option value="">Raf Seçin</option>');
+        data.forEach(item => {
+            select.append(`<option value="${item.id}" data-name="${item.name}">${item.name}</option>`);
+        });
+    });
+}
+
+function loadBins(warehouseId) {
+    const corridorName = $("#corridorSelect option:selected").data("name");
+    const shelfName = $("#shelfSelect option:selected").data("name");
+    if (!corridorName || !shelfName) return;
+
+    $.get(`/WarehouseLocation/GetBins?warehouseId=${warehouseId}&corridor=${corridorName}&shelf=${shelfName}`, function (data) {
+        const select = $("#binSelect");
+        $("#binSelectContainer").show();
+        select.empty().append('<option value="">Göz Seçin</option>');
+        data.forEach(item => {
+            select.append(`<option value="${item.id}" data-name="${item.name}">${item.name}</option>`);
+        });
+    });
+}
 
 // SAYFALARI MODAL OLARAK BUTONLAR SAYESİNDE AÇMAYA YARAYAN KISIM
 
@@ -495,13 +546,7 @@ document.querySelectorAll('.open-category-edit-modal').forEach(button => {
 });
 
 
-document.querySelectorAll('.openProductaddModal').forEach(button => {
-    button.addEventListener('click', function () {
 
-        const title = 'Depoya Ürün Ekle';  // Başlık
-        openModal(`WarehouseProduct/AddProduct`, title);  // Modalı aç ve içeriği yükle
-    });
-});
 
 
 $(document).on('click', '.openProductaddModal', function () {

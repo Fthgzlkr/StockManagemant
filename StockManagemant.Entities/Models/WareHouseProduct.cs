@@ -22,6 +22,10 @@ namespace StockManagemant.Entities.Models
         [Required]
         [Range(0, int.MaxValue)]
         public int StockQuantity { get; set; } // O depodaki stok miktarı
+        public int? WarehouseLocationId { get; set; }
+        public string? StockCode { get; set; }
+
+        public WarehouseLocation? WarehouseLocation { get; set; }
 
         public bool IsDeleted { get; set; } = false; // Soft Delete
     }

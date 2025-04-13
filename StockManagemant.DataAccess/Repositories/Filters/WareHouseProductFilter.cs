@@ -16,6 +16,7 @@ namespace StockManagemant.DataAccess.Repositories.Filters
         public int? CategoryId { get; set; } // Kategoriye göre filtreleme
         public decimal? MinPrice { get; set; } // Minimum fiyat filtresi
         public decimal? MaxPrice { get; set; } // Maksimum fiyat filtresi
+        public string? StockCode { get; set; } //Stok kodu filtresi
         public bool IncludeDeleted { get; set; } = false; // Silinmişleri dahil etme
 
         public Expression<Func<WarehouseProduct, bool>> GetFilterExpression()
@@ -23,6 +24,7 @@ namespace StockManagemant.DataAccess.Repositories.Filters
             return wp =>
                 (!IncludeDeleted ? !wp.IsDeleted : true) &&
                 (string.IsNullOrEmpty(Search) || wp.Product.Name.Contains(Search)) &&
+                (string.IsNullOrEmpty(StockCode) || wp.StockCode.Contains(StockCode)) &&
                 (!WarehouseId.HasValue || wp.WarehouseId == WarehouseId.Value) &&
                 (!ProductId.HasValue || wp.ProductId == ProductId.Value) &&
                 (!CategoryId.HasValue || wp.Product.CategoryId == CategoryId.Value) &&

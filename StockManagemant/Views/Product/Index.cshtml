@@ -1,9 +1,8 @@
-﻿
-@{
+﻿@{
     ViewData["Title"] = "Product List";
 }
-<link rel="stylesheet" href="~/css/Product.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/GlobalStyles.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/Product.css" asp-append-version="true" />
 
 
 <h2 class="page-title">@ViewData["Title"]</h2>
@@ -15,6 +14,11 @@
         <div class="col-md-4">
             <label for="productSearch" class="form-label">Ürün Adı:</label>
             <input type="text" id="productSearch" class="form-control" placeholder="Ürün adını girin">
+        </div>
+        <!-- Barkod ile Arama -->
+        <div class="col-md-3">
+            <label for="barcodeSearch" class="form-label">Barkod:</label>
+            <input type="text" id="barcodeSearch" class="form-control" placeholder="Barkod girin">
         </div>
         
         <!-- Fiyat Aralığı Seçimi -->
@@ -67,16 +71,18 @@
             url: '/Product/GetProducts',
             datatype: "json",
             mtype: "GET",
-            colNames: ['ID', 'Name', 'Price', 'Currency', 'Category','Actions'],
+            colNames: ['ID','Barcode', 'Name', 'Price', 'Currency', 'Category','Actions'],
             colModel: [
                 { name: 'id', index: 'id', align: "center", sortable: true, key: true ,hidden:true },
+                { name: 'barcode', index: 'barcode', align: "center", sortable: true ,hidden:false },
                 { name: 'name', index: 'name', sortable: true, editable: true },
                 { name: 'price', index: 'price', align: "center", sortable: true, editable: true, formatter: formatPrice },
                 {
                     name: 'currencyType', index: 'currencyType', sortable: true, editable: true ,  
                     edittype: "select",
                     formatter: currencyFormatter,
-                    editoptions: { value: "TL:Türk Lirası;USD:Dolar" }
+                    editoptions: { value: "TL:Türk Lirası;USD:Dolar" },
+                    hidden:true
                 },
                 {
                     name: 'categoryId', index: 'categoryId', sortable: true, editable: true,
@@ -85,7 +91,6 @@
                     editoptions: { value: Object.entries(categoryDropdown).map(([key, value]) => `${key}:${value}`).join(";") }
                 },
                  
-               
                 {
                     name: "actions",
                     label: "Actions",
@@ -119,7 +124,14 @@
                 page: "page",
                 total: "total",
                 records: "records"
-            }
+            },
+            ondblClickRow: function (rowid) {
+                if (rowid) {
+                    const rowData = $("#productGrid").jqGrid("getRowData", rowid);
+                    const productId = rowData.id;
+                    window.open('/Product/ProductDetail/' + productId, '_blank');
+                }
+            },
         });
 
         $("#productGrid").jqGrid('navGrid', '#pager',
@@ -195,11 +207,12 @@
         // Ürünleri filtreleme fonksiyonu
         function filterProducts() {
             let searchName = $("#productSearch").val().trim();
+            let barcode = $("#barcodeSearch").val().trim();
             let minPrice = $("#minPrice").val();
             let maxPrice = $("#maxPrice").val();
 
             $("#productGrid").jqGrid('setGridParam', {
-                url: `/Product/GetProducts?search=${searchName}&minPrice=${minPrice}&maxPrice=${maxPrice}`,
+                url: `/Product/GetProducts?search=${searchName}&minPrice=${minPrice}&maxPrice=${maxPrice} &Barcode=${barcode}`,
                 page: 1
             }).trigger("reloadGrid");
         }

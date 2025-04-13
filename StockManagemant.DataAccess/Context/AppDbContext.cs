@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Reflection.Emit;
 using Microsoft.EntityFrameworkCore;
+using StockManagemant.Entities.DTO;
 using StockManagemant.Entities.Models;
 
 namespace StockManagemant.DataAccess.Context
@@ -16,6 +17,8 @@ namespace StockManagemant.DataAccess.Context
         public DbSet<ReceiptDetail> ReceiptDetails { get; set; }
         public DbSet<Warehouse> Warehouses { get; set; }
         public DbSet<WarehouseProduct> WarehouseProducts { get; set; }
+
+        public DbSet<WarehouseLocation> WarehouseLocations {get;set;}
 
         // Model yapılandırmaları
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -41,6 +44,13 @@ namespace StockManagemant.DataAccess.Context
                 .HasForeignKey(wp => wp.ProductId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // ✅ WarehouseProduct - WarehouseLocation ilişkisi
+            modelBuilder.Entity<WarehouseProduct>()
+                .HasOne(wp => wp.WarehouseLocation)
+                .WithMany()
+                .HasForeignKey(wp => wp.WarehouseLocationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // ✅ ReceiptDetail - Receipt ilişkisi
             modelBuilder.Entity<ReceiptDetail>()
                 .HasOne(rd => rd.Receipt)
@@ -61,10 +71,20 @@ namespace StockManagemant.DataAccess.Context
                 .HasForeignKey(p => p.CategoryId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+                   // ✅ WarehouseLocation - Warehouse ilişkisi
+            modelBuilder.Entity<WarehouseLocation>()
+                .HasOne(wl => wl.Warehouse)
+                .WithMany()
+                .HasForeignKey(wl => wl.WarehouseId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+
             // ✅ Soft Delete için Global Query Filter
             modelBuilder.Entity<Product>().HasQueryFilter(p => !p.IsDeleted);
             modelBuilder.Entity<Warehouse>().HasQueryFilter(w => !w.IsDeleted);
             modelBuilder.Entity<WarehouseProduct>().HasQueryFilter(wp => !wp.IsDeleted);
+            modelBuilder.Entity<WarehouseLocation>().HasQueryFilter(wl => !wl.IsDeleted);
+
         }
     }
 

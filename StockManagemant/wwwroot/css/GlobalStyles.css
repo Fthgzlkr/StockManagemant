@@ -19,22 +19,7 @@
 }
 
 /* 🌟 JQGrid Satırları */
-.ui-jqgrid tr.jqgrow td {
-    height: 30px !important;
-    padding: 3px !important;
-    vertical-align: middle;
-    font-size: 12px;
-    white-space: nowrap;
-}
 
-/* 🌟 JQGrid Başlık Satırı */
-.ui-jqgrid .ui-jqgrid-htable th {
-    height: 36px !important;
-    padding: 6px !important;
-    text-align: center;
-    background-color: #e9ecef;
-    font-size: 12px;
-}
 
 /* 🌟 İkonların Grid Yapısını Bozmasını Engelleme */
 .action-icons {

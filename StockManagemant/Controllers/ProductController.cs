@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using StockManagemant.Entities.DTO;
+using System.ComponentModel;
 
 namespace StockManagemant.Controllers
 {
@@ -19,6 +20,12 @@ namespace StockManagemant.Controllers
             _productManager = productManager;
             _categoryManager = categoryManager;
         }
+
+            public IActionResult ProductDetail(int id)
+{
+    ViewData["ProductId"] = id;
+    return View();
+}
 
         // ✅ Ürünleri sayfalama ile JSON olarak döndüren action
         [HttpGet]
@@ -50,6 +57,9 @@ namespace StockManagemant.Controllers
                         price = p.Price,
                         category = p.CategoryName, 
                         categoryId = p.CategoryId,
+                        barcode =p.Barcode,
+                        image=p.ImageUrl,
+                        description=p.Description,
                         currencyType = p.Currency.ToString()
                     })
                 };
@@ -160,10 +170,22 @@ namespace StockManagemant.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit([FromBody] ProductDto productDto)
         {
-            if (!ModelState.IsValid)
+                if (!ModelState.IsValid)
+        {
+            var errorList = ModelState
+                .Where(kv => kv.Value.Errors.Any())
+                .Select(kv => new {
+                    Field = kv.Key,
+                    Errors = kv.Value.Errors.Select(e => e.ErrorMessage).ToList()
+                });
+
+            return BadRequest(new
             {
-                return BadRequest(new { success = false, message = "Geçersiz ürün bilgisi veya değerler.", errors = ModelState.Values });
-            }
+                success = false,
+                message = "Geçersiz ürün bilgisi veya değerler.",
+                errors = errorList
+            });
+        }
 
             try
             {

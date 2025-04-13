@@ -1,41 +1,110 @@
-﻿/* Form Gölgelendirme */
+﻿/* 🌤️ Arka Plan - Yumuşak Geçişli */
+body {
+    background: linear-gradient(to bottom right, #f4f7fa, #e8edf2);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #2e2e2e;
+    font-size: 13.5px;
+    margin: 0;
+    padding: 0;
+}
+
+/* 📦 Kartlar (Formlar, Filtre Kutusu vs) */
 .card {
     border-radius: 8px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    padding: 18px;
+    border: 1px solid #dee2e6;
 }
 
-/* Buton Hover Efekti */
+/* 🧾 Başlıklar */
+.page-title, .text-center {
+    text-align: center;
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #1e2d3f;
+    border-bottom: 1px solid #ccd6dd;
+    padding-bottom: 6px;
+}
+
+/* 🔘 Butonlar */
+.btn {
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 6px 14px;
+    transition: background-color 0.3s ease;
+    border: none;
+}
+
+.btn-primary {
+    background-color: #4a90e2;
+    color: #fff;
+}
+
 .btn-primary:hover {
-    background-color: #0056b3;
+    background-color: #3a78c2;
 }
 
-body {
-    background: linear-gradient(135deg, #e3e6e8, #f8f9fa);
+.btn-danger {
+    background-color: #e74c3c;
+    color: #fff;
 }
 
-/* 🔥 İkonların Satırları Büyütmesini Önleyelim 🔥 */
+.btn-danger:hover {
+    background-color: #c0392b;
+}
+
+/* 🧮 Input ve Form Elemanları */
+input[type="text"],
+input[type="number"],
+select,
+textarea {
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    padding: 6px 10px;
+    font-size: 13px;
+    width: 100%;
+    background-color: #fafafa;
+}
+
+/* 🧾 İkon Alanı */
 .action-icons {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 5px;
     height: 100%;
 }
 
-/* 🔥 İkonları Küçük ve Sabit Hale Getirme 🔥 */
+/* 🎯 Font Awesome İkonlar */
 .fa-solid {
-    font-size: 14px !important;
+    font-size: 13px !important;
     cursor: pointer;
     transition: transform 0.2s ease-in-out;
 }
 
-    /* 🔥 Hover Efektleri 🔥 */
 .fa-pen:hover {
-    color: #007bff !important;
+    color: #4a90e2 !important;
     transform: scale(1.1);
 }
 
-    .delete-btn:hover {
-        color: #dc3545 !important;
-        transform: scale(1.1);
-    }
+.delete-btn:hover {
+    color: #e74c3c !important;
+    transform: scale(1.1);
+}
+
+/* 📊 Grid Hover Satırı */
+.ui-jqgrid tr.jqgrow:hover td {
+    background-color: #f1f8ff !important;
+}
+
+/* 🔽 Scrollbar (isteğe bağlı) */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 4px;
+}

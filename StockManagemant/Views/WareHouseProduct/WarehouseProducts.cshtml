@@ -7,12 +7,19 @@
 <h2 class="page-title">@ViewData["Title"]</h2>
 
 <!-- Filtreleme Alanı -->
+
 <div class="filter-container card p-4 shadow-sm">
     <div class="row g-3">
         <!-- Ürün Adı ile Arama -->
-        <div class="col-md-4">
+        <div class="col-md-3">
             <label for="productSearch" class="form-label">Ürün Adı:</label>
             <input type="text" id="productSearch" class="form-control" placeholder="Ürün adını girin">
+        </div>
+
+        <!-- Barkod ile Arama -->
+        <div class="col-md-3">
+            <label for="stockCodeSearch" class="form-label">Barkod:</label>
+            <input type="text" id="stockCodeSearch" class="form-control" placeholder="Barkod girin">
         </div>
 
         <!-- Fiyat Aralığı Seçimi -->
@@ -26,8 +33,8 @@
         </div>
 
         <!-- Filtreleme Butonu -->
-        <div class="col-md-4 d-flex align-items-end">
-            <button id="filterBtn" class="btn btn-primary">Filtrele</button>
+        <div class="col-md-2 d-flex align-items-end">
+            <button id="filterBtn" class="btn btn-primary w-100">Filtrele</button>
         </div>
     </div>
 </div>
@@ -50,39 +57,52 @@
            url: `/WarehouseProduct/GetWarehouseProducts?warehouseId=${warehouseId}`,
            datatype: "json",
            mtype: "GET",
-           colNames: ['ID', 'Ürün Adı', 'Kategori', 'Fiyat', 'Para Birimi', 'Stok', 'İşlemler'],
+           colNames: ['ID','ProductId', 'Barkod','Stok Kodu','Ürün Adı', 'Kategori', 'Fiyat', 'Para Birimi', 'Stok', ' Depo Lokasyonu', 'İşlemler'],
            colModel: [
                { name: 'id', index: 'id', align: "center", sortable: true, key: true, hidden: true },
+               { name: 'product_id', index: 'product_id', align: "center", sortable: true, key: true, hidden:true },
+               { name: 'barcode', index: 'barcode', align: "center", sortable: true, hidden:false },
+               { name: 'stockcode', index: ' stockcode', align: "center", sortable: true, hidden:false },
                { name: 'name', index: 'name', sortable: true, editable: false },
                { name: 'category', index: 'category', sortable: true, editable: false },
                { name: 'price', index: 'price', align: "center", sortable: true, editable: false, formatter: formatPrice },
-               { name: 'currencyType', index: 'currencyType', sortable: true, editable: false, formatter: currencyFormatter },
+               { name: 'currencyType', index: 'currencyType', sortable: true, editable: false, formatter: currencyFormatter ,hidden:true},
+               { 
+                   name: 'stock', 
+                   index: 'stock', 
+                   align: "center", 
+                   sortable: true, 
+                   editable: false, 
+                   formatter: function (cellvalue, options, rowObject) {
+                       return `
+                           <div class="stock-container" style="display: flex; align-items: center; justify-content: center;">
+                               <input type="number" class="stock-input" 
+                                   data-id="${rowObject.id}"
+                                   value="${cellvalue}"
+                                   readonly
+                                   style="width: 70px; height: 25px; text-align: center; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; cursor: pointer;">
+                               <div class="stock-controls" style="display: flex; flex-direction: column; margin-left: 3px;">
+                                   <button class="increaseStockBtn" data-id="${rowObject.id}" title="Stok Artır"
+                                       style="border: none; background: transparent; cursor: pointer; font-size: 10px; padding: 2px;">
+                                       ▲
+                                   </button>
+                                   <button class="decreaseStockBtn" data-id="${rowObject.id}" title="Stok Azalt"
+                                       style="border: none; background: transparent; cursor: pointer; font-size: 10px; padding: 2px;">
+                                       ▼
+                                   </button>
+                               </div>
+                           </div>
+                       `;
+                   }
+               },
                {
-                   name: 'stock',
-                   index: 'stock',
+                   name: 'location',
+                   index: 'location',
                    align: "center",
-                   sortable: true,
-                   editable: false,
-               formatter: function (cellvalue, options, rowObject) {
-                    return `
-                        <div class="stock-container" style="display: flex; align-items: center; justify-content: center;">
-                            <input type="number" class="stock-input" 
-                                data-id="${rowObject.id}"
-                                value="${cellvalue}"
-                                readonly
-                                style="width: 70px; height: 25px; text-align: center; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; cursor: pointer;"                            <div class="stock-controls" style="display: flex; flex-direction: column; margin-left: 3px;">
-                                <button class="increaseStockBtn" data-id="${rowObject.id}" title="Stok Artır"
-                                    style="border: none; background: transparent; cursor: pointer; font-size: 10px; padding: 2px;">
-                                    ▲
-                                </button>
-                                <button class="decreaseStockBtn" data-id="${rowObject.id}" title="Stok Azalt"
-                                    style="border: none; background: transparent; cursor: pointer; font-size: 10px; padding: 2px;">
-                                    ▼
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                }
+                   sortable: false,
+                   formatter: function (cellvalue) {
+                       return cellvalue ? cellvalue : `<span class="text-muted">Lokasyon Yok</span>`;
+                   }
                },
                {
                    name: "actions",
@@ -91,7 +111,6 @@
                    formatter: function (cellvalue, options, rowObject) {
                        return `
                            <div class="action-icons">                            
-                           
                                <i class="fa-solid fa-trash text-danger fa-xl deleteWarehouseProductBtn"
                                    data-id="${rowObject.id}" title="Depodan Kaldır"></i>
                            </div>
@@ -117,6 +136,14 @@
                total: "total",
                records: "records"
            },
+
+             ondblClickRow: function (rowid) {
+                if (rowid) {
+                    const rowData = $("#warehouseProductGrid").jqGrid("getRowData", rowid);
+                    const productId = rowData.product_id;
+                    window.open('/Product/ProductDetail/' + productId, '_blank');
+                }
+            },
 
           
            rowattr: function (rowObject) {
@@ -155,9 +182,10 @@
             let searchName = $("#productSearch").val().trim();
             let minPrice = $("#minPrice").val();
             let maxPrice = $("#maxPrice").val();
+            let StockCode = $("#stockCodeSearch").val().trim();
 
             $("#warehouseProductGrid").jqGrid('setGridParam', {
-                url: `/WarehouseProduct/GetWarehouseProducts?warehouseId=${warehouseId}&search=${searchName}&minPrice=${minPrice}&maxPrice=${maxPrice}`,
+                url: `/WarehouseProduct/GetWarehouseProducts?warehouseId=${warehouseId}&search=${searchName}&minPrice=${minPrice}&maxPrice=${maxPrice}&stockCode=${StockCode}`,
                 page: 1
             }).trigger("reloadGrid");
         }
@@ -171,22 +199,20 @@
 
 // ➕ Artırma
 $(document).on("click", ".increaseStockBtn", function () {
-    let productId = $(this).data("id");
-    let warehouseId = localStorage.getItem("selectedWarehouseId");
-    let input = $(`input.stock-input[data-id="${productId}"]`);
+    let warehouseProductId = $(this).data("id");
+    let input = $(`input.stock-input[data-id="${warehouseProductId}"]`);
     let current = parseInt(input.val());
 
-    updateStock(productId, warehouseId, current + 1);
+    updateStock(warehouseProductId, current + 1);
 });
 
 // ➖ Azaltma
 $(document).on("click", ".decreaseStockBtn", function () {
-    let productId = $(this).data("id");
-    let warehouseId = localStorage.getItem("selectedWarehouseId");
-    let input = $(`input.stock-input[data-id="${productId}"]`);
+    let warehouseProductId = $(this).data("id");
+    let input = $(`input.stock-input[data-id="${warehouseProductId}"]`);
     let current = parseInt(input.val());
 
-    if (current > 0) updateStock(productId, warehouseId, current - 1);
+    if (current > 0) updateStock(warehouseProductId, current - 1);
 });
 
 // 🖱️ Stok sayısına tıklayınca input aktifleşsin
@@ -201,27 +227,25 @@ $(document).on("click", ".stock-input", function () {
 // 🖊️ Kullanıcı inputtan çıkarsa veya Enter’a basarsa yeni değer gönder
 $(document).on("blur", ".stock-input", function () {
     let input = $(this);
-    let productId = input.data("id");
-    let warehouseId = localStorage.getItem("selectedWarehouseId");
+    let warehouseProductId = input.data("id");
     let newValue = parseInt(input.val());
 
-    if (!isNaN(newValue)) updateStock(productId, warehouseId, newValue);
+    if (!isNaN(newValue)) updateStock(warehouseProductId, newValue);
 });
 
 $(document).on("keypress", ".stock-input", function (e) {
     if (e.which === 13) {
-        $(this).blur(); // Enter basılırsa blur tetiklenmiş gibi davran
+        $(this).blur(); 
     }
 });
 
-function updateStock(productId, warehouseId, newStock) {
+function updateStock(warehouseProductId, newStock) {
     $.ajax({
         url: '/WarehouseProduct/UpdateStock',
         type: 'POST',
         contentType: 'application/json',
         data: JSON.stringify({
-            productId: productId,
-            warehouseId: warehouseId,
+            warehouseProductId: warehouseProductId,
             stockQuantity: newStock
         }),
         success: function () {

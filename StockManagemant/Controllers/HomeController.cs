@@ -9,5 +9,7 @@ namespace StockManagemant.Controllers
             return View();
         }
 
+       
+
     }
 }

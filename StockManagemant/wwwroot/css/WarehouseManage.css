@@ -1,0 +1,97 @@
+body {
+    background: linear-gradient(to bottom right, #f6f9fc, #e9eff5);
+    font-family: "Segoe UI", sans-serif;
+    font-size: 14px;
+    color: #2f3e4e;
+}
+
+h2 {
+    font-size: 22px;
+    font-weight: 600;
+    color: #1f2e40;
+}
+
+.btn {
+    border-radius: 6px;
+    font-size: 13px;
+    padding: 6px 10px;
+    min-width: 72px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    line-height: 1;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-sm {
+    padding: 5px 10px;
+    font-size: 12px;
+    height: 34px;
+    min-width: 68px;
+}
+
+.table td, .table th {
+    padding: 14px 12px !important;
+    height: 52px;
+    vertical-align: middle;
+}
+
+.table tbody tr {
+    transition: background-color 0.2s ease-in-out;
+}
+
+.table tbody tr:hover {
+    background-color: #f1f8ff;
+}
+
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+/* Buton Renkleri */
+.btn-success {
+    background-color: #2e8b57;
+    border: none;
+    color: #fff;
+}
+
+.btn-success:hover {
+    background-color: #25734a;
+}
+
+.btn-warning {
+    background-color: #ffc107;
+    color: #000;
+    border: none;
+}
+
+.btn-warning:hover {
+    background-color: #e0a800;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    border: none;
+    color: #fff;
+}
+
+.btn-danger:hover {
+    background-color: #bb2d3b;
+}
+
+.btn-info {
+    background-color: #0dcaf0;
+    border: none;
+    color: #fff;
+}
+
+.btn-info:hover {
+    background-color: #0bb5d3;
+    color: #fff;
+}

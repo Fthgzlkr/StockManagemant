@@ -1,0 +1,68 @@
+/* 🎯 Kart formun stili */
+form.card {
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ffffff, #f7fafd);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07);
+    border: 1px solid #e3e6eb;
+}
+
+/* 🎨 Input alanları */
+form.card input.form-control,
+form.card select.form-select,
+form.card textarea.form-control {
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    font-size: 13px;
+    background-color: #fefefe;
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+form.card input.form-control:focus,
+form.card select.form-select:focus,
+form.card textarea.form-control:focus {
+    border-color: #3a7bd5;
+    box-shadow: 0 0 0 0.15rem rgba(58, 123, 213, 0.2);
+}
+
+/* 🎯 Label yazıları */
+form.card .form-label {
+    font-weight: 500;
+    color: #334155;
+    margin-bottom: 4px;
+}
+
+/* 🎯 Buton stil (Ekle ve Güncelle) */
+form.card .btn {
+    font-weight: 500;
+    padding: 8px 28px;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+form.card .btn-success {
+    background-color: #2e8b57;
+    border: none;
+}
+
+form.card .btn-success:hover {
+    background-color: #247346;
+}
+
+form.card .btn-primary {
+    background-color: #3a7bd5;
+    border: none;
+}
+
+form.card .btn-primary:hover {
+    background-color: #3169ba;
+}
+
+/* 🎯 Başlık */
+form.card h2, .modal-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1f2e40;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 10px;
+}

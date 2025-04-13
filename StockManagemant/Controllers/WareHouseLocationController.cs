@@ -114,6 +114,15 @@ namespace StockManagemant.Web.Controllers
             }
         }
 
+
+        [HttpGet]
+        public async Task<IActionResult> GetLocationsByWarehouseId(int warehouseId)
+        {
+            var locations = await _locationManager.GetLocationsByWarehouseIdAsync(warehouseId);
+            return Json(locations);
+        }
+                        
+
         // ✅ Dinamik: Koridorları getir
         [HttpGet]
         public async Task<IActionResult> GetCorridors(int warehouseId)
