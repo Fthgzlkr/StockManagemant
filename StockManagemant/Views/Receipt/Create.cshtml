@@ -6,53 +6,108 @@
     ViewData["Title"] = "Fiş Oluşturma";
 }
 
-<h2 class="text-center my-3 fs-5">Fiş Oluştur</h2>
+<!-- 🔥 Başlık -->
+<h2 class="text-center my-4 fw-semibold fs-5">📄 Fiş Oluştur</h2>
 
+<!-- Ana Alan -->
 <div class="container">
-    <div class="row">
-        <!-- Sol Sütun: Ürün Arama ve Gelen Ürün -->
+    <div class="row g-4">
+        <!-- Sol: Ürün Arama ve Detay -->
         <div class="col-md-6">
-            <!-- Ürün Arama Alanı -->
-            <div class="p-2 border rounded">
-                <label for="productIdInput" class="form-label small">Ürün ID:</label>
-                <div class="input-group input-group-sm">
+            <div class="card shadow-sm p-3">
+                <h6 class="fw-bold mb-3 text-primary">🔍 Ürün Arama</h6>
+                <div class="input-group input-group-sm mb-2">
                     <input type="number" id="productIdInput" class="form-control" placeholder="Ürün ID girin">
-                    <button id="searchProductBtn" class="btn btn-primary">
+                    <button id="searchProductBtn" class="btn btn-outline-primary px-3">
                         <i class="fas fa-search"></i>
                     </button>
                 </div>
-            </div>
 
-            <!-- Aranan Ürün -->
-            <div id="searchedProduct" class="mt-3 p-2 border rounded d-none">
-                <h6 class="text-center">Aranan Ürün</h6>
-                <p class="mb-1 small"><strong>Adı:</strong> <span id="productName"></span></p>
-                <p class="mb-1 small"><strong>Kategori:</strong> <span id="productCategory"></span></p>
-                <p class="mb-1 small"><strong>Fiyat:</strong> <span id="productPrice"></span> TL</p>
-                <p class="mb-1 small"><strong>Stok:</strong> <span id="productStock"></span></p>
-
-                <!-- Adet Seçme Alanı -->
-                <label for="productQuantity" class="form-label small">Miktar:</label>
-                <input type="number" id="productQuantity" class="form-control form-control-sm" min="1" value="1">
-
-                <button id="addProductBtn" class="btn btn-success btn-sm w-100 mt-2">Fişe Ekle</button>
+                <!-- Aranan Ürün Bilgisi -->
+                <div id="searchedProduct" class="mt-3 d-none">
+                    <div class="border rounded p-3 bg-light-subtle">
+                        <h6 class="text-center fw-semibold mb-2">📦 Ürün Bilgisi</h6>
+                        <ul class="list-unstyled small mb-2">
+                            <li><strong>Adı:</strong> <span id="productName"></span></li>
+                            <li><strong>Kategori:</strong> <span id="productCategory"></span></li>
+                            <li><strong>Fiyat:</strong> <span id="productPrice"></span> TL</li>
+                            <li><strong>Stok:</strong> <span id="productStock"></span></li>
+                        </ul>
+                        <label for="productQuantity" class="form-label small mb-1">Miktar:</label>
+                        <input type="number" id="productQuantity" class="form-control form-control-sm mb-2" min="1" value="1">
+                        <button id="addProductBtn" class="btn btn-success btn-sm w-100">➕ Fişe Ekle</button>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Sağ Sütun: Fiş Görüntüsü -->
+        <!-- Sağ: Fiş Detayı -->
         <div class="col-md-6">
-            <div class="p-3 border rounded bg-light shadow-sm" id="receiptContainer">
-                <h6 class="text-center">Fiş</h6>
-                <div id="receiptItems" class="small">
-                    <!-- Dinamik olarak ürünler buraya eklenecek -->
+            <div class="card shadow-sm p-3" id="receiptContainer">
+                <h6 class="text-center fw-bold mb-3 text-dark">🧾 Fiş</h6>
+                <div id="receiptItems" class="small mb-2">
+                    <!-- Ürünler buraya gelecek -->
                 </div>
                 <hr>
-                <h5 class="text-end"><strong>Toplam:</strong> <span id="totalAmount">0.00 TL</span></h5>
-                <button id="createReceiptBtn" class="btn btn-dark btn-sm w-100 mt-2">Fişi Tamamla</button>
+                <div class="d-flex justify-content-between fw-semibold">
+                    <span>Toplam:</span>
+                    <span id="totalAmount">0.00 TL</span>
+                </div>
+                <button id="createReceiptBtn" class="btn btn-dark btn-sm w-100 mt-3">✅ Fişi Tamamla</button>
             </div>
         </div>
     </div>
 </div>
+
+<!-- 🔗 FontAwesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<!-- 🎨 Ek CSS -->
+<style>
+    body {
+        background: linear-gradient(to bottom right, #f9fbfd, #e6edf3);
+        font-family: "Segoe UI", sans-serif;
+    }
+
+    .card {
+        border-radius: 10px;
+        background-color: #fff;
+        border: 1px solid #e3e6ea;
+    }
+
+    .btn {
+        font-size: 13px;
+        border-radius: 6px;
+        padding: 6px 12px;
+        transition: 0.2s ease-in-out;
+    }
+
+    .btn-outline-primary:hover {
+        background-color: #0d6efd;
+        color: #fff;
+    }
+
+    .form-control {
+        font-size: 13px;
+    }
+
+    #receiptItems .item-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        border-bottom: 1px dashed #ddd;
+    }
+
+    #receiptItems .item-row:last-child {
+        border-bottom: none;
+    }
+
+    .remove-product {
+        font-size: 11px;
+        padding: 2px 6px;
+    }
+</style>
 
 <script>
     let warehouseId = new URLSearchParams(window.location.search).get("warehouseId");

@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using StockManagemant.DataAccess.Context;
 using StockManagemant.DataAccess.Repositories;
 using StockManagemant.Business.MappingProfiles;
@@ -10,7 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddEnvironmentVariables(); // UserSecrets iptal edildi
+    .AddEnvironmentVariables();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
@@ -30,8 +31,6 @@ catch (Exception ex)
     throw;
 }
 
-
-
 // ✅ Generic Repository Bağımlılığını Ekleme
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
@@ -41,19 +40,27 @@ builder.Services.AddRepositoriesAndManagers();
 // ✅ AutoMapper Bağlantısı
 builder.Services.AddAutoMapper(typeof(GeneralMappingProfile));
 
+// ✅ Cookie Authentication Ekle
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Auth/Login";
+        options.AccessDeniedPath = "/Auth/AccessDenied";
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
+    });
+
 // ✅ MVC Controller'ları ve View'leri Yükleme
 builder.Services.AddControllersWithViews();
 
-// Add session services
+// ✅ Session Services
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
-    options.Cookie.HttpOnly = true; 
-    options.Cookie.IsEssential = true; 
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
 });
 
 var app = builder.Build();
-
 
 if (!app.Environment.IsDevelopment())
 {
@@ -66,13 +73,14 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseSession();
 
-app.UseSession(); 
-
+// ✅ Authentication ve Authorization sıralı
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Auth}/{action=Login}/{id?}");
 
 app.Run();

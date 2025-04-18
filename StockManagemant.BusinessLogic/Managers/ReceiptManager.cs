@@ -39,17 +39,21 @@ namespace StockManagemant.Business.Managers
 
 
 
-        public async Task<int> AddReceiptAsync(ReceiptDto receiptDto)
-        {
-            if (receiptDto == null || receiptDto.WareHouseId == 0)
-                throw new Exception("Hata: Depo ID boş olamaz!");
+       public async Task<int> AddReceiptAsync(ReceiptDto receiptDto)
+{
+    if (receiptDto == null || receiptDto.WareHouseId == 0)
+        throw new Exception("Hata: Depo ID boş olamaz!");
 
-            var receipt = _mapper.Map<Receipt>(receiptDto);
-            receipt.TotalAmount = 0; // Yeni fişin toplam tutarı başlangıçta 0 olmalı
-            receipt.IsDeleted = false;
+    var receipt = new Receipt
+    {
+        Date = receiptDto.Date,
+        TotalAmount = 0,
+        IsDeleted = false,
+        WarehouseId = receiptDto.WareHouseId // 🔥 Navigation property değil, doğrudan ID
+    };
 
-            return await _receiptRepository.AddReceiptAsync(receipt);
-        }
+    return await _receiptRepository.AddReceiptAsync(receipt);
+}
 
 
 

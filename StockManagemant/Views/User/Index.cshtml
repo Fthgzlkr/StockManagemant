@@ -1,0 +1,194 @@
+@{
+    ViewData["Title"] = "Kullanıcı Yönetimi";
+}
+<link rel="stylesheet" href="~/css/Product.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/GlobalStyles.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/Site.css" asp-append-version="true" />
+
+<h2 class="text-center mt-3 mb-4">Kullanıcı Yönetimi</h2>
+
+<div class="container">
+    <table id="userGrid"></table>
+    <div id="userPager"></div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $("#userGrid").jqGrid({
+            url: '/User/GetUsers',
+            datatype: "json",
+            mtype: "GET",
+            colNames: ['ID', 'Kullanıcı Adı', 'Rol', 'Depo ID', 'İşlemler'],
+            colModel: [
+                { name: 'id', index: 'id', width: 50, align: "center", sortable: true, key: true, hidden: true },
+                { name: 'username', index: 'username', width: 150, sortable: true },
+                { name: 'role', index: 'role', width: 100, sortable: true },
+                { name: 'assignedWarehouseId', index: 'assignedWarehouseId', width: 100, sortable: true },
+                {
+                    name: "actions",
+                    label: "İşlemler",
+                    align: "center",
+                    formatter: function (cellvalue, options, rowObject) {
+                        return `
+                            <div class="action-icons">
+                                <i class="fa-solid fa-pen text-primary fa-xl edit-user" data-id="${rowObject.id}" data-username="${rowObject.username}" data-role="${rowObject.role}" data-warehouse="${rowObject.assignedWarehouseId}" title="Düzenle"></i>
+                                <i class="fa-solid fa-trash text-danger fa-xl delete-user" data-id="${rowObject.id}" title="Sil"></i>
+                            </div>`;
+                    }
+                }
+            ],
+            pager: '#userPager',
+            rowNum: 10,
+            rowList: [10, 20, 30],
+            sortname: 'id',
+            sortorder: 'asc',
+            viewrecords: true,
+            autowidth: true,
+            shrinkToFit: true,
+            guiStyle: "bootstrap4",
+            caption: "Kullanıcı Listesi",
+            jsonReader: {
+                root: "data",
+                page: "page",
+                total: "total",
+                records: "records",
+                repeatitems: false,
+                id: "id"
+            },
+            loadComplete: function () {
+                if (!$('#addUserBtn').length) {
+                    $("#userPager_left").append(`
+                        <button class="btn btn-sm btn-outline-success ms-2" id="addUserBtn">
+                            <i class="fa fa-plus me-1"></i>Yeni Kullanıcı
+                        </button>`);
+                }
+            }
+        });
+
+        $("#userGrid").jqGrid('navGrid', '#userPager',
+            { edit: false, add: false, del: false, search: false, refresh: true }
+        );
+
+        $(document).on("click", ".delete-user", function () {
+            let userId = $(this).data("id");
+            Swal.fire({
+                title: "Kullanıcı Sil",
+                text: "Bu kullanıcıyı silmek istediğinize emin misiniz?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Evet, Sil!",
+                cancelButtonText: "İptal"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('/User/DeleteUser/' + userId, function () {
+                        Swal.fire("Başarılı", "Kullanıcı silindi", "success");
+                        $("#userGrid").trigger("reloadGrid");
+                    }).fail(function () {
+                        Swal.fire("Hata", "Silme işlemi başarısız oldu!", "error");
+                    });
+                }
+            });
+        });
+
+        $(document).on("click", "#addUserBtn", function () {
+            Swal.fire({
+                title: "Yeni Kullanıcı Ekle",
+                html:
+                    `<input type="text" id="swalUsername" class="swal2-input" placeholder="Kullanıcı Adı">
+                    <input type="password" id="swalPassword" class="swal2-input" placeholder="Şifre">
+                    <select id="swalRole" class="swal2-select">
+                        <option value="Admin">Admin</option>
+                        <option value="Operator">Operator</option>
+                        <option value="BasicUser">BasicUser</option>
+                    </select>
+                    <input type="number" id="swalWarehouse" class="swal2-input" placeholder="Depo ID (isteğe bağlı)">`,
+                focusConfirm: false,
+                preConfirm: () => {
+                    return {
+                        username: document.getElementById('swalUsername').value,
+                        password: document.getElementById('swalPassword').value,
+                        role: document.getElementById('swalRole').value,
+                        assignedWarehouseId: document.getElementById('swalWarehouse').value || null
+                    }
+                },
+                showCancelButton: true,
+                confirmButtonText: 'Kaydet',
+                cancelButtonText: 'İptal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "/User/CreateUser",
+                        type: "POST",
+                        contentType: "application/json",
+                        data: JSON.stringify(result.value),
+                        success: function (res) {
+                            if (res.success) {
+                                Swal.fire("Başarılı", res.message, "success");
+                                $("#userGrid").trigger("reloadGrid");
+                            } else {
+                                Swal.fire("Hata", res.message, "error");
+                            }
+                        },
+                        error: function () {
+                            Swal.fire("Hata", "Kullanıcı eklenemedi!", "error");
+                        }
+                    });
+                }
+            });
+        });
+
+        $(document).on("click", ".edit-user", function () {
+            let id = $(this).data("id");
+            let username = $(this).data("username");
+            let role = $(this).data("role");
+            let warehouseId = $(this).data("warehouse") || "";
+
+            Swal.fire({
+                title: "Kullanıcı Güncelle",
+                html:
+                    `<input type="text" id="swalUsername" class="swal2-input" value="${username}" placeholder="Kullanıcı Adı" disabled>
+                    <input type="password" id="swalPassword" class="swal2-input" placeholder="Yeni Şifre (boş bırakılırsa değişmez)">
+                    <select id="swalRole" class="swal2-select">
+                        <option value="Admin" ${role === "Admin" ? "selected" : ""}>Admin</option>
+                        <option value="Operator" ${role === "Operator" ? "selected" : ""}>Operator</option>
+                        <option value="BasicUser" ${role === "BasicUser" ? "selected" : ""}>BasicUser</option>
+                    </select>
+                    <input type="number" id="swalWarehouse" class="swal2-input" value="${warehouseId}" placeholder="Depo ID (isteğe bağlı)">`,
+                focusConfirm: false,
+                preConfirm: () => {
+                    return {
+                        username: username,
+                        password: document.getElementById('swalPassword').value,
+                        role: document.getElementById('swalRole').value,
+                        assignedWarehouseId: document.getElementById('swalWarehouse').value || null
+                    }
+                },
+                showCancelButton: true,
+                confirmButtonText: 'Güncelle',
+                cancelButtonText: 'İptal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "/User/UpdateUser/" + id,
+                        type: "POST",
+                        contentType: "application/json",
+                        data: JSON.stringify(result.value),
+                        success: function (res) {
+                            if (res.success) {
+                                Swal.fire("Başarılı", res.message, "success");
+                                $("#userGrid").trigger("reloadGrid");
+                            } else {
+                                Swal.fire("Hata", res.message, "error");
+                            }
+                        },
+                        error: function () {
+                            Swal.fire("Hata", "Güncelleme başarısız!", "error");
+                        }
+                    });
+                }
+            });
+        });
+    });
+</script>

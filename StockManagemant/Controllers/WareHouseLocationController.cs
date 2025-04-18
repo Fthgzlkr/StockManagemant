@@ -1,11 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using StockManagemant.BusinessLogic.Managers.Interfaces;
 using StockManagemant.Entities.DTO;
 using AutoMapper;
 
-
 namespace StockManagemant.Web.Controllers
 {
+    
     public class WarehouseLocationController : Controller
     {
         private readonly IWareHouseLocationManager _locationManager;
@@ -18,12 +19,14 @@ namespace StockManagemant.Web.Controllers
         }
 
         // Ana sayfa - Yönetim arayüzü açılacak
+        [Authorize(Roles = "Admin")]
         public IActionResult Index()
         {
             return View();
         }
 
         // ✅ Tüm lokasyonları jqGrid’e uygun formatta getir
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<IActionResult> GetAllLocations()
         {
@@ -55,6 +58,7 @@ namespace StockManagemant.Web.Controllers
         }
 
         // ✅ Yeni lokasyon ekleme
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> AddLocation([FromBody] WarehouseLocationDto locationDto)
         {
@@ -75,6 +79,7 @@ namespace StockManagemant.Web.Controllers
         }
 
         // ✅ Lokasyon güncelleme
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> EditLocation([FromBody] WarehouseLocationDto locationDto)
         {
@@ -95,6 +100,7 @@ namespace StockManagemant.Web.Controllers
         }
 
         // ✅ Lokasyon silme (soft delete)
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
@@ -114,35 +120,73 @@ namespace StockManagemant.Web.Controllers
             }
         }
 
-
+        [Authorize(Roles = "Admin,Operator,BasicUser")]
         [HttpGet]
         public async Task<IActionResult> GetLocationsByWarehouseId(int warehouseId)
         {
+            if (User.IsInRole("BasicUser"))
+            {
+                var assignedWarehouseId = User.FindFirst("AssignedWarehouseId")?.Value;
+                if (assignedWarehouseId == null || assignedWarehouseId != warehouseId.ToString())
+                {
+                    return RedirectToAction("AccessDenied", "Auth");
+                }
+            }
+
             var locations = await _locationManager.GetLocationsByWarehouseIdAsync(warehouseId);
             return Json(locations);
         }
-                        
 
         // ✅ Dinamik: Koridorları getir
+        [Authorize(Roles = "Admin,Operator,BasicUser")]
         [HttpGet]
         public async Task<IActionResult> GetCorridors(int warehouseId)
         {
+            if (User.IsInRole("BasicUser"))
+            {
+                var assignedWarehouseId = User.FindFirst("AssignedWarehouseId")?.Value;
+                if (assignedWarehouseId == null || assignedWarehouseId != warehouseId.ToString())
+                {
+                    return RedirectToAction("AccessDenied", "Auth");
+                }
+            }
+
             var corridors = await _locationManager.GetCorridorsByWarehouseIdAsync(warehouseId);
             return Json(corridors);
         }
 
         // ✅ Dinamik: Rafları getir
+        [Authorize(Roles = "Admin,Operator,BasicUser")]
         [HttpGet]
         public async Task<IActionResult> GetShelves(int warehouseId, string corridor)
         {
+            if (User.IsInRole("BasicUser"))
+            {
+                var assignedWarehouseId = User.FindFirst("AssignedWarehouseId")?.Value;
+                if (assignedWarehouseId == null || assignedWarehouseId != warehouseId.ToString())
+                {
+                    return RedirectToAction("AccessDenied", "Auth");
+                }
+            }
+
             var shelves = await _locationManager.GetShelvesByWarehouseAsync(warehouseId, corridor);
             return Json(shelves);
         }
 
         // ✅ Dinamik: Binleri getir
+        [Authorize(Roles = "Admin,Operator,BasicUser")]
         [HttpGet]
         public async Task<IActionResult> GetBins(int warehouseId, string corridor, string shelf)
         {
+            if (User.IsInRole("BasicUser"))
+            {
+                var assignedWarehouseId = User.FindFirst("AssignedWarehouseId")?.Value;
+                if (assignedWarehouseId == null || assignedWarehouseId != warehouseId.ToString())
+                {
+                    return RedirectToAction("AccessDenied", "Auth");
+                }
+            }
+
             var bins = await _locationManager.GetBinsByWarehouseAsync(warehouseId, corridor, shelf);
             return Json(bins);
         }

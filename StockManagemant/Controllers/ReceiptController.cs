@@ -3,10 +3,8 @@ using StockManagemant.Business.Managers;
 using StockManagemant.Entities.DTO;
 using StockManagemant.Web.Helpers;
 using StockManagemant.DataAccess.Filters;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+
 
 namespace StockManagemant.Controllers
 {
@@ -27,12 +25,14 @@ namespace StockManagemant.Controllers
         }
 
         // Fişleri listeleme sayfası
+         [Authorize(Roles = "Admin")]
         public IActionResult List()
         {
             return View();
         }
 
         //Depo Fişlerini dönen sayfa
+        [Authorize(Roles = "Admin,Operator,BasicUser")]
         [HttpGet]
         public IActionResult ListByWarehouse(int warehouseId)
         {
@@ -41,15 +41,35 @@ namespace StockManagemant.Controllers
                 return BadRequest("Geçersiz depo ID!");
             }
 
+            if (User.IsInRole("BasicUser"))
+            {
+                var assignedWarehouseId = User.FindFirst("AssignedWarehouseId")?.Value;
+                if (assignedWarehouseId == null || assignedWarehouseId != warehouseId.ToString())
+                {
+                    return RedirectToAction("AccessDenied", "Auth");
+                }
+            }
+
             ViewData["WarehouseId"] = warehouseId; 
             return View("ListByWarehouse"); 
         }
 
 
         // JQGrid için fişleri JSON formatında getirir
+        [Authorize(Roles = "Admin,Operator,BasicUser")]
         [HttpGet]
         public async Task<IActionResult> GetReceipts([FromQuery] ReceiptFilter filter, int page = 1, int rows = 10, string sidx = "id", string sord = "asc")
         {
+
+             if (User.IsInRole("BasicUser"))
+            {
+                var assignedWarehouseId = User.FindFirst("AssignedWarehouseId")?.Value;
+                if (string.IsNullOrEmpty(assignedWarehouseId) || filter.WarehouseId.ToString() != assignedWarehouseId)
+                {
+                    return RedirectToAction("AccessDenied", "Auth");
+                }
+            }
+
             var totalReceipts = await _receiptManager.GetTotalReceiptCountAsync(filter);
             var receipts = await _receiptManager.GetPagedReceiptAsync(page, rows, filter);
 
@@ -81,21 +101,45 @@ namespace StockManagemant.Controllers
 
 
         // Fiş detaylarını görüntüleme
+        [Authorize(Roles = "Admin,Operator,BasicUser")]
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
             var receipt = await _receiptManager.GetReceiptByIdAsync(id);
-            if (receipt == null) return NotFound(new { success = false, message = "Fiş bulunamadı." });
+            if (receipt == null)
+                return NotFound(new { success = false, message = "Fiş bulunamadı." });
 
-            return View("Details", receipt); // ✅ Sadece `ReceiptDto` gönderiliyor
+            if (User.IsInRole("BasicUser"))
+            {
+                var assignedWarehouseId = User.FindFirst("AssignedWarehouseId")?.Value;
+                if (assignedWarehouseId == null || receipt.WareHouseId.ToString() != assignedWarehouseId)
+                {
+                    return RedirectToAction("AccessDenied", "Auth");
+                }
+            }
+
+            return View("Details", receipt);
         }
 
 
 
         // Seçilen fişin ürünlerini JSON olarak getirir
+        [Authorize(Roles = "Admin,Operator,BasicUser")]
         [HttpGet]
         public async Task<IActionResult> GetReceiptDetails(int receiptId)
         {
+            // Erişim kontrolü: BasicUser sadece kendi deposuna ait fişleri görebilir
+            if (User.IsInRole("BasicUser"))
+            {
+                var receipt = await _receiptManager.GetReceiptByIdAsync(receiptId);
+                var assignedWarehouseId = User.FindFirst("AssignedWarehouseId")?.Value;
+
+                if (receipt == null || assignedWarehouseId == null || receipt.WareHouseId.ToString() != assignedWarehouseId)
+                {
+                    return RedirectToAction("AccessDenied", "Auth");
+                }
+            }
+
             var filteredDetails = await _receiptDetailManager.GetReceiptDetailsByReceiptIdAsync(receiptId);
 
             var jsonData = new
@@ -112,7 +156,7 @@ namespace StockManagemant.Controllers
                         unitPrice = CurrencyHelper.FormatPrice(d.ProductPriceAtSale, product?.Currency.ToString()),
                         subTotal = d.SubTotal.ToString("C")
                     };
-                }).Select(t => t.Result) // Asenkron metodları senkron hale getiriyoruz
+                }).Select(t => t.Result)
             };
 
             return Json(jsonData);
@@ -120,6 +164,7 @@ namespace StockManagemant.Controllers
 
 
         // Fiş silme (Soft Delete)
+        [Authorize(Roles = "Admin,Operator")]
         [HttpPost]
         public async Task<IActionResult> DeleteReceipt(int receiptId)
         {
@@ -141,6 +186,7 @@ namespace StockManagemant.Controllers
 
 
         // Fişten ürün kaldırma (Soft Delete)
+        [Authorize(Roles = "Admin,Operator")]
         [HttpPost]
         public async Task<IActionResult> RemoveProductFromReceipt( int receiptDetailId)
         {
@@ -158,6 +204,7 @@ namespace StockManagemant.Controllers
         }
 
         // Fişteki ürün miktarını güncelleme
+        [Authorize(Roles = "Admin,Operator")]
         [HttpPost]
         public async Task<IActionResult> UpdateProductQuantityInReceipt(int receiptDetailId, int newQuantity)
         {
@@ -174,6 +221,7 @@ namespace StockManagemant.Controllers
 
 
 
+        [Authorize(Roles = "Admin,Operator")]
         [HttpGet]
         public IActionResult Create(int warehouseId)
         {
@@ -192,6 +240,7 @@ namespace StockManagemant.Controllers
             public int Quantity { get; set; }
         }
 
+        [Authorize(Roles = "Admin,Operator")]
         [HttpPost]
         public async Task<IActionResult> CreateReceipt([FromBody] ReceiptDto receiptDto)
         {
@@ -213,6 +262,7 @@ namespace StockManagemant.Controllers
         }
 
 
+        [Authorize(Roles = "Admin,Operator")]
         [HttpPost]
         public async Task<IActionResult> AddProductsToReceipt(int receiptId, [FromBody] List<ProductModel> products)
         {
@@ -242,6 +292,7 @@ namespace StockManagemant.Controllers
 
 
         //Fiş güncelleme (Tarih güncelleme)
+        [Authorize(Roles = "Admin,Operator")]
         [HttpPost]
         public async Task<IActionResult> UpdateReceipt(int receiptId, DateTime date)
         {
@@ -267,8 +318,8 @@ namespace StockManagemant.Controllers
             }
         }
 
-
-
+        //Fiş oluşturma sayfasında depo ürünü getirirken 
+        [Authorize(Roles = "Admin,Operator")]
         [HttpGet]
         public async Task<IActionResult> GetWarehouseProduct(int warehouseId, int productId)
         {

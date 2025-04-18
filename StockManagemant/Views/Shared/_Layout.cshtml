@@ -20,39 +20,70 @@
     <div class="d-flex">
         <!-- Sidebar -->
         <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark" id="sidebar" style="width: 220px; min-height: 100vh;">
-            <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-                <span class="fs-4">Depolar</span>
-            </a>
+            @if (User.IsInRole("Admin") || User.IsInRole("Operator"))
+            {
+                <a href="/Home/Index" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+                    <span class="fs-4">Depolar</span>
+                </a>
+            
+                <a href="/Product/Index" class="nav-link active" aria-current="page">Ürün Listesi</a>
+                    
+            }
             <hr>
             <ul class="nav nav-pills flex-column mb-auto">
-                <li class="nav-item">
-                    <a href="/Product" class="nav-link active" aria-current="page">Ürün Listesi</a>
-                </li>
-                <li>
-                    <a href="/Receipt/List" class="nav-link text-white">Fişler</a>
-                </li>
+                @if (User.IsInRole("Admin"))
+                {
+                   
+                    <li>
+                        <a href="/Receipt/List" class="nav-link text-white">Fişler</a>
+                    </li>
+                    <li>
+                        <a href="/Categories/Index" class="nav-link text-white open-category-modal">Kategoriler</a>
+                    </li>
+                    <li>
+                        <a href="/Warehouse/Manage" class="nav-link text-white">Depo Yönetimi</a>
+                    </li>
+                       <li>
+                        <a href="/User/Index" class="nav-link text-white">Kullanıcı Yönetimi</a>
+                    </li>
+                }
 
-                <li>
-                    <a href="/Categories" class="nav-link text-white open-category-modal">
-                        Kategoriler
-                    </a>
-                </li>
-                <li>
-                    <a href="#" id="receiptLink" class="nav-link text-white">Depo Fişleri</a>
-                </li>
-                <li>
-                    <a href="#" id="createReceiptLink" class="nav-link text-white">Fiş Oluştur</a>
-                </li>
-                <li>
-                    <a href="#" id="warehouseProductsLink" class="nav-link text-white">Depo Ürünleri</a>
-                </li>
+                @if (User.IsInRole("Operator") || User.IsInRole("Admin"))
+                {
+                    <li>
+                        <a href="#" id="receiptLink" class="nav-link text-white">Depo Fişleri</a>
+                    </li>
+                    <li>
+                        <a href="#" id="createReceiptLink" class="nav-link text-white">Fiş Oluştur</a>
+                    </li>
+                    <li>
+                        <a href="#" id="warehouseProductsLink" class="nav-link text-white">Depo Ürünleri</a>
+                    </li>
+                }
 
-                 <li>
-                    <a href="/Warehouse/Manage"  class="nav-link text-white">Depo Yönetimi</a>
-                </li>
+                @if (User.IsInRole("BasicUser"))
+                {
+                    var assignedWarehouseId = User.FindFirst("AssignedWarehouseId")?.Value;
+                <text>
+                    <li>
+                        <a href="/Receipt/ListByWarehouse?warehouseId=@assignedWarehouseId" class="nav-link text-white">Depo Fişleri</a>
+                    </li>
+                    <li>
+                        <a href="/WarehouseProduct/WarehouseProducts?warehouseId=@assignedWarehouseId" class="nav-link text-white">Depo Ürünleri</a>
+                    </li>
+                </text>
+                }
             </ul>
-            <hr>
-
+            <div class="dropdown mt-2">
+                <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <strong>@User.Identity?.Name</strong>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="userDropdown">
+                    <li><a class="dropdown-item" href="/Auth/Logout">Çıkış Yap</a></li>
+                </ul>
+            </div>
+            <hr> 
+            
         </div>
 
         <!-- Main Content -->

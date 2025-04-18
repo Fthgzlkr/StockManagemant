@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using StockManagemant.Business.Managers;
 using StockManagemant.Entities.DTO;
 using StockManagemant.DataAccess.Filters;
@@ -20,8 +21,18 @@ namespace StockManagemant.Controllers
         }
 
 
+        [Authorize(Roles = "Admin,Operator,BasicUser")]
         public IActionResult WarehouseProducts(int warehouseId)
         {
+            if (User.IsInRole("BasicUser"))
+            {
+                var assignedId = User.FindFirst("AssignedWarehouseId")?.Value;
+                if (assignedId == null || assignedId != warehouseId.ToString())
+                {
+                    return RedirectToAction("AccessDenied", "Auth");
+                }
+            }
+
             if (warehouseId <= 0)
             {
                 return BadRequest("Geçersiz depo ID!");
@@ -30,16 +41,19 @@ namespace StockManagemant.Controllers
             return View("WarehouseProducts", warehouseId); 
         }
 
-
-        public IActionResult AddProduct()
-        {
-            return View();
-        }
-
-        // Sayfalı depo ürünleri
         [HttpGet]
+        [Authorize(Roles = "Admin,Operator,BasicUser")]
         public async Task<IActionResult> GetWarehouseProducts([FromQuery] WarehouseProductFilter filter, int warehouseId, int page = 1, int rows = 5)
         {
+            if (User.IsInRole("BasicUser"))
+            {
+                var assignedId = User.FindFirst("AssignedWarehouseId")?.Value;
+                if (assignedId == null || assignedId != warehouseId.ToString())
+                {
+                    return RedirectToAction("AccessDenied", "Auth");
+                }
+            }
+
             if (warehouseId <= 0)
             {
                 return BadRequest(new { success = false, message = "Geçersiz depo ID!" });
@@ -87,6 +101,7 @@ namespace StockManagemant.Controllers
 
 
 
+        [Authorize(Roles = "Admin,Operator")]
         // Yeni Ürün ekleme depoya 
         [HttpPost]
         public async Task<IActionResult> AddProductToWarehouse([FromBody] WarehouseProductDto dto)
@@ -104,8 +119,9 @@ namespace StockManagemant.Controllers
             }
         }
 
+        
         //Depo ürünü stok yönetimi 
-            [HttpPost]
+        [HttpPost]
         public async Task<IActionResult> UpdateStock([FromBody] UpdateStockDto dto)
         {
             if (!ModelState.IsValid)
@@ -123,6 +139,7 @@ namespace StockManagemant.Controllers
         }
 
 
+       
         // Depo ürün kaldıerma
         [HttpPost]
         public async Task<IActionResult> RemoveProductFromWarehouse(int warehouseProductId)
@@ -138,6 +155,7 @@ namespace StockManagemant.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin,Operator")]
         // Depo ürünü geri getirme 
         [HttpPost]
         public async Task<IActionResult> RestoreWarehouseProduct(int warehouseProductId)
@@ -151,6 +169,12 @@ namespace StockManagemant.Controllers
             {
                 return StatusCode(500, new { success = false, message = $"Depodaki ürün geri yüklenirken hata oluştu: {ex.Message}" });
             }
+        }
+
+        [Authorize(Roles = "Admin,Operator")]
+        public IActionResult AddProduct()
+        {
+            return View();
         }
     }
 }

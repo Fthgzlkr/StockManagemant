@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using StockManagemant.Business.Managers;
 using StockManagemant.BusinessLogic.Managers.Interfaces;
 using StockManagemant.Entities.DTO;
@@ -24,6 +25,7 @@ namespace StockManagemant.Web.Controllers
 
       
         [HttpGet]
+        [Authorize(Roles = "Admin,Operator")]
         public async Task<IActionResult> GetAllWarehouses()
         {
             try
@@ -39,6 +41,7 @@ namespace StockManagemant.Web.Controllers
 
         //  ID'ye göre depo getir
         [HttpGet]
+        [Authorize(Roles = "Admin,Operator")]
         public async Task<IActionResult> GetWarehouseById(int id)
         {
             try
@@ -57,6 +60,7 @@ namespace StockManagemant.Web.Controllers
 
         //  İsme göre depo getir
         [HttpGet]
+        [Authorize(Roles = "Admin,Operator")]
         public async Task<IActionResult> GetWarehouseByName(string name)
         {
             try
@@ -75,6 +79,7 @@ namespace StockManagemant.Web.Controllers
 
         //  Yeni depo ekleme
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddWarehouse([FromBody] WareHouseDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -92,6 +97,7 @@ namespace StockManagemant.Web.Controllers
 
         //  Depo güncelleme
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateWarehouse([FromBody] WareHouseDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -109,6 +115,7 @@ namespace StockManagemant.Web.Controllers
 
         //  Depo silme (Soft Delete)
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteWarehouse(int id)
         {
             try
@@ -124,6 +131,7 @@ namespace StockManagemant.Web.Controllers
 
         //  Silinen depoyu geri getirme (Restore)
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> RestoreWarehouse(int id)
         {
             try
@@ -139,10 +147,19 @@ namespace StockManagemant.Web.Controllers
 
         //  Depo ve içindeki ürünleri getir
         [HttpGet]
+        [Authorize(Roles = "Admin,Operator")]
         public async Task<IActionResult> GetWarehouseWithProducts(int id)
         {
             try
             {
+                if (User.IsInRole("BasicUser"))
+                {
+                    var assignedWarehouseId = User.FindFirst("AssignedWarehouseId")?.Value;
+                    if (assignedWarehouseId == null || id.ToString() != assignedWarehouseId)
+                    {
+                        return RedirectToAction("AccessDenied", "Auth");
+                    }
+                }
                 var warehouse = await _warehouseManager.GetWarehouseWithProductsAsync(id);
                 if (warehouse == null)
                     return NotFound(new { success = false, message = "Depo bulunamadı veya ürün içermiyor." });
@@ -156,6 +173,7 @@ namespace StockManagemant.Web.Controllers
         }
 
          [HttpGet]
+         [Authorize(Roles = "Admin")]
       public async Task<IActionResult> Manage()
     {
         var warehouses = await _warehouseManager.GetAllWarehousesAsync();
@@ -164,6 +182,7 @@ namespace StockManagemant.Web.Controllers
 
 
       [HttpGet]
+      [Authorize(Roles = "Admin")]
      public IActionResult Locations(int id)
 {
     ViewBag.WarehouseId = id;

@@ -2,15 +2,14 @@
 using StockManagemant.Business.Managers;
 using StockManagemant.Entities.Models;
 using StockManagemant.DataAccess.Filters;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using StockManagemant.Entities.DTO;
 using System.ComponentModel;
 
 namespace StockManagemant.Controllers
-{
-    public class ProductController : Controller
+{ 
+      
+       public class ProductController : Controller
     {
         private readonly IProductManager _productManager;
         private readonly ICategoryManager _categoryManager;
@@ -21,13 +20,14 @@ namespace StockManagemant.Controllers
             _categoryManager = categoryManager;
         }
 
-            public IActionResult ProductDetail(int id)
+    public IActionResult ProductDetail(int id)
 {
     ViewData["ProductId"] = id;
     return View();
 }
 
         // ✅ Ürünleri sayfalama ile JSON olarak döndüren action
+        [Authorize(Roles = "Admin,Operator")]
         [HttpGet]
         public async Task<IActionResult> GetProducts([FromQuery] ProductFilter filter, int page = 1, int rows = 5, string sidx = "id", string sord = "asc")
         {
@@ -72,7 +72,7 @@ namespace StockManagemant.Controllers
             }
         }
 
-
+       [Authorize(Roles = "Admin,Operator,BasicUser")]
         [HttpGet]
         public async Task<IActionResult> GetProductById(int id)
         {
@@ -81,6 +81,22 @@ namespace StockManagemant.Controllers
             if (product == null)
             {
                 return NotFound(new { message = "Ürün bulunamadı." });
+            }
+
+            // BasicUser ise kontrol et: ürün kendi deposuna mı ait?
+            if (User.IsInRole("BasicUser"))
+            {
+                var assignedWarehouseId = User.FindFirst("AssignedWarehouseId")?.Value;
+                if (string.IsNullOrEmpty(assignedWarehouseId))
+                {
+                    return RedirectToAction("AccessDenied", "Auth");
+                }
+
+                var productIsInUserWarehouse = await _productManager.IsProductInWarehouseAsync(id, int.Parse(assignedWarehouseId));
+                if (!productIsInUserWarehouse)
+                {
+                    return RedirectToAction("AccessDenied", "Auth");
+                }
             }
 
             return Json(product);
@@ -100,19 +116,20 @@ namespace StockManagemant.Controllers
 
 
         // ✅ Ana sayfa view'ı
+        [Authorize(Roles = "Admin ,Operator")]
         public IActionResult Index()
         {
             return View();
         }
 
         // ✅ Ürün ekleme sayfası
-
-
+        [Authorize(Roles = "Admin,Operator")]
         public IActionResult Create()
         {
             return View();
         }
 
+        [Authorize(Roles = "Admin,Operator")]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] ProductDto productDto, [FromServices] ILogger<ProductController> logger)
         {
@@ -153,7 +170,7 @@ namespace StockManagemant.Controllers
 
 
 
-
+        [Authorize(Roles = "Admin,Operator")]
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
@@ -167,6 +184,7 @@ namespace StockManagemant.Controllers
         }
 
         // ✅ **Ürün düzenleme işlemi (DTO Kullanımı)**
+        [Authorize(Roles = "Admin,Operator")]
         [HttpPost]
         public async Task<IActionResult> Edit([FromBody] ProductDto productDto)
         {
@@ -201,6 +219,7 @@ namespace StockManagemant.Controllers
         }
 
         // ✅ Ürün silme işlemi (Soft Delete)
+        [Authorize(Roles = "Admin,Operator")]
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
@@ -216,6 +235,7 @@ namespace StockManagemant.Controllers
         }
 
         // ✅ Silinen ürünü geri getirme (Restore)
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> Restore(int id)
         {

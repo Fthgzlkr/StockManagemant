@@ -4,23 +4,104 @@
 <link rel="stylesheet" href="~/css/Product.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/GlobalStyles.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/Site.css" asp-append-version="true" />
+<style>
+    body {
+        background: linear-gradient(to bottom right, #f4f7fb, #e3ebf4);
+        font-family: "Segoe UI", sans-serif;
+        font-size: 14px;
+        color: #2f3e4e;
+    }
 
-<h2 class="text-center mt-3">Kategori Yönetimi</h2>
+    h2 {
+        font-size: 24px;
+        font-weight: 600;
+        color: #1f2e40;
+        text-align: center;
+        margin-bottom: 30px;
+    }
 
-<!-- Grid ve Sayfalama Alanı -->
-<table id="categoryGrid"></table>
-<div id="pager"></div>
+    .container {
+        background-color: #fff;
+        padding: 25px 30px;
+        border-radius: 12px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+    }
+
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 13px;
+        border-radius: 6px;
+        min-width: 90px;
+        transition: all 0.2s ease-in-out;
+    }
+
+    #addCategoryBtn {
+        padding: 6px 12px;
+        font-size: 13px;
+        border-radius: 6px;
+    }
+
+    .action-icons {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .action-icons i {
+        cursor: pointer;
+        transition: transform 0.2s ease-in-out;
+    }
+
+    .action-icons i:hover {
+        transform: scale(1.1);
+    }
+
+    .ui-jqgrid {
+        font-size: 13px;
+    }
+
+    .ui-jqgrid .ui-jqgrid-htable th {
+        background-color: #343a40;
+        color: #fff;
+        padding: 10px;
+        text-align: center;
+        font-weight: 500;
+    }
+
+    .ui-jqgrid tr.jqgrow td {
+        padding: 8px;
+        vertical-align: middle;
+        text-align: center;
+        background-color: #fff;
+    }
+
+    .ui-jqgrid tr.jqgrow:hover td {
+        background-color: #f1f8ff;
+    }
+
+    .swal2-popup input {
+        font-size: 14px !important;
+    }
+</style>
+<h2 class="text-center mt-3 mb-4">Kategori Yönetimi</h2>
+
+<div class="container">
+    <table id="categoryGrid"></table>
+    <div id="pager"></div>
+</div>
+
 
 <script>
-     $(document).ready(function () {
+    $(document).ready(function () {
+        // jqGrid kurulumu
         $("#categoryGrid").jqGrid({
             url: '/Categories/GetAllCategories',
             datatype: "json",
             mtype: "GET",
-            colNames: ['ID', 'Kategori Adı','Actions'],
+            colNames: ['ID', 'Kategori Adı', 'İşlemler'],
             colModel: [
-                { name: 'id', index: 'id', width: 50, align: "center", sortable: true, key: true, hidden: true },
-                { name: 'name', index: 'name', width: 200, sortable: true, editable: true, editrules: { required: true } },
+                  { name: 'id', index: 'id', width: 50, align: "center", sortable: true, key: true, hidden: true },
+                { name: 'name', index: 'name', width: 100, sortable: true, editable: true, editrules: { required: true } },
                 {
                     name: "actions",
                     label: "Actions",
@@ -38,17 +119,15 @@
                 }
             ],
             pager: '#pager',
-            rowNum: 15,
-            rowList: [10, 20, 30, 50],
+            rowNum: 10,
+            rowList: [10, 20, 30],
             sortname: 'id',
             sortorder: 'asc',
             viewrecords: true,
-            height: 'auto',
             autowidth: true,
             shrinkToFit: true,
-            caption: "Kategori Listesi",
-            loadonce: false,
             guiStyle: "bootstrap4",
+            caption: "Kategori Listesi",
             jsonReader: {
                 root: "rows",
                 page: "page",
@@ -56,14 +135,24 @@
                 records: "records",
                 repeatitems: false,
                 id: "id"
+            },
+            loadComplete: function () {
+                // Kategori Ekle butonunu sadece bir kez ekle
+                if (!$('#addCategoryBtn').length) {
+                    $("#pager_left").append(`
+                        <button class="btn btn-sm btn-outline-success ms-2" id="addCategoryBtn">
+                            <i class="fa fa-plus me-1"></i>Yeni Kategori
+                        </button>
+                    `);
+                }
             }
         });
 
         $("#categoryGrid").jqGrid('navGrid', '#pager',
-            { edit: false, add: true, del: false, search: false, refresh: true },
-            {}, {}, {}, {}
+            { edit: false, add: false, del: false, search: false, refresh: true }
         );
 
+        // Kategori Silme
         $(document).on("click", ".delete-btn", function () {
             let categoryId = $(this).data("id");
             Swal.fire({
@@ -74,61 +163,52 @@
                 confirmButtonColor: "#3085d6",
                 cancelButtonColor: "#d33",
                 confirmButtonText: "Evet, Sil!",
-                cancelButtonText: "Hayır, İptal"
+                cancelButtonText: "İptal"
             }).then((result) => {
                 if (result.isConfirmed) {
-                    $.ajax({
-                        url: '/Categories/Delete/' + categoryId,
-                        type: 'POST',
-                        success: function (response) {
-                            Swal.fire("Başarılı!", "Kategori başarıyla silindi.", "success");
-                            $("#categoryGrid").trigger("reloadGrid");
-                        },
-                        error: function () {
-                            Swal.fire("Hata!", "Silme işlemi başarısız oldu!", "error");
-                        }
+                    $.post('/Categories/Delete/' + categoryId, function () {
+                        Swal.fire("Başarılı!", "Kategori silindi.", "success");
+                        $("#categoryGrid").trigger("reloadGrid");
+                    }).fail(function () {
+                        Swal.fire("Hata!", "Silme işlemi başarısız oldu!", "error");
                     });
                 }
             });
         });
 
+        // Kategori Düzenleme
         $(document).on("click", ".open-category-edit", function () {
-            let categoryId = $(this).data("id");
-            let categoryName = $(this).data("name");
+            let id = $(this).data("id");
+            let name = $(this).data("name");
 
             Swal.fire({
                 title: "Kategori Düzenle",
                 input: "text",
                 inputLabel: "Kategori Adı",
-                inputValue: categoryName,
+                inputValue: name,
                 showCancelButton: true,
                 confirmButtonText: "Kaydet",
                 cancelButtonText: "İptal",
                 inputValidator: (value) => {
-                    if (!value) {
-                        return "Kategori adı boş olamaz!";
-                    }
-                    if (value.length < 3 || value.length > 50) {
-                        return "Kategori adı en az 3, en fazla 50 karakter olmalıdır!";
-                    }
-                    if (!/^[a-zA-Z0-9ğüşöçİĞÜŞÖÇ ]+$/.test(value)) {
-                        return "Kategori adı yalnızca harf, rakam ve boşluk içerebilir!";
-                    }
+                    if (!value) return "Kategori adı boş olamaz!";
+                    if (value.length < 3 || value.length > 50)
+                        return "Kategori adı 3-50 karakter arasında olmalı!";
+                    if (!/^[a-zA-Z0-9ğüşöçİĞÜŞÖÇ ]+$/.test(value))
+                        return "Geçersiz karakterler!";
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
-                    let newCategoryName = result.value;
                     $.ajax({
                         url: "/Categories/EditCategory",
                         type: "POST",
                         contentType: "application/json",
-                        data: JSON.stringify({ Id: categoryId, Name: newCategoryName }),
-                        success: function (response) {
-                            if (response.success) {
-                                Swal.fire("Güncellendi!", "Kategori başarıyla güncellendi.", "success");
+                        data: JSON.stringify({ Id: id, Name: result.value }),
+                        success: function (res) {
+                            if (res.success) {
+                                Swal.fire("Başarılı!", "Kategori güncellendi.", "success");
                                 $("#categoryGrid").trigger("reloadGrid");
                             } else {
-                                Swal.fire("Hata!", response.message, "error");
+                                Swal.fire("Hata!", res.message, "error");
                             }
                         },
                         error: function () {
@@ -139,5 +219,44 @@
             });
         });
 
+        // Kategori Ekleme
+        $(document).on("click", "#addCategoryBtn", function () {
+            Swal.fire({
+                title: "Yeni Kategori",
+                input: "text",
+                inputLabel: "Kategori Adı",
+                inputPlaceholder: "Örn: Elektronik",
+                showCancelButton: true,
+                confirmButtonText: "Ekle",
+                cancelButtonText: "İptal",
+                inputValidator: (value) => {
+                    if (!value) return "Kategori adı boş olamaz!";
+                    if (value.length < 3 || value.length > 50)
+                        return "Kategori adı 3-50 karakter olmalı!";
+                    if (!/^[a-zA-Z0-9ğüşöçİĞÜŞÖÇ ]+$/.test(value))
+                        return "Sadece harf, rakam ve boşluk içermeli!";
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "/Categories/AddCategory",
+                        type: "POST",
+                        contentType: "application/json",
+                        data: JSON.stringify({ name: result.value }),
+                        success: function (res) {
+                            if (res.success) {
+                                Swal.fire("Başarılı!", res.message, "success");
+                                $("#categoryGrid").trigger("reloadGrid");
+                            } else {
+                                Swal.fire("Hata!", res.message, "error");
+                            }
+                        },
+                        error: function () {
+                            Swal.fire("Hata!", "Kategori eklenemedi!", "error");
+                        }
+                    });
+                }
+            });
+        });
     });
 </script>

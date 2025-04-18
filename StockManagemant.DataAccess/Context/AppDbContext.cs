@@ -17,8 +17,8 @@ namespace StockManagemant.DataAccess.Context
         public DbSet<ReceiptDetail> ReceiptDetails { get; set; }
         public DbSet<Warehouse> Warehouses { get; set; }
         public DbSet<WarehouseProduct> WarehouseProducts { get; set; }
-
         public DbSet<WarehouseLocation> WarehouseLocations {get;set;}
+        public DbSet<AppUser> AppUsers { get; set; }
 
         // Model yapılandırmaları
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -78,12 +78,20 @@ namespace StockManagemant.DataAccess.Context
                 .HasForeignKey(wl => wl.WarehouseId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // ✅ AppUser - Warehouse ilişkisi (BasicUser için atanan depo)
+            modelBuilder.Entity<AppUser>()
+                .HasOne(u => u.AssignedWarehouse)
+                .WithMany()
+                .HasForeignKey(u => u.AssignedWarehouseId)
+                .OnDelete(DeleteBehavior.Restrict);    
+
 
             // ✅ Soft Delete için Global Query Filter
             modelBuilder.Entity<Product>().HasQueryFilter(p => !p.IsDeleted);
             modelBuilder.Entity<Warehouse>().HasQueryFilter(w => !w.IsDeleted);
             modelBuilder.Entity<WarehouseProduct>().HasQueryFilter(wp => !wp.IsDeleted);
             modelBuilder.Entity<WarehouseLocation>().HasQueryFilter(wl => !wl.IsDeleted);
+            modelBuilder.Entity<AppUser>().HasQueryFilter(au => !au.IsDeleted);
 
         }
     }

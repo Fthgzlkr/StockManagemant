@@ -3,9 +3,7 @@ using StockManagemant.Business.Managers;
 using StockManagemant.Entities.Models;
 using StockManagemant.Entities.DTO;
 using AutoMapper;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Linq;
+using Microsoft.AspNetCore.Authorization;
 
 namespace StockManagemant.Web.Controllers
 {
@@ -21,6 +19,7 @@ namespace StockManagemant.Web.Controllers
         }
 
         // Kategori yönetim sayfası
+        [Authorize(Roles = "Admin")]
         public IActionResult Index()
         {
             return View();
@@ -56,6 +55,7 @@ namespace StockManagemant.Web.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> AddCategory([FromBody] CategoryDto categoryDto)
         {
@@ -78,7 +78,7 @@ namespace StockManagemant.Web.Controllers
 
 
 
-
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> EditCategory([FromBody] CategoryDto categoryDto)
         {
@@ -97,7 +97,8 @@ namespace StockManagemant.Web.Controllers
                 return Json(new { success = false, message = "Kategori güncellenirken hata oluştu: " + ex.Message });
             }
         }
-
+        
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
