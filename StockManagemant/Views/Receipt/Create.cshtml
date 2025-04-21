@@ -17,7 +17,7 @@
             <div class="card shadow-sm p-3">
                 <h6 class="fw-bold mb-3 text-primary">🔍 Ürün Arama</h6>
                 <div class="input-group input-group-sm mb-2">
-                    <input type="number" id="productIdInput" class="form-control" placeholder="Ürün ID girin">
+                    <input type="text" id="productBarcodeInput" class="form-control" placeholder="Ürün barkodunu girin">
                     <button id="searchProductBtn" class="btn btn-outline-primary px-3">
                         <i class="fas fa-search"></i>
                     </button>
@@ -114,14 +114,14 @@
     let receiptItems = [];
 
     // Ürün Arama Butonu
-    $("#searchProductBtn").click(function () {
-        let productId = $("#productIdInput").val();
-        if (!productId) {
-            Swal.fire("Hata!", "Lütfen geçerli bir ürün ID girin!", "error");
+        $("#searchProductBtn").click(function () {
+        let barcode = $("#productBarcodeInput").val();
+        if (!barcode) {
+            Swal.fire("Hata!", "Lütfen geçerli bir ürün barkodu girin!", "error");
             return;
         }
 
-        $.get(`/Receipt/GetWarehouseProduct?warehouseId=${warehouseId}&productId=${productId}`, function (response) {
+        $.get(`/Receipt/GetWarehouseProduct?warehouseId=${warehouseId}&barcode=${barcode}`, function (response) {
             if (response.success) {
                 showSearchedProduct(response.data);
             } else {

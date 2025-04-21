@@ -1,4 +1,6 @@
-﻿@{
+﻿@using System.Security.Claims
+
+@{
     ViewData["Title"] = "Depo Seçimi";
 }
 
@@ -29,6 +31,19 @@ else
     <!-- Script -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
+            const userRole = "@User.FindFirstValue(ClaimTypes.Role)";
+            const assignedWarehouseId = "@User.FindFirst("AssignedWarehouseId")?.Value";
+            const localWarehouseId = localStorage.getItem("selectedWarehouseId");
+
+            if (userRole === "BasicUser") {
+                if (localWarehouseId !== assignedWarehouseId) {
+                    localStorage.setItem("selectedWarehouseId", assignedWarehouseId);
+                }
+
+                updateSidebarLinks(assignedWarehouseId);
+                return;
+            }
+
             fetch("/Warehouse/GetAllWarehouses")
                 .then(response => response.json())
                 .then(data => {
@@ -40,29 +55,32 @@ else
                         warehouseSelect.appendChild(option);
                     });
 
-                    let selectedWarehouseId = localStorage.getItem("selectedWarehouseId");
-                    if (selectedWarehouseId) {
-                        warehouseSelect.value = selectedWarehouseId;
-                        updateSidebarLinks(selectedWarehouseId);
+                    if (localWarehouseId) {
+                        warehouseSelect.value = localWarehouseId;
+                        updateSidebarLinks(localWarehouseId);
                     }
                 });
 
             document.getElementById("warehouseSelect").addEventListener("change", function () {
-                let selectedWarehouseId = this.value;
-                if (selectedWarehouseId) {
-                    localStorage.setItem("selectedWarehouseId", selectedWarehouseId);
-                    updateSidebarLinks(selectedWarehouseId);
+                const selectedId = this.value;
+                if (selectedId) {
+                    localStorage.setItem("selectedWarehouseId", selectedId);
+                    updateSidebarLinks(selectedId);
                 }
             });
-        });
 
-        function updateSidebarLinks(warehouseId) {
-            if (warehouseId) {
-                document.getElementById("receiptLink").href = `/Receipt/ListByWarehouse?warehouseId=${warehouseId}`;
-                document.getElementById("createReceiptLink").href = `/Receipt/Create?warehouseId=${warehouseId}`;
-                document.getElementById("warehouseProductsLink").href = `/WarehouseProduct/WarehouseProducts?warehouseId=${warehouseId}`;
+            function updateSidebarLinks(warehouseId) {
+                if (warehouseId) {
+                    const receiptLink = document.getElementById("receiptLink");
+                    const createReceiptLink = document.getElementById("createReceiptLink");
+                    const warehouseProductsLink = document.getElementById("warehouseProductsLink");
+
+                    if (receiptLink) receiptLink.href = `/Receipt/ListByWarehouse?warehouseId=${warehouseId}`;
+                    if (createReceiptLink) createReceiptLink.href = `/Receipt/Create?warehouseId=${warehouseId}`;
+                    if (warehouseProductsLink) warehouseProductsLink.href = `/WarehouseProduct/WarehouseProducts?warehouseId=${warehouseId}`;
+                }
             }
-        }
+        });
     </script>
 
 

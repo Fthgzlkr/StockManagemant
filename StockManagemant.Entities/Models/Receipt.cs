@@ -15,11 +15,24 @@ namespace StockManagemant.Entities.Models
         [Required]
         public int WarehouseId { get; set; } // İşlem yapılan depo
         public Warehouse Warehouse { get; set; }
+        
+        [Required]
+        [MaxLength(50)]
+        public string ReceiptNumber { get; set; }
+
+        [Required]
+       public ReceiptType ReceiptType { get; set; } // "Giriş" veya "Çıkış"
+
+        public string? Description { get; set; }
 
         public ICollection<ReceiptDetail> ReceiptDetails { get; set; } = new List<ReceiptDetail>();
 
         public bool IsDeleted { get; set; } = false; // Soft Delete
     }
 
-
+     public enum ReceiptType 
+    {
+        Entry = 1,
+        Exit = 2
+    }
 }

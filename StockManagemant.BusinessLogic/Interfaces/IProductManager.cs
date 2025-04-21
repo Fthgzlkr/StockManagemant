@@ -15,5 +15,6 @@ namespace StockManagemant.Business.Managers
         Task RestoreProductAsync(int productId);
         Task<ProductDto> GetProductByIdAsync(int productId);
         Task<ProductDto> GetProductByIdWithDeletedAsync(int productId);
+        Task<bool> IsProductInWarehouseAsync(int productId, int warehouseId);
     }
 }

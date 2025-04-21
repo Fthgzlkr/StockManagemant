@@ -9,14 +9,9 @@ namespace StockManagemant.DataAccess.Repositories.Interfaces
     {
 
         Task<int> GetTotalCountAsync(ProductFilter filter);
-
-
         Task<IEnumerable<Product>> GetPagedProductsAsync(ProductFilter filter, int page, int pageSize);
-
-
         Task<Product> GetByIdAsync(int id);
-
-
         Task<Product> GetByIdWithDeletedAsync(int id);
+        Task<bool> IsProductInWarehouseAsync(int productId, int warehouseId);
     }
 }

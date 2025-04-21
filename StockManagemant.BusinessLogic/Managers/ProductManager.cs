@@ -101,6 +101,10 @@ namespace StockManagemant.Business.Managers
             return _mapper.Map<ProductDto>(product);
         }
 
+        public async Task<bool> IsProductInWarehouseAsync(int productId, int warehouseId)
+        {
+            return await _productRepository.IsProductInWarehouseAsync(productId, warehouseId);
+        }
 
 
 

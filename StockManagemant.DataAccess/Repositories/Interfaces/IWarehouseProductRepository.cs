@@ -12,7 +12,7 @@ namespace StockManagemant.DataAccess.Repositories.Interfaces
         Task<int> GetTotalCountAsync(WarehouseProductFilter filter, int warehouseId);
         Task<IEnumerable<WarehouseProduct>> GetPagedWarehouseProductsWithStockAsync(WarehouseProductFilter filter, int warehouseId, int page, int pageSize);
         Task<WarehouseProduct> GetByIdAsync(int id);   
-        Task<WarehouseProduct> GetProductInWarehouseByIdAsync(int warehouseId, int productId);
+         Task<WarehouseProduct> GetProductInWarehouseByBarcodeAsync(int warehouseId, string barcode);
         Task<WarehouseProduct> GetByIdWithDeletedAsync(int id);
     }
 }

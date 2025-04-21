@@ -73,14 +73,18 @@ namespace StockManagemant.DataAccess.Repositories
         }
 
         //Fiş oluştururken kullanacağımız depoya göre ürünü id ile getiren metod
-        public async Task<WarehouseProduct> GetProductInWarehouseByIdAsync(int warehouseId, int productId)
-        {
-            return await _context.WarehouseProducts
-                .Include(wp => wp.Product)
-                .ThenInclude(p => p.Category)
-                .Include(wp => wp.Warehouse)
-                .FirstOrDefaultAsync(wp => wp.WarehouseId == warehouseId && wp.ProductId == productId && !wp.IsDeleted);
-        }
+       public async Task<WarehouseProduct?> GetProductInWarehouseByBarcodeAsync(int warehouseId, string barcode)
+{
+    return await _context.WarehouseProducts
+        .Include(wp => wp.Product)
+            .ThenInclude(p => p.Category)
+        .Include(wp => wp.Warehouse)
+        .FirstOrDefaultAsync(wp =>
+            wp.WarehouseId == warehouseId &&
+            wp.Product.Barcode == barcode &&
+            !wp.IsDeleted &&
+            !wp.Product.IsDeleted); // ürün soft deleted olabilir, onu da kontrol et
+}
 
 
 

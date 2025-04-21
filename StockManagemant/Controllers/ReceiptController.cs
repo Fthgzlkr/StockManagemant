@@ -92,7 +92,10 @@ namespace StockManagemant.Controllers
                 {
                     id = r.Id,
                     date = r.FormattedDate,
-                    totalAmount = r.TotalAmount.ToString("C")
+                    totalAmount = r.TotalAmount.ToString("C"),
+                    receiptType = r.ReceiptType.ToString(),
+                    receiptNumber = r.ReceiptNumber,
+                    description = r.Description
                 })
             };
 
@@ -318,24 +321,19 @@ namespace StockManagemant.Controllers
             }
         }
 
-        //Fiş oluşturma sayfasında depo ürünü getirirken 
+        // Fiş oluşturma sayfasında depo ürünü getirirken 
         [Authorize(Roles = "Admin,Operator")]
         [HttpGet]
-        public async Task<IActionResult> GetWarehouseProduct(int warehouseId, int productId)
+        public async Task<IActionResult> GetWarehouseProduct(int warehouseId, string barcode)
         {
-            if (warehouseId <= 0 || productId <= 0)
+            if (warehouseId <= 0 || string.IsNullOrWhiteSpace(barcode))
             {
-                return BadRequest(new { success = false, message = "Geçersiz depo veya ürün ID!" });
+                return BadRequest(new { success = false, message = "Geçersiz depo ID veya barkod!" });
             }
 
             try
             {
-                var warehouseProduct = await _warehouseProductManager.GetProductInWarehouseByIdAsync(warehouseId, productId);
-                if (warehouseProduct == null)
-                {
-                    return NotFound(new { success = false, message = "Ürün bu depoda bulunamadı!" });
-                }
-
+                var warehouseProduct = await _warehouseProductManager.GetProductInWarehouseByBarcodeAsync(warehouseId, barcode);
                 return Ok(new { success = true, data = warehouseProduct });
             }
             catch (Exception ex)

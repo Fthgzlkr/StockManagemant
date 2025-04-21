@@ -95,23 +95,65 @@
         $(document).on("click", "#addUserBtn", function () {
             Swal.fire({
                 title: "Yeni Kullanıcı Ekle",
-                html:
-                    `<input type="text" id="swalUsername" class="swal2-input" placeholder="Kullanıcı Adı">
-                    <input type="password" id="swalPassword" class="swal2-input" placeholder="Şifre">
-                    <select id="swalRole" class="swal2-select">
-                        <option value="Admin">Admin</option>
-                        <option value="Operator">Operator</option>
-                        <option value="BasicUser">BasicUser</option>
-                    </select>
-                    <input type="number" id="swalWarehouse" class="swal2-input" placeholder="Depo ID (isteğe bağlı)">`,
-                focusConfirm: false,
+                html: `
+                    <div class="container-fluid">
+                        <div class="mb-3"><input type="text" id="swalUsername" class="form-control" placeholder="Kullanıcı Adı"></div>
+                        <div class="mb-3"><input type="password" id="swalPassword" class="form-control" placeholder="Şifre"></div>
+                        <div class="mb-3">
+                            <select id="swalRole" class="form-select">
+                                <option value="Admin">Admin</option>
+                                <option value="Operator">Operator</option>
+                                <option value="BasicUser">BasicUser</option>
+                            </select>
+                        </div>
+                        <div class="mb-3" id="warehouseContainer" style="display:none;">
+                            <select id="swalWarehouse" class="form-select">
+                                <option value="">Depo Seçin</option>
+                            </select>
+                        </div>
+                    </div>`,
+                didOpen: () => {
+                    const roleSelect = document.getElementById("swalRole");
+                    const warehouseSelect = document.getElementById("swalWarehouse");
+                    const warehouseContainer = document.getElementById("warehouseContainer");
+
+                    roleSelect.addEventListener("change", function () {
+                        if (this.value === "BasicUser") {
+                            warehouseContainer.style.display = "block";
+                        } else {
+                            warehouseContainer.style.display = "none";
+                            warehouseSelect.value = "";
+                        }
+                    });
+
+                    fetch("/Warehouse/GetAllWarehouses")
+                        .then(res => res.json())
+                        .then(data => {
+                            data.data.forEach(w => {
+                                let opt = document.createElement("option");
+                                opt.value = w.id;
+                                opt.innerText = w.name;
+                                warehouseSelect.appendChild(opt);
+                            });
+                        });
+                },
                 preConfirm: () => {
-                    return {
-                        username: document.getElementById('swalUsername').value,
-                        password: document.getElementById('swalPassword').value,
-                        role: document.getElementById('swalRole').value,
-                        assignedWarehouseId: document.getElementById('swalWarehouse').value || null
+                    const username = document.getElementById('swalUsername').value;
+                    const password = document.getElementById('swalPassword').value;
+                    const role = document.getElementById('swalRole').value;
+                    const assignedWarehouseId = document.getElementById('swalWarehouse').value || null;
+
+                    if (!username || !password) {
+                        Swal.showValidationMessage("Kullanıcı adı ve şifre zorunludur!");
+                        return false;
                     }
+
+                    if (role === "BasicUser" && !assignedWarehouseId) {
+                        Swal.showValidationMessage("BasicUser için depo seçilmelidir!");
+                        return false;
+                    }
+
+                    return { username, password, role, assignedWarehouseId };
                 },
                 showCancelButton: true,
                 confirmButtonText: 'Kaydet',
@@ -147,23 +189,63 @@
 
             Swal.fire({
                 title: "Kullanıcı Güncelle",
-                html:
-                    `<input type="text" id="swalUsername" class="swal2-input" value="${username}" placeholder="Kullanıcı Adı" disabled>
-                    <input type="password" id="swalPassword" class="swal2-input" placeholder="Yeni Şifre (boş bırakılırsa değişmez)">
-                    <select id="swalRole" class="swal2-select">
-                        <option value="Admin" ${role === "Admin" ? "selected" : ""}>Admin</option>
-                        <option value="Operator" ${role === "Operator" ? "selected" : ""}>Operator</option>
-                        <option value="BasicUser" ${role === "BasicUser" ? "selected" : ""}>BasicUser</option>
-                    </select>
-                    <input type="number" id="swalWarehouse" class="swal2-input" value="${warehouseId}" placeholder="Depo ID (isteğe bağlı)">`,
-                focusConfirm: false,
+                html: `
+                    <div class="container-fluid">
+                        <div class="mb-3"><input type="text" id="swalUsername" class="form-control" value="${username}" placeholder="Kullanıcı Adı" disabled></div>
+                        <div class="mb-3"><input type="password" id="swalPassword" class="form-control" placeholder="Yeni Şifre (boş bırakılırsa değişmez)"></div>
+                        <div class="mb-3">
+                            <select id="swalRole" class="form-select">
+                                <option value="Admin" ${role === "Admin" ? "selected" : ""}>Admin</option>
+                                <option value="Operator" ${role === "Operator" ? "selected" : ""}>Operator</option>
+                                <option value="BasicUser" ${role === "BasicUser" ? "selected" : ""}>BasicUser</option>
+                            </select>
+                        </div>
+                        <div class="mb-3" id="warehouseContainer" style="display:none;">
+                            <select id="swalWarehouse" class="form-select">
+                                <option value="">Depo Seçin</option>
+                            </select>
+                        </div>
+                    </div>`,
+                didOpen: () => {
+                    const roleSelect = document.getElementById("swalRole");
+                    const warehouseSelect = document.getElementById("swalWarehouse");
+                    const warehouseContainer = document.getElementById("warehouseContainer");
+
+                    roleSelect.addEventListener("change", function () {
+                        if (this.value === "BasicUser") {
+                            warehouseContainer.style.display = "block";
+                        } else {
+                            warehouseContainer.style.display = "none";
+                            warehouseSelect.value = "";
+                        }
+                    });
+
+                    fetch("/Warehouse/GetAllWarehouses")
+                        .then(res => res.json())
+                        .then(data => {
+                            data.data.forEach(w => {
+                                let opt = document.createElement("option");
+                                opt.value = w.id;
+                                opt.innerText = w.name;
+                                warehouseSelect.appendChild(opt);
+                            });
+                            warehouseSelect.value = warehouseId; // set selected warehouse
+                            if (role === "BasicUser") {
+                                warehouseContainer.style.display = "block";
+                            }
+                        });
+                },
                 preConfirm: () => {
-                    return {
-                        username: username,
-                        password: document.getElementById('swalPassword').value,
-                        role: document.getElementById('swalRole').value,
-                        assignedWarehouseId: document.getElementById('swalWarehouse').value || null
+                    const password = document.getElementById('swalPassword').value;
+                    const role = document.getElementById('swalRole').value;
+                    const assignedWarehouseId = document.getElementById('swalWarehouse').value || null;
+
+                    if (role === "BasicUser" && !assignedWarehouseId) {
+                        Swal.showValidationMessage("BasicUser için depo seçilmelidir!");
+                        return false;
                     }
+
+                    return { username: username, password, role, assignedWarehouseId };
                 },
                 showCancelButton: true,
                 confirmButtonText: 'Güncelle',

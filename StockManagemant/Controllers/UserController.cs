@@ -1,11 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using StockManagemant.Business.Managers;
 using StockManagemant.Entities.DTO;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
-
 
 namespace StockManagemant.Web.Controllers
 {
@@ -51,12 +48,24 @@ namespace StockManagemant.Web.Controllers
             if (targetUser == null)
                 return NotFound();
 
+            if (dto.Role == "BasicUser" && dto.AssignedWarehouseId == null)
+            {
+                return BadRequest(new { success = false, message = "BasicUser için Depo ID zorunludur." });
+            }
+
             if (currentUserRole == "Admin" ||
                (currentUserRole == "Operator" && (targetUser.Id == currentUserId || targetUser.Role == "BasicUser")) ||
                (currentUserRole == "BasicUser" && currentUserId == id))
             {
-                await _userManager.UpdateAsync(id, dto);
-                return Ok(new { success = true, message = "Kullanıcı güncellendi." });
+                try
+                {
+                    await _userManager.UpdateAsync(id, dto);
+                    return Ok(new { success = true, message = "Kullanıcı güncellendi." });
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(500, new { success = false, message = $"Güncelleme sırasında hata oluştu: {ex.Message}" });
+                }
             }
 
             return Forbid();
@@ -75,8 +84,15 @@ namespace StockManagemant.Web.Controllers
             if (currentUserRole == "Admin" ||
                (currentUserRole == "Operator" && targetUser.Role == "BasicUser"))
             {
-                await _userManager.DeleteAsync(id);
-                return Ok(new { success = true, message = "Kullanıcı silindi." });
+                try
+                {
+                    await _userManager.DeleteAsync(id);
+                    return Ok(new { success = true, message = "Kullanıcı silindi." });
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(500, new { success = false, message = $"Silme sırasında hata oluştu: {ex.Message}" });
+                }
             }
 
             return Forbid();

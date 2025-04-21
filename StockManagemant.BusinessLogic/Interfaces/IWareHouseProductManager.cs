@@ -16,6 +16,6 @@ namespace StockManagemant.Business.Managers
         Task RestoreWarehouseProductAsync(int warehouseProductId);
         Task<List<WarehouseProductDto>> GetPagedWarehouseProductsAsync(WarehouseProductFilter filter, int warehouseId, int page, int pageSize);
         Task<int> GetTotalWarehouseProductCountAsync(WarehouseProductFilter filter, int WarehouseId);
-        Task<WarehouseProductDto> GetProductInWarehouseByIdAsync(int warehouseId, int productId);
+        Task<WarehouseProductDto> GetProductInWarehouseByBarcodeAsync(int warehouseId, string barcode);
     }
 }

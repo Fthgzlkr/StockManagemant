@@ -38,11 +38,12 @@
         url: '/Receipt/GetReceipts',
         datatype: "json",
         mtype: "GET",
-        colNames: ['Fiş No', 'Tarih', 'Toplam Tutar','İşlemler'],
+        colNames: ['Fiş No', 'Tarih', 'Toplam Tutar','İşlem Türü','İşlemler'],
         colModel: [
             { name: 'id', index: 'id', width: 50, align: "center", sortable: true, key: true,hidden:true },
             { name: 'date', index: 'date', width: 60, align: "center", sortable: true },
             { name: 'totalAmount', index: 'totalAmount', width: 60, align: "right", sortable: true },
+            { name: 'receiptType', index: 'receiptType', width: 60, align: "right", sortable: true },
                  {
                     name: "actions",
                     label: "İşlemler",

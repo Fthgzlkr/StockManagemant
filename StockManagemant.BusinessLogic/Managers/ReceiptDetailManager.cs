@@ -9,12 +9,13 @@ using StockManagemant.DataAccess.Repositories.Interfaces;
 
 namespace StockManagemant.Business.Managers
 {
-    public class ReceiptDetailManager :IReceiptDetailManager
+    public class ReceiptDetailManager : IReceiptDetailManager
     {
         private readonly IReceiptDetailRepository _receiptDetailRepository;
         private readonly IProductRepository _productRepository;
         private readonly IWarehouseProductRepository _warehouseProductRepository;
-      
+        private readonly IReceiptRepository _receiptRepository;
+
         private readonly IMapper _mapper;
 
         public ReceiptDetailManager(
@@ -26,32 +27,51 @@ namespace StockManagemant.Business.Managers
         {
             _receiptDetailRepository = receiptDetailRepository;
             _productRepository = productRepository;
+            _receiptRepository = receiptRepository;
             _warehouseProductRepository = warehouseProductRepository;
-            
+
             _mapper = mapper;
         }
 
-        // ✅ Tüm aktif fiş detaylarını getir (DTO kullanımı)
+        // Tüm aktif fiş detaylarını getir 
         public async Task<List<ReceiptDetailDto>> GetAllReceiptDetailsAsync()
         {
             var receiptDetails = await _receiptDetailRepository.GetAllAsync();
             return _mapper.Map<List<ReceiptDetailDto>>(receiptDetails);
         }
 
-        // ✅ Belirli bir fişin aktif detaylarını getir (DTO kullanımı)
+        //  Belirli bir fişin aktif detaylarını getir 
         public async Task<List<ReceiptDetailDto>> GetReceiptDetailsByReceiptIdAsync(int receiptId)
         {
             var receiptDetails = await _receiptDetailRepository.GetByReceiptIdAsync(receiptId);
             return _mapper.Map<List<ReceiptDetailDto>>(receiptDetails);
         }
 
-        // ✅ Fişe yeni ürün ekleme (DTO kullanımı)
+        //  Fişe yeni ürün ekleme 
         public async Task AddProductToReceiptAsync(int receiptId, int productId, int quantity)
         {
             if (quantity <= 0) throw new Exception("Hata: Ürün miktarı sıfırdan büyük olmalıdır!");
 
             var product = await _productRepository.GetByIdAsync(productId);
             if (product == null) throw new Exception("Hata: Ürün bulunamadı!");
+
+            var receipt = await _receiptRepository.GetByIdAsync(receiptId);
+            if (receipt == null) throw new Exception("Hata: Fiş bulunamadı!");
+
+            var warehouseProduct = await _warehouseProductRepository.GetProductInWarehouseByBarcodeAsync(receipt.WarehouseId, product.Barcode);
+            if (warehouseProduct == null) throw new Exception("Bu ürün ilgili depoda bulunamadı!");
+
+            // Stok güncellemesi
+            if (receipt.ReceiptType == ReceiptType.Entry)
+            {
+                warehouseProduct.StockQuantity += quantity;
+            }
+            else if (receipt.ReceiptType == ReceiptType.Exit)
+            {
+                warehouseProduct.StockQuantity -= quantity;
+                if (warehouseProduct.StockQuantity < 0)
+                    throw new Exception("Yetersiz stok! Stok miktarı sıfırın altına inemez.");
+            }
 
             decimal productPriceAtSale = product.Price ?? 0;
 
@@ -65,63 +85,81 @@ namespace StockManagemant.Business.Managers
             };
 
             await _receiptDetailRepository.AddAsync(receiptDetail);
+            await _warehouseProductRepository.UpdateAsync(warehouseProduct);
             await _receiptDetailRepository.UpdateReceiptTotal(receiptId);
         }
 
-
-
-        // ✅ Fişten ürün kaldırma (Soft Delete)
+        // Fişten ürün kaldırma 
         public async Task RemoveProductFromReceiptAsync(int receiptDetailId)
         {
             var receiptDetail = await _receiptDetailRepository.GetByIdAsync(receiptDetailId);
             if (receiptDetail == null) throw new Exception("Fiş detayı bulunamadı.");
 
-            await _receiptDetailRepository.DeleteAsync(receiptDetailId); // ✅ Generic Repository DeleteAsync kullanıldı
+            var receipt = await _receiptRepository.GetByIdAsync(receiptDetail.ReceiptId);
+            if (receipt == null) throw new Exception("Fiş bulunamadı.");
 
+            var product = await _productRepository.GetByIdAsync(receiptDetail.ProductId);
+            if (product == null) throw new Exception("Ürün bulunamadı.");
+
+            var warehouseProduct = await _warehouseProductRepository.GetProductInWarehouseByBarcodeAsync(receipt.WarehouseId, product.Barcode);
+            if (warehouseProduct == null) throw new Exception("Ürün depoda bulunamadı.");
+
+            // Stok geri iade işlemi
+            if (receipt.ReceiptType == ReceiptType.Entry)
+            {
+                warehouseProduct.StockQuantity -= receiptDetail.Quantity;
+                if (warehouseProduct.StockQuantity < 0)
+                    throw new Exception("Stok miktarı sıfırın altına inemez!");
+            }
+            else if (receipt.ReceiptType == ReceiptType.Exit)
+            {
+                warehouseProduct.StockQuantity += receiptDetail.Quantity;
+            }
+
+            await _warehouseProductRepository.UpdateAsync(warehouseProduct);
+            await _receiptDetailRepository.DeleteAsync(receiptDetailId);
             await _receiptDetailRepository.UpdateReceiptTotal(receiptDetail.ReceiptId);
         }
 
-
-        // ✅ Fişteki ürün miktarını güncelleme (DTO kullanımı)
+        //  Fişteki ürün miktarını güncelleme 
         public async Task UpdateProductQuantityInReceiptAsync(int receiptDetailId, int newQuantity)
         {
             var receiptDetail = await _receiptDetailRepository.GetByIdAsync(receiptDetailId);
             if (receiptDetail == null) throw new Exception("Fiş detayı bulunamadı.");
 
-            
-            var warehouseProduct = await _warehouseProductRepository.GetByIdAsync(receiptDetail.ProductId);
+            var receipt = await _receiptRepository.GetByIdAsync(receiptDetail.ReceiptId);
+            if (receipt == null) throw new Exception("Fiş bulunamadı.");
+
+            var product = await _productRepository.GetByIdAsync(receiptDetail.ProductId);
+            if (product == null) throw new Exception("Ürün bulunamadı.");
+
+            var warehouseProduct = await _warehouseProductRepository.GetProductInWarehouseByBarcodeAsync(receipt.WarehouseId, product.Barcode);
             if (warehouseProduct == null) throw new Exception("Ürün depoda bulunamadı.");
 
-            int receiptId = receiptDetail.ReceiptId;
-
-            
             int quantityDifference = newQuantity - receiptDetail.Quantity;
 
-            
-            warehouseProduct.StockQuantity -= quantityDifference;
-
-            if (warehouseProduct.StockQuantity < 0)
+            if (receipt.ReceiptType == ReceiptType.Entry)
             {
-                throw new Exception("Yetersiz stok! Stok miktarı sıfırın altına inemez.");
+                warehouseProduct.StockQuantity += quantityDifference;
+            }
+            else if (receipt.ReceiptType == ReceiptType.Exit)
+            {
+                warehouseProduct.StockQuantity -= quantityDifference;
+                if (warehouseProduct.StockQuantity < 0)
+                {
+                    throw new Exception("Yetersiz stok! Stok miktarı sıfırın altına inemez.");
+                }
             }
 
-            
             receiptDetail.Quantity = newQuantity;
             receiptDetail.SubTotal = newQuantity * receiptDetail.ProductPriceAtSale;
 
-
-            var updateWarehouseProductDto = _mapper.Map<WarehouseProductDto>(warehouseProduct);
-
-
             await _receiptDetailRepository.UpdateAsync(receiptDetail);
-            await _warehouseProductRepository.UpdateAsync(warehouseProduct); 
-
-            await _receiptDetailRepository.UpdateReceiptTotal(receiptId);
+            await _warehouseProductRepository.UpdateAsync(warehouseProduct);
+            await _receiptDetailRepository.UpdateReceiptTotal(receiptDetail.ReceiptId);
         }
 
-
-
-        // ✅ Belirli fişe ait tüm detayları soft delete ile silme
+        // Belirli fişe ait tüm detayları soft delete ile silme
         public async Task DeleteDetailsByReceiptIdAsync(int receiptId)
         {
             var details = await _receiptDetailRepository.GetByReceiptIdAsync(receiptId);
@@ -133,6 +171,5 @@ namespace StockManagemant.Business.Managers
 
             await _receiptDetailRepository.UpdateReceiptTotal(receiptId);
         }
-
     }
 }

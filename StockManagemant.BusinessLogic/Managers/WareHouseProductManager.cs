@@ -116,9 +116,9 @@ namespace StockManagemant.Business.Managers
             return await _warehouseProductRepository.GetTotalCountAsync(filter,WarehouseId);
         }
 
-        public async Task<WarehouseProductDto> GetProductInWarehouseByIdAsync(int warehouseId, int productId)
+       public async Task<WarehouseProductDto> GetProductInWarehouseByBarcodeAsync(int warehouseId, string barcode)
         {
-            var warehouseProduct = await _warehouseProductRepository.GetProductInWarehouseByIdAsync(warehouseId, productId);
+            var warehouseProduct = await _warehouseProductRepository.GetProductInWarehouseByBarcodeAsync(warehouseId, barcode);
 
             if (warehouseProduct == null)
                 throw new Exception("Ürün bu depoda bulunamadı.");
@@ -135,7 +135,9 @@ namespace StockManagemant.Business.Managers
                 StockQuantity = warehouseProduct.StockQuantity,
                 WarehouseLocationId = warehouseProduct.WarehouseLocationId,
                 StockCode = warehouseProduct.StockCode,
-                LocationDisplay = warehouseProduct.WarehouseLocation != null ? $"{warehouseProduct.WarehouseLocation.Corridor} > {warehouseProduct.WarehouseLocation.Shelf} > {warehouseProduct.WarehouseLocation.Bin}" : null,
+                LocationDisplay = warehouseProduct.WarehouseLocation != null
+                    ? $"{warehouseProduct.WarehouseLocation.Corridor} > {warehouseProduct.WarehouseLocation.Shelf} > {warehouseProduct.WarehouseLocation.Bin}"
+                    : null,
                 Barcode = warehouseProduct.Product.Barcode,
                 ImageUrl = warehouseProduct.Product.ImageUrl,
                 Description = warehouseProduct.Product.Description

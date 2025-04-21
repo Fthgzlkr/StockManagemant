@@ -19,7 +19,10 @@ namespace StockManagemant.Entities.DTO
                 return Date.ToString("dd MMMM yyyy", new CultureInfo("tr-TR"));
             }
         }
-
+        
+        [Required]
+        [MaxLength(50)]
+        public string ReceiptNumber { get; set; }
         public decimal TotalAmount { get; set; }
 
         public bool? IsDeleted { get; set; } // Create için null olabilir, Update işlemi için kullanılabilir
@@ -27,6 +30,10 @@ namespace StockManagemant.Entities.DTO
         public int WareHouseId { get; set; }
 
         public string? WareHouseName { get; set; } // Get için gerekli, Create işleminde opsiyonel
+
+        public ReceiptType ReceiptType { get; set; } // Giriş veya Çıkış fişi
+
+        public string? Description { get; set; } // Açıklama alanı (isteğe bağlı)
 
         public ICollection<ReceiptDetailDto>? ReceiptDetails { get; set; } // Create ve Update işlemlerinde opsiyonel olabilir
     }

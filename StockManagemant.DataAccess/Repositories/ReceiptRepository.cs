@@ -49,6 +49,7 @@ namespace StockManagemant.DataAccess.Repositories
                 }
 
                 receipt.TotalAmount = 0;
+                receipt.ReceiptNumber = $"FIS-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid().ToString().Substring(0, 4).ToUpper()}";
                 await _context.Receipts.AddAsync(receipt);
                 await _context.SaveChangesAsync();
                 return receipt.Id;

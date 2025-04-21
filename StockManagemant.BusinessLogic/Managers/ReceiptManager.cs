@@ -15,18 +15,19 @@ namespace StockManagemant.Business.Managers
         private readonly IReceiptDetailManager _receiptDetailManager;
         private readonly IReceiptDetailRepository _receiptDetailRepository;
         private readonly IMapper _mapper;
+        private readonly IWarehouseProductRepository _warehouseProductRepository;
 
-        public ReceiptManager(IReceiptRepository receiptRepository, IReceiptDetailManager receiptDetailManager, IReceiptDetailRepository receiptDetailRepository,IMapper mapper)
+        public ReceiptManager(IReceiptRepository receiptRepository, IReceiptDetailManager receiptDetailManager, IReceiptDetailRepository receiptDetailRepository, IMapper mapper, IWarehouseProductRepository warehouseProductRepository)
         {
             _receiptRepository = receiptRepository;
             _receiptDetailManager = receiptDetailManager;
             _receiptDetailRepository = receiptDetailRepository;
             _mapper = mapper;
+            _warehouseProductRepository = warehouseProductRepository;
         }
 
         public async Task<int> GetTotalReceiptCountAsync(ReceiptFilter filter)
         {
-          
             return await _receiptRepository.GetTotalCountAsync(filter);
         }
 
@@ -37,29 +38,23 @@ namespace StockManagemant.Business.Managers
             return _mapper.Map<List<ReceiptDto>>(receipts);
         }
 
+        public async Task<int> AddReceiptAsync(ReceiptDto receiptDto)
+        {
+            if (receiptDto == null || receiptDto.WareHouseId == 0)
+                throw new Exception("Hata: Depo ID boş olamaz!");
 
+            var receipt = new Receipt
+            {
+                Date = receiptDto.Date,
+                TotalAmount = 0,
+                IsDeleted = false,
+                WarehouseId = receiptDto.WareHouseId,
+                ReceiptType = receiptDto.ReceiptType,
+                Description = receiptDto.Description
+            };
 
-       public async Task<int> AddReceiptAsync(ReceiptDto receiptDto)
-{
-    if (receiptDto == null || receiptDto.WareHouseId == 0)
-        throw new Exception("Hata: Depo ID boş olamaz!");
-
-    var receipt = new Receipt
-    {
-        Date = receiptDto.Date,
-        TotalAmount = 0,
-        IsDeleted = false,
-        WarehouseId = receiptDto.WareHouseId // 🔥 Navigation property değil, doğrudan ID
-    };
-
-    return await _receiptRepository.AddReceiptAsync(receipt);
-}
-
-
-
-
-
-
+            return await _receiptRepository.AddReceiptAsync(receipt);
+        }
 
         public async Task UpdateReceiptDateAsync(ReceiptDto updateDto)
         {
@@ -72,10 +67,6 @@ namespace StockManagemant.Business.Managers
 
             await _receiptRepository.UpdateAsync(receipt);
         }
-
-
-
-
 
         // ✅ **Fiş güncelle (Toplam tutarı da günceller)**
         public async Task UpdateReceiptAsync(int receiptId)
@@ -91,8 +82,6 @@ namespace StockManagemant.Business.Managers
 
             await _receiptRepository.UpdateAsync(receipt);
         }
-
-
 
         // ✅ **Fiş silme (Önce detayları soft delete yapar, sonra fişi soft delete yapar)**
         public async Task DeleteReceiptAsync(int receiptId)
@@ -135,14 +124,33 @@ namespace StockManagemant.Business.Managers
                 int quantity = product.quantity;
 
                 await _receiptDetailManager.AddProductToReceiptAsync(receiptId, productId, quantity);
+
+                var receipt = await _receiptRepository.GetByIdAsync(receiptId);
+                if (receipt.ReceiptType == ReceiptType.Entry)
+                {
+                    // increase stock
+                    var warehouseProduct = await _warehouseProductRepository.GetProductInWarehouseByBarcodeAsync(receipt.WarehouseId, product.Barcode);
+                    if (warehouseProduct != null)
+                    {
+                        warehouseProduct.StockQuantity += quantity;
+                        await _warehouseProductRepository.UpdateAsync(warehouseProduct);
+                    }
+                }
+                else if (receipt.ReceiptType == ReceiptType.Exit)
+                {
+                    var warehouseProduct = await _warehouseProductRepository.GetProductInWarehouseByBarcodeAsync(receipt.WarehouseId, product.Barcode);
+                    if (warehouseProduct != null)
+                    {
+                        warehouseProduct.StockQuantity -= quantity;
+                        if (warehouseProduct.StockQuantity < 0)
+                            throw new Exception("Stok yetersiz.");
+                        await _warehouseProductRepository.UpdateAsync(warehouseProduct);
+                    }
+                }
             }
 
             await UpdateReceiptAsync(receiptId);
         }
-
-
-
-
 
         // ✅ **Fişten ürün kaldırma (Toplam tutar güncellenir)**
         public async Task RemoveProductFromReceiptAsync(int receiptDetailId)
@@ -151,6 +159,26 @@ namespace StockManagemant.Business.Managers
             if (receiptDetail == null) throw new Exception("Fiş detayı bulunamadı.");
 
             int receiptId = receiptDetail.ReceiptId;
+
+            var receipt = await _receiptRepository.GetByIdAsync(receiptId);
+            if (receipt == null) throw new Exception("Fiş bulunamadı.");
+
+            var warehouseProducts = await _warehouseProductRepository.GetProductsByWarehouseIdAsync(receipt.WarehouseId);
+            var targetWarehouseProduct = warehouseProducts.FirstOrDefault(wp => wp.ProductId == receiptDetail.ProductId);
+            if (targetWarehouseProduct == null) throw new Exception("Depo ürünü bulunamadı.");
+
+            if (receipt.ReceiptType == ReceiptType.Entry)
+            {
+                targetWarehouseProduct.StockQuantity -= receiptDetail.Quantity;
+                if (targetWarehouseProduct.StockQuantity < 0)
+                    throw new Exception("Stok yetersiz. Çıkarılan miktar stoktan fazla.");
+            }
+            else if (receipt.ReceiptType == ReceiptType.Exit)
+            {
+                targetWarehouseProduct.StockQuantity += receiptDetail.Quantity;
+            }
+
+            await _warehouseProductRepository.UpdateAsync(targetWarehouseProduct);
 
             await _receiptDetailManager.RemoveProductFromReceiptAsync(receiptDetailId);
 
@@ -170,9 +198,5 @@ namespace StockManagemant.Business.Managers
 
             await UpdateReceiptAsync(receiptId);
         }
-
-
-
-   }
-
+    }
 }

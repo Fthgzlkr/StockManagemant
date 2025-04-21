@@ -49,7 +49,17 @@
 
 <script>
     $(document).ready(function () {
-       let warehouseId = localStorage.getItem("selectedWarehouseId") || 1;
+            let warehouseId;
+            
+            const userRole = '@User.FindFirst("http://schemas.microsoft.com/ws/2008/06/identity/claims/role")?.Value';
+            const assignedWarehouseId = '@User.FindFirst("AssignedWarehouseId")?.Value';
+            
+            if (userRole === "BasicUser") {
+                warehouseId = assignedWarehouseId;
+                localStorage.setItem("selectedWarehouseId", warehouseId);
+            } else {
+                warehouseId = localStorage.getItem("selectedWarehouseId") || 1;
+            }
        let currencyDropdown = { "TL": "Türk Lirası", "USD": "Dolar" };
 
        // jqGrid Başlat

@@ -53,7 +53,13 @@ namespace StockManagemant.DataAccess.Repositories
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
-
+        public async Task<bool> IsProductInWarehouseAsync(int productId, int warehouseId)
+        {
+            return await _context.WarehouseProducts
+                .AnyAsync(wp => wp.ProductId == productId 
+                            && wp.WarehouseId == warehouseId 
+                            && !wp.IsDeleted);
+        }
     
 
       
