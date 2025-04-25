@@ -32,6 +32,18 @@ namespace StockManagemant.Entities.DTO
         public string? WareHouseName { get; set; } // Get için gerekli, Create işleminde opsiyonel
 
         public ReceiptType ReceiptType { get; set; } // Giriş veya Çıkış fişi
+        public string FormattedReceiptType
+        {
+            get
+            {
+                return ReceiptType switch
+                {
+                    ReceiptType.Entry => "Depo Giriş",
+                    ReceiptType.Exit => "Depo Çıkış",
+                    _ => "Bilinmeyen"
+                };
+            }
+        }
 
         public string? Description { get; set; } // Açıklama alanı (isteğe bağlı)
 

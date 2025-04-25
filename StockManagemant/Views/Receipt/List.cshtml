@@ -43,7 +43,21 @@
             { name: 'id', index: 'id', width: 50, align: "center", sortable: true, key: true,hidden:true },
             { name: 'date', index: 'date', width: 60, align: "center", sortable: true },
             { name: 'totalAmount', index: 'totalAmount', width: 60, align: "right", sortable: true },
-            { name: 'receiptType', index: 'receiptType', width: 60, align: "right", sortable: true },
+            {
+                    name: 'receiptType',
+                    index: 'receiptType',
+                    width: 60,
+                    align: "right",
+                    sortable: true,
+                     formatter: function (cellvalue) {
+                    if (cellvalue === "Entry") {
+                        return `<span class="text-success"><i class="fa-solid fa-arrow-down"></i> Depo Giriş</span>`;
+                    } else if (cellvalue === "Exit") {
+                        return `<span class="text-danger"><i class="fa-solid fa-arrow-up"></i> Depo Çıkış</span>`;
+                    }
+                    return cellvalue;
+                }
+                },
                  {
                     name: "actions",
                     label: "İşlemler",

@@ -8,19 +8,53 @@
     <link rel="stylesheet" href="~/css/GlobalStyles.css" asp-append-version="true" />
 }
 
-<!-- Fiş Bilgileri -->
-<p><strong>Fiş No:</strong> @Model.Id</p>
-<p><strong>Depo No:</strong> @Model.WareHouseId</p>
-<p><strong>Tarih:</strong> @Model.FormattedDate</p>
-<p><strong>Toplam Tutar:</strong> @CurrencyHelper.FormatPrice(@Model.TotalAmount, "TL")</p>
 
-<!-- Ürünleri Getir Butonu (Toplam Tutar Data-Attribute olarak eklendi) -->
-<button type="button" class="btn btn-primary" id="showProductsBtn"
+<!-- Fiş Bilgileri -->
+<div class="receipt-card">
+    <p><strong>Fiş No:</strong> @Model.ReceiptNumber</p>
+    <p><strong>Depo No:</strong> @Model.WareHouseId</p>
+    <p><strong>Tarih:</strong> @Model.FormattedDate</p>
+    <p><strong>Açıklama:</strong> @Model.Description</p>
+    <p><strong>Toplam Tutar:</strong> @CurrencyHelper.FormatPrice(@Model.TotalAmount, "TL")</p>
+    <p><strong>İşlem Türü:</strong> @Model.FormattedReceiptType</p>
+    <button type="button" class="btn btn-primary" id="showProductsBtn"
         data-receipt-id="@Model.Id"
         data-total-amount="@CurrencyHelper.FormatPrice(@Model.TotalAmount, "TL")">
     Fiş Ürünlerini Getir
 </button>
+</div>
+<!-- Ürünleri Getir Butonu (Toplam Tutar Data-Attribute olarak eklendi) -->
 
+
+<style>
+    .receipt-card {
+        background-color: #fefefe;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+        margin-bottom: 30px;
+        font-size: 15px;
+    }
+
+    .receipt-card p {
+        margin-bottom: 10px;
+    }
+
+    .receipt-card strong {
+        display: inline-block;
+        width: 130px;
+        font-weight: 600;
+        color: #333;
+    }
+
+    #showProductsBtn {
+        margin-bottom: 15px;
+    }
+
+    .modal-content {
+        border-radius: 15px;
+    }
+</style>
 <!-- Ürünler için jqGrid -->
 <table id="productsGrid"></table>
 <div id="pagerProducts"></div>

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using StockManagemant.Business.Managers;
 using StockManagemant.Entities.DTO;
+using StockManagemant.Entities.Models;
 using StockManagemant.Web.Helpers;
 using StockManagemant.DataAccess.Filters;
 using Microsoft.AspNetCore.Authorization;
@@ -289,6 +290,78 @@ namespace StockManagemant.Controllers
                 return StatusCode(500, new { success = false, message = $"Ürün ekleme hatası: {ex.Message}" });
             }
         }
+
+
+       
+        [HttpPost]
+        public async Task<IActionResult> SaveEntryReceipt([FromBody] StockChangePayloadDto dto)
+        {
+            try
+            {
+                if (dto == null || dto.WarehouseId == 0 || dto.Changes == null || !dto.Changes.Any())
+                    return BadRequest(new { success = false, message = "Geçersiz veya eksik veri!" });
+
+                var receiptDto = new ReceiptDto
+                {
+                    Date = DateTime.UtcNow,
+                    WareHouseId = dto.WarehouseId,
+                    ReceiptType = ReceiptType.Entry,
+                    Description = dto.Description ?? "",
+                    TotalAmount = 0
+                };
+
+                var receiptId = await _receiptManager.AddReceiptAsync(receiptDto);
+
+                foreach (var item in dto.Changes)
+                {
+                    await _receiptDetailManager.AddProductToReceiptAsync(receiptId, item.Id, item.Quantity);
+                }
+
+                return Ok(new { success = true, receiptId, message = "Giriş fişi başarıyla oluşturuldu." });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[SaveEntryReceipt] Hata: {ex.Message}");
+                return StatusCode(500, new { success = false, message = "Giriş fişi oluşturulamadı.", error = ex.Message });
+            }
+        }
+
+    
+     [HttpPost]
+    public async Task<IActionResult> SaveExitReceipt([FromBody] StockChangePayloadDto dto)
+    {
+        try
+        {
+            if (dto == null || dto.WarehouseId == 0 || dto.Changes == null || !dto.Changes.Any())
+                return BadRequest(new { success = false, message = "Geçersiz veya eksik veri!" });
+
+            var receiptDto = new ReceiptDto
+            {
+                Date = DateTime.UtcNow,
+                WareHouseId = dto.WarehouseId,
+                ReceiptType = ReceiptType.Exit,
+                Description = dto.Description ?? "",
+                TotalAmount = 0
+            };
+
+            var receiptId = await _receiptManager.AddReceiptAsync(receiptDto);
+
+            foreach (var item in dto.Changes)
+            {
+                await _receiptDetailManager.AddProductToReceiptAsync(receiptId, item.Id, Math.Abs(item.Quantity));
+            }
+
+            return Ok(new { success = true, receiptId, message = "Çıkış fişi başarıyla oluşturuldu." });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[SaveExitReceipt] Hata: {ex.Message}");
+            return StatusCode(500, new { success = false, message = "Çıkış fişi oluşturulamadı.", error = ex.Message });
+        }
+    }  
+
+        
+  
 
 
 

@@ -109,48 +109,7 @@ namespace StockManagemant.Business.Managers
             return _mapper.Map<List<ReceiptDetailDto>>(receiptDetails);
         }
 
-        // ✅ **Fişe ürün ekleme (Toplam tutar otomatik güncellenir)**
-        public async Task AddProductsToReceiptAsync(int receiptId, List<dynamic> products)
-        {
-            if (products == null || !products.Any())
-                throw new Exception("Hata: En az bir ürün eklenmelidir!");
-
-            foreach (var product in products)
-            {
-                if (product.productId == null || product.quantity == null)
-                    throw new Exception("Hata: Ürün bilgileri eksik!");
-
-                int productId = product.productId;
-                int quantity = product.quantity;
-
-                await _receiptDetailManager.AddProductToReceiptAsync(receiptId, productId, quantity);
-
-                var receipt = await _receiptRepository.GetByIdAsync(receiptId);
-                if (receipt.ReceiptType == ReceiptType.Entry)
-                {
-                    // increase stock
-                    var warehouseProduct = await _warehouseProductRepository.GetProductInWarehouseByBarcodeAsync(receipt.WarehouseId, product.Barcode);
-                    if (warehouseProduct != null)
-                    {
-                        warehouseProduct.StockQuantity += quantity;
-                        await _warehouseProductRepository.UpdateAsync(warehouseProduct);
-                    }
-                }
-                else if (receipt.ReceiptType == ReceiptType.Exit)
-                {
-                    var warehouseProduct = await _warehouseProductRepository.GetProductInWarehouseByBarcodeAsync(receipt.WarehouseId, product.Barcode);
-                    if (warehouseProduct != null)
-                    {
-                        warehouseProduct.StockQuantity -= quantity;
-                        if (warehouseProduct.StockQuantity < 0)
-                            throw new Exception("Stok yetersiz.");
-                        await _warehouseProductRepository.UpdateAsync(warehouseProduct);
-                    }
-                }
-            }
-
-            await UpdateReceiptAsync(receiptId);
-        }
+       
 
         // ✅ **Fişten ürün kaldırma (Toplam tutar güncellenir)**
         public async Task RemoveProductFromReceiptAsync(int receiptDetailId)

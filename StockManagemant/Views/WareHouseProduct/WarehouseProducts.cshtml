@@ -1,6 +1,10 @@
 ﻿@{
     ViewData["Title"] = "Depodaki Ürünler";
 }
+<script>
+    var userRole = '@User.FindFirst("http://schemas.microsoft.com/ws/2008/06/identity/claims/role")?.Value';
+    var assignedWarehouseId = '@User.FindFirst("AssignedWarehouseId")?.Value';
+</script>
 <link rel="stylesheet" href="~/css/Product.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/GlobalStyles.css" asp-append-version="true" />
 
@@ -45,289 +49,67 @@
     <div id="pager"></div>
 </div>
 
+<!-- Fişleri Tamamla Butonu -->
+<div class="text-center mt-4">
+    <!-- Button moved below with receipt section -->
+</div>
 
+<!-- Receipt Preview and Description Section - Improved Visual Layout -->
+<div class="bg-light p-4 rounded shadow-sm mt-5">
+    <!-- Giriş Fişi Açıklama Alanı -->
+    <div id="entryDescriptionContainer" class="mb-4 d-none">
+        <div class="card border-0 shadow-sm p-4 bg-white">
+            <div class="card-body p-0">
+                <div class="form-group">
+                    <label for="entryDescription" class="form-label">Giriş Fişi Açıklaması:</label>
+                    <textarea id="entryDescription" class="form-control fs-6" rows="2" placeholder="Giriş fişi için açıklama girin..."></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<script>
-    $(document).ready(function () {
-            let warehouseId;
-            
-            const userRole = '@User.FindFirst("http://schemas.microsoft.com/ws/2008/06/identity/claims/role")?.Value';
-            const assignedWarehouseId = '@User.FindFirst("AssignedWarehouseId")?.Value';
-            
-            if (userRole === "BasicUser") {
-                warehouseId = assignedWarehouseId;
-                localStorage.setItem("selectedWarehouseId", warehouseId);
-            } else {
-                warehouseId = localStorage.getItem("selectedWarehouseId") || 1;
-            }
-       let currencyDropdown = { "TL": "Türk Lirası", "USD": "Dolar" };
+    <!-- Çıkış Fişi Açıklama Alanı -->
+    <div id="exitDescriptionContainer" class="mb-4 d-none">
+        <div class="card border-0 shadow-sm p-4 bg-white">
+            <div class="card-body p-0">
+                <div class="form-group">
+                    <label for="exitDescription" class="form-label">Çıkış Fişi Açıklaması:</label>
+                    <textarea id="exitDescription" class="form-control fs-6" rows="2" placeholder="Çıkış fişi için açıklama girin..."></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
 
-       // jqGrid Başlat
-       $("#warehouseProductGrid").jqGrid({
-           url: `/WarehouseProduct/GetWarehouseProducts?warehouseId=${warehouseId}`,
-           datatype: "json",
-           mtype: "GET",
-           colNames: ['ID','ProductId', 'Barkod','Stok Kodu','Ürün Adı', 'Kategori', 'Fiyat', 'Para Birimi', 'Stok', ' Depo Lokasyonu', 'İşlemler'],
-           colModel: [
-               { name: 'id', index: 'id', align: "center", sortable: true, key: true, hidden: true },
-               { name: 'product_id', index: 'product_id', align: "center", sortable: true, key: true, hidden:true },
-               { name: 'barcode', index: 'barcode', align: "center", sortable: true, hidden:false },
-               { name: 'stockcode', index: ' stockcode', align: "center", sortable: true, hidden:false },
-               { name: 'name', index: 'name', sortable: true, editable: false },
-               { name: 'category', index: 'category', sortable: true, editable: false },
-               { name: 'price', index: 'price', align: "center", sortable: true, editable: false, formatter: formatPrice },
-               { name: 'currencyType', index: 'currencyType', sortable: true, editable: false, formatter: currencyFormatter ,hidden:true},
-               { 
-                   name: 'stock', 
-                   index: 'stock', 
-                   align: "center", 
-                   sortable: true, 
-                   editable: false, 
-                   formatter: function (cellvalue, options, rowObject) {
-                       return `
-                           <div class="stock-container" style="display: flex; align-items: center; justify-content: center;">
-                               <input type="number" class="stock-input" 
-                                   data-id="${rowObject.id}"
-                                   value="${cellvalue}"
-                                   readonly
-                                   style="width: 70px; height: 25px; text-align: center; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; cursor: pointer;">
-                               <div class="stock-controls" style="display: flex; flex-direction: column; margin-left: 3px;">
-                                   <button class="increaseStockBtn" data-id="${rowObject.id}" title="Stok Artır"
-                                       style="border: none; background: transparent; cursor: pointer; font-size: 10px; padding: 2px;">
-                                       ▲
-                                   </button>
-                                   <button class="decreaseStockBtn" data-id="${rowObject.id}" title="Stok Azalt"
-                                       style="border: none; background: transparent; cursor: pointer; font-size: 10px; padding: 2px;">
-                                       ▼
-                                   </button>
-                               </div>
-                           </div>
-                       `;
-                   }
-               },
-               {
-                   name: 'location',
-                   index: 'location',
-                   align: "center",
-                   sortable: false,
-                   formatter: function (cellvalue) {
-                       return cellvalue ? cellvalue : `<span class="text-muted">Lokasyon Yok</span>`;
-                   }
-               },
-               {
-                   name: "actions",
-                   label: "İşlemler",
-                   align: "center",
-                   formatter: function (cellvalue, options, rowObject) {
-                       return `
-                           <div class="action-icons">                            
-                               <i class="fa-solid fa-trash text-danger fa-xl deleteWarehouseProductBtn"
-                                   data-id="${rowObject.id}" title="Depodan Kaldır"></i>
-                           </div>
-                       `;
-                   }
-               }
-           ],
-           pager: '#pager',
-           rowNum: 5,
-           rowList: [5, 10, 15, 20, 30, 40, 50],
-           sortname: 'id',
-           sortorder: 'asc',
-           viewrecords: true,
-           height: 'auto',
-           autowidth: true,
-           shrinkToFit: true,
-           caption: "Depodaki Ürünler",
-           loadonce: false,
-           guiStyle: "bootstrap4",
-           jsonReader: {
-               root: "rows",
-               page: "page",
-               total: "total",
-               records: "records"
-           },
+    <!-- Fiş Kartları -->
+    <div class="row">
+        <!-- Giriş Fişi Kartı -->
+        <div class="col-md-6 mb-4">
+            <div id="inputReceiptCard" class="card shadow-sm rounded d-none">
+                <div class="card-header bg-success text-white fw-bold fs-5">
+                    Giriş Fişi
+                </div>
+                <div class="card-body">
+                    <ul id="inputReceiptList" class="list-group"></ul>
+                </div>
+            </div>
+        </div>
 
-             ondblClickRow: function (rowid) {
-                if (rowid) {
-                    const rowData = $("#warehouseProductGrid").jqGrid("getRowData", rowid);
-                    const productId = rowData.product_id;
-                    window.open('/Product/ProductDetail/' + productId, '_blank');
-                }
-            },
+        <!-- Çıkış Fişi Kartı -->
+        <div class="col-md-6 mb-4">
+            <div id="outputReceiptCard" class="card shadow-sm rounded d-none">
+                <div class="card-header bg-danger text-white fw-bold fs-5">
+                    Çıkış Fişi
+                </div>
+                <div class="card-body">
+                    <ul id="outputReceiptList" class="list-group"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Fişleri Tamamla Butonu moved here -->
+    <div class="text-end mt-3">
+        <button id="completeReceiptsBtn" class="btn btn-success d-none">Fişleri Tamamla</button>
+    </div>
+</div>
 
-          
-           rowattr: function (rowObject) {
-               if (rowObject.stock < 15) {
-                   return { "class": "low-stock-row" };
-               }
-           },
-
-
-
-
-       });
-           $("<style>")
-        .prop("type", "text/css")
-        .html(`
-            .low-stock-row td {
-                background-color: #ffcccc !important;
-            }
-        `)
-        .appendTo("head");
-
-        
-        function currencyFormatter(cellValue, options, rowObject) {
-            return currencyDropdown[cellValue] || cellValue;
-        }
-
-      
-        function formatPrice(cellValue, options, rowObject) {
-            if (!cellValue) return "0.00";
-            let currencySymbol = rowObject.currencyType === "TL" ? "₺" : "$";
-            return cellValue.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) + " " + currencySymbol;
-        }
-
-        
-        function filterWarehouseProducts() {
-            let searchName = $("#productSearch").val().trim();
-            let minPrice = $("#minPrice").val();
-            let maxPrice = $("#maxPrice").val();
-            let StockCode = $("#stockCodeSearch").val().trim();
-
-            $("#warehouseProductGrid").jqGrid('setGridParam', {
-                url: `/WarehouseProduct/GetWarehouseProducts?warehouseId=${warehouseId}&search=${searchName}&minPrice=${minPrice}&maxPrice=${maxPrice}&stockCode=${StockCode}`,
-                page: 1
-            }).trigger("reloadGrid");
-        }
-
-        
-        $("#filterBtn").on("click", function () {
-            filterWarehouseProducts();
-        });
-
-  
-
-// ➕ Artırma
-$(document).on("click", ".increaseStockBtn", function () {
-    let warehouseProductId = $(this).data("id");
-    let input = $(`input.stock-input[data-id="${warehouseProductId}"]`);
-    let current = parseInt(input.val());
-
-    updateStock(warehouseProductId, current + 1);
-});
-
-// ➖ Azaltma
-$(document).on("click", ".decreaseStockBtn", function () {
-    let warehouseProductId = $(this).data("id");
-    let input = $(`input.stock-input[data-id="${warehouseProductId}"]`);
-    let current = parseInt(input.val());
-
-    if (current > 0) updateStock(warehouseProductId, current - 1);
-});
-
-// 🖱️ Stok sayısına tıklayınca input aktifleşsin
-$(document).on("click", ".stock-input", function () {
-    $(this).removeAttr("readonly");
-
-    setTimeout(() => {
-        $(this).focus().select();
-    }, 0);
-});
-
-// 🖊️ Kullanıcı inputtan çıkarsa veya Enter’a basarsa yeni değer gönder
-$(document).on("blur", ".stock-input", function () {
-    let input = $(this);
-    let warehouseProductId = input.data("id");
-    let newValue = parseInt(input.val());
-
-    if (!isNaN(newValue)) updateStock(warehouseProductId, newValue);
-});
-
-$(document).on("keypress", ".stock-input", function (e) {
-    if (e.which === 13) {
-        $(this).blur(); 
-    }
-});
-
-function updateStock(warehouseProductId, newStock) {
-    $.ajax({
-        url: '/WarehouseProduct/UpdateStock',
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({
-            warehouseProductId: warehouseProductId,
-            stockQuantity: newStock
-        }),
-        success: function () {
-            $("#warehouseProductGrid").trigger("reloadGrid");
-        },
-        error: function () {
-            Swal.fire("Hata!", "Stok güncellenirken bir hata oluştu.", "error");
-        }
-    });
-}
-
-
-
-
-        // Depodan Ürünü Kaldırma Butonu
-        $(document).on("click", ".deleteWarehouseProductBtn", function () {
-            let id = $(this).data("id");
-
-            Swal.fire({
-                title: "Ürünü Depodan Kaldır",
-                text: "Bu ürünü depodan çıkarmak istediğinize emin misiniz?",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#d33",
-                cancelButtonColor: "#3085d6",
-                confirmButtonText: "Evet, Kaldır!",
-                cancelButtonText: "İptal"
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: '/WarehouseProduct/RemoveProductFromWarehouse',
-                        type: 'POST',
-                        data: { warehouseProductId: id },
-                        success: function (response) {
-                            Swal.fire("Başarılı!", "Ürün depodan kaldırıldı.", "success");
-                            $("#warehouseProductGrid").trigger("reloadGrid");
-                        },
-                        error: function () {
-                            Swal.fire("Hata!", "Ürün kaldırılırken hata oluştu.", "error");
-                        }
-                    });
-                }
-            });
-        });
-
-            $(document).on("click", ".İncreaseStockBtn", function () {
-        let productId = $(this).data("id");
-        updateStock(productId, 1);
-    });
-
-
-    
-
-        $("#pager_left").append(`
-            <i id="customRefreshBtn" class="fa-solid fa-arrows-rotate" title="Yenile" style="cursor: pointer; margin-left: 10px;"></i>
-        `);
-
-                    $("#pager_left").append(`
-        <i class="fa-solid fa-plus fa-2xl openProductaddModal" title="Yeni Ürün Ekle" style="cursor: pointer; margin-left: 10px;"></i>
-    `);
-
-            
-        $("#customRefreshBtn").on("click", function () {
-            $("#productSearch").val("");
-            $("#minPrice").val("");
-            $("#maxPrice").val("");
-            $("#warehouseProductGrid").setGridParam({
-                url: `/WarehouseProduct/GetWarehouseProducts?warehouseId=${warehouseId}`,
-                page: 1
-            }).trigger("reloadGrid");
-        });
-
-    });
-
-</script>
+<script src="~/js/WarehouseProducts.js" asp-append-version="true"></script>

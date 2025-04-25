@@ -15,7 +15,6 @@ namespace StockManagemant.Business.Managers
         Task DeleteReceiptAsync(int receiptId);
         Task<ReceiptDto> GetReceiptByIdAsync(int receiptId);
         Task<List<ReceiptDetailDto>> GetReceiptDetailsAsync(int receiptId);
-        Task AddProductsToReceiptAsync(int receiptId, List<dynamic> products);
         Task RemoveProductFromReceiptAsync(int receiptDetailId);
         Task UpdateProductQuantityInReceiptAsync(int receiptDetailId, int newQuantity);
     }

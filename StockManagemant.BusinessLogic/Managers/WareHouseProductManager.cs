@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using StockManagemant.DataAccess.Context;
-using StockManagemant.DataAccess.Repositories.Filters;
+﻿using StockManagemant.DataAccess.Repositories.Filters;
 using StockManagemant.Entities.Models;
 using StockManagemant.Entities.DTO;
 using AutoMapper;
@@ -12,20 +6,27 @@ using StockManagemant.DataAccess.Repositories.Interfaces;
 
 namespace StockManagemant.Business.Managers
 {
-    public class WarehouseProductManager : IWarehouseProductManager
-    {
-        private readonly IWarehouseProductRepository _warehouseProductRepository;
-        private readonly IProductRepository _productRepository;
-        private readonly IMapper _mapper;
+  public class WarehouseProductManager : IWarehouseProductManager
+{
+    private readonly IWarehouseProductRepository _warehouseProductRepository;
+    private readonly IProductRepository _productRepository;
+    private readonly IMapper _mapper;
+    private readonly IReceiptManager _receiptManager; 
+    private readonly IReceiptDetailManager _receiptDetailManager; 
 
-        public WarehouseProductManager(IWarehouseProductRepository warehouseProductRepository,
-                                       IProductRepository productRepository,
-                                       IMapper mapper)
-        {
-            _warehouseProductRepository = warehouseProductRepository;
-            _productRepository = productRepository;
-            _mapper = mapper;
-        }
+    public WarehouseProductManager(IWarehouseProductRepository warehouseProductRepository,
+                                   IProductRepository productRepository,
+                                   IMapper mapper,
+                                   IReceiptManager receiptManager,           
+                                   IReceiptDetailManager receiptDetailManager) 
+    {
+        _warehouseProductRepository = warehouseProductRepository;
+        _productRepository = productRepository;
+        _mapper = mapper;
+        _receiptManager = receiptManager; 
+        _receiptDetailManager = receiptDetailManager; 
+    }
+
 
         public async Task<List<WarehouseProductDto>> GetProductsByWarehouseIdAsync(int warehouseId)
         {
@@ -53,34 +54,74 @@ namespace StockManagemant.Business.Managers
             await _warehouseProductRepository.UpdateAsync(warehouseProduct);
         }    
 
-        public async Task AddProductToWarehouseAsync(WarehouseProductDto dto)
-        {
-            var product = await _productRepository.GetByIdAsync(dto.ProductId);
-            if (product == null) throw new Exception("Ürün bulunamadı.");
+     public async Task AddProductToWarehouseAsync(WarehouseProductDto dto)
+{
+    var product = await _productRepository.GetByIdAsync(dto.ProductId);
+    if (product == null)
+        throw new Exception("Ürün bulunamadı.");
 
-            var existingWarehouseProduct = await _warehouseProductRepository
-                .FindAsync(wp => wp.ProductId == dto.ProductId && wp.WarehouseId == dto.WarehouseId);
+    var existingWarehouseProduct = await _warehouseProductRepository
+        .FindAsync(wp => wp.ProductId == dto.ProductId && wp.WarehouseId == dto.WarehouseId);
 
-            if (existingWarehouseProduct.Any())
-                throw new Exception("Bu ürün zaten bu depoda mevcut!");
+    if (existingWarehouseProduct.Any())
+        throw new Exception("Bu ürün zaten bu depoda mevcut!");
 
-            var warehouseProduct = new WarehouseProduct
-            {
-                ProductId = dto.ProductId,
-                WarehouseId = dto.WarehouseId,
-                StockQuantity = dto.StockQuantity,
-                WarehouseLocationId = dto.WarehouseLocationId,
-                StockCode = dto.StockCode,
-                IsDeleted = false
-            };
+    // 1. Depoya ürünü ekle
+    var warehouseProduct = new WarehouseProduct
+    {
+        ProductId = dto.ProductId,
+        WarehouseId = dto.WarehouseId,
+        StockQuantity = dto.StockQuantity,
+        WarehouseLocationId = dto.WarehouseLocationId,
+        StockCode = dto.StockCode,
+        IsDeleted = false
+    };
 
-            await _warehouseProductRepository.AddAsync(warehouseProduct);
-        }
+    await _warehouseProductRepository.AddAsync(warehouseProduct);
 
-        public async Task RemoveProductFromWarehouseAsync(int warehouseProductId)
-        {
-            await _warehouseProductRepository.DeleteAsync(warehouseProductId);
-        }
+    // ✅ Sadece ürün adı kullanarak açıklama oluşturuyoruz
+    string productName = product.Name ?? "Ürün";
+
+    // 2. Giriş Fişi oluştur
+    var receiptDto = new ReceiptDto
+    {
+        WareHouseId = dto.WarehouseId,
+        ReceiptType = ReceiptType.Entry, // GİRİŞ fişi olacak
+        Description = $"{productName} depoya eklendi.",
+    };
+
+    int receiptId = await _receiptManager.AddReceiptAsync(receiptDto);
+
+    // 3. Fiş Detayı oluştur
+    await _receiptDetailManager.AddProductToReceiptAsync(receiptId, dto.ProductId, dto.StockQuantity);
+}
+
+     public async Task RemoveProductFromWarehouseAsync(int warehouseProductId)
+{
+    var warehouseProduct = await _warehouseProductRepository.GetByIdAsync(warehouseProductId);
+    if (warehouseProduct == null)
+        throw new Exception("Depodaki ürün bulunamadı.");
+
+    var product = await _productRepository.GetByIdAsync(warehouseProduct.ProductId);
+    if (product == null)
+        throw new Exception("İlgili ürün sistemde bulunamadı.");
+
+    // 1. Fiş oluştur (çıkış fişi)
+    var receiptDto = new ReceiptDto
+    {
+        WareHouseId = warehouseProduct.WarehouseId,
+        ReceiptType = ReceiptType.Exit,
+        Description = $"{product.Name} ürünü depodan kaldırıldı.",
+    };
+
+    int receiptId = await _receiptManager.AddReceiptAsync(receiptDto);
+
+    // 2. Fiş detayı oluştur
+    await _receiptDetailManager.AddProductToReceiptAsync(receiptId, warehouseProduct.ProductId, warehouseProduct.StockQuantity);
+
+    // 3. Ürünü sil
+    await _warehouseProductRepository.DeleteAsync(warehouseProductId);
+}
 
         public async Task RestoreWarehouseProductAsync(int warehouseProductId)
         {

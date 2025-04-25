@@ -53,8 +53,29 @@
                     <span>Toplam:</span>
                     <span id="totalAmount">0.00 TL</span>
                 </div>
-                <button id="createReceiptBtn" class="btn btn-dark btn-sm w-100 mt-3">✅ Fişi Tamamla</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Updated placement for receipt type buttons -->
+    <div class="container mt-4 text-center">
+        <div class="btn-group btn-group-lg" role="group" aria-label="Fiş Türü">
+            <input type="radio" class="btn-check" name="receiptType" id="entryRadio" value="1" autocomplete="off" checked>
+            <label class="btn btn-outline-success" for="entryRadio">Depo Giriş</label>
+
+            <input type="radio" class="btn-check" name="receiptType" id="exitRadio" value="2" autocomplete="off">
+            <label class="btn btn-outline-danger" for="exitRadio">Depo Çıkış</label>
+        </div>
+    </div>
+
+    <!-- Description area moved outside of the receipt card -->
+    <div class="container mt-3">
+        <label for="receiptDescription" class="form-label fw-semibold">Açıklama:</label>
+        <textarea id="receiptDescription" class="form-control" rows="3" placeholder="İşleme dair açıklama girin..."></textarea>
+        <div class="text-center mt-3">
+            <button id="createReceiptBtn" class="btn btn-dark btn-lg px-4">
+                ✅ Fişi Tamamla
+            </button>
         </div>
     </div>
 </div>
@@ -106,6 +127,22 @@
     .remove-product {
         font-size: 11px;
         padding: 2px 6px;
+    }
+
+    .btn-group-lg > .btn {
+        font-size: 16px;
+        padding: 10px 20px;
+    }
+</style>
+<style>
+    .btn-check:checked + .btn-outline-success {
+        background-color: #198754;
+        color: #fff;
+    }
+
+    .btn-check:checked + .btn-outline-danger {
+        background-color: #dc3545;
+        color: #fff;
     }
 </style>
 
@@ -219,9 +256,11 @@
             method: "POST",
             contentType: "application/json",
             data: JSON.stringify({
-                 wareHouseId: parseInt(warehouseId),
-                    totalAmount: receiptItems.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-                    date: new Date().toISOString()
+                wareHouseId: parseInt(warehouseId),
+                totalAmount: receiptItems.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+                date: new Date().toISOString(),
+                receiptType: parseInt(document.querySelector("input[name='receiptType']:checked").value),
+                description: $("#receiptDescription").val()
             }),
             success: function (res) {
                 if (!res.success) {

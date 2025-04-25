@@ -9,7 +9,7 @@ namespace StockManagemant.Entities.Models
 {
     public class WarehouseLocation
     {
-       public int Id { get; set; }
+    public int Id { get; set; }
 
     public int WarehouseId { get; set; }  // Hangi Depo
     public string Corridor { get; set; } = null!;
