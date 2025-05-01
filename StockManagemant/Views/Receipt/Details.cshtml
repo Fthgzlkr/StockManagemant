@@ -13,15 +13,21 @@
 <div class="receipt-card">
     <p><strong>Fiş No:</strong> @Model.ReceiptNumber</p>
     <p><strong>Depo No:</strong> @Model.WareHouseId</p>
+    <p><strong>Depo Adı:</strong> @Model.WareHouseName</p>
     <p><strong>Tarih:</strong> @Model.FormattedDate</p>
     <p><strong>Açıklama:</strong> @Model.Description</p>
     <p><strong>Toplam Tutar:</strong> @CurrencyHelper.FormatPrice(@Model.TotalAmount, "TL")</p>
     <p><strong>İşlem Türü:</strong> @Model.FormattedReceiptType</p>
-    <button type="button" class="btn btn-primary" id="showProductsBtn"
-        data-receipt-id="@Model.Id"
-        data-total-amount="@CurrencyHelper.FormatPrice(@Model.TotalAmount, "TL")">
-    Fiş Ürünlerini Getir
-</button>
+    <div class="receipt-buttons">
+        <button type="button" class="btn btn-primary" id="showProductsBtn"
+            data-receipt-id="@Model.Id"
+            data-total-amount="@CurrencyHelper.FormatPrice(@Model.TotalAmount, "TL")">
+            Fiş Ürünlerini Getir
+        </button>
+        <button type="button" class="btn btn-success" id="printReceiptBtn">
+            🖨️ Fişi Yazdır
+        </button>
+    </div>
 </div>
 <!-- Ürünleri Getir Butonu (Toplam Tutar Data-Attribute olarak eklendi) -->
 
@@ -34,28 +40,41 @@
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
         margin-bottom: 30px;
         font-size: 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
     }
 
     .receipt-card p {
-        margin-bottom: 10px;
+        margin-bottom: 8px;
     }
 
     .receipt-card strong {
         display: inline-block;
-        width: 130px;
+        width: 140px;
         font-weight: 600;
         color: #333;
     }
 
-    #showProductsBtn {
-        margin-bottom: 15px;
+    #showProductsBtn,
+    #printReceiptBtn {
+        margin-top: 10px;
+        margin-right: 10px;
+    }
+
+    .receipt-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
     }
 
     .modal-content {
         border-radius: 15px;
+        padding: 20px;
     }
 </style>
 <!-- Ürünler için jqGrid -->
 <table id="productsGrid"></table>
 <div id="pagerProducts"></div>
 
+<script src="~/js/ReceiptDetail.js" asp-append-version="true"></script>

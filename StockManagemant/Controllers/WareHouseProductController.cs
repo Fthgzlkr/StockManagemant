@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using StockManagemant.Business.Managers;
 using StockManagemant.Entities.DTO;
+using ExcelDataReader;
 using StockManagemant.DataAccess.Filters;
 using System;
 using System.Linq;
@@ -168,6 +169,70 @@ namespace StockManagemant.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { success = false, message = $"Depodaki ürün geri yüklenirken hata oluştu: {ex.Message}" });
+            }
+        }
+
+        [Authorize(Roles = "Admin,Operator")]
+        [HttpPost]
+        public async Task<IActionResult> UploadWarehouseProductsFromExcel(IFormFile file, int warehouseId)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest("Dosya boş veya yüklenemedi.");
+            }
+
+            var warehouseExcelList = new List<WarehouseProductExcelDto>();
+
+            try
+            {
+                using var stream = new MemoryStream();
+                await file.CopyToAsync(stream);
+                stream.Position = 0;
+
+                System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+
+                using var reader = ExcelReaderFactory.CreateReader(stream);
+                var isFirstRow = true;
+
+                while (reader.Read())
+                {
+                    if (isFirstRow)
+                    {
+                        isFirstRow = false;
+                        continue;
+                    }
+
+                    var barcode = reader.GetValue(0)?.ToString()?.Trim();
+                    var qtyStr = reader.GetValue(1)?.ToString();
+                    var locationText = reader.GetValue(2)?.ToString()?.Trim();
+                    var stockCode = reader.GetValue(3)?.ToString()?.Trim();
+
+                    if (!int.TryParse(qtyStr, out int quantityChange))
+                        continue;
+
+                    warehouseExcelList.Add(new WarehouseProductExcelDto
+                    {
+                        Barcode = barcode,
+                        QuantityChange = quantityChange,
+                        LocationText = locationText,
+                        StockCode = stockCode
+                    });
+                }
+
+                var (insertedCount, updatedCount, errors) = await _warehouseProductManager
+                    .UpsertWarehouseProductsFromExcelAsync(warehouseId, warehouseExcelList);
+
+                return Ok(new
+                {
+                    success = true,
+                    insertedCount,
+                    updatedCount,
+                    errors
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Excel işlenirken hata oluştu: {ex.Message}");
             }
         }
 

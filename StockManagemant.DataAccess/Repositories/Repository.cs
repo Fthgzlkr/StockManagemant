@@ -1,11 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using StockManagemant.DataAccess.Context;
 using StockManagemant.DataAccess.Repositories.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Threading.Tasks;
+using EFCore.BulkExtensions;
 
 namespace StockManagemant.DataAccess.Repositories
 {
@@ -82,6 +79,15 @@ namespace StockManagemant.DataAccess.Repositories
                 .Where(predicate)
                 .Where(e => EF.Property<bool>(e, "IsDeleted") == false)
                 .ToListAsync();
+        }
+        public async Task BulkInsertAsync(List<T> entities)
+        {
+            var bulkConfig = new BulkConfig
+            {
+                SetOutputIdentity = true
+            };
+
+            await _context.BulkInsertAsync(entities, bulkConfig);
         }
     }
 }

@@ -44,6 +44,13 @@
     <div id="pager"></div>
 </div>
 
+<div class="text-end my-3">
+    <input type="file" id="excelFileInput" accept=".xlsx" style="display: none;" />
+    <button type="button" class="btn btn-primary" id="uploadExcelBtn">
+        <i class="fa-solid fa-file-excel me-1"></i> Excel ile Toplu Ürün Ekle
+    </button>
+</div>
+
 
 
 
@@ -138,6 +145,45 @@
             { edit: false, add: false, del: false, search: false, refresh: false },
 
          );
+
+
+         $("#uploadExcelBtn").on("click", function () {
+    $("#excelFileInput").click(); // gizli inputu tetikle
+});
+
+$("#excelFileInput").on("change", function () {
+    const file = this.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    $.ajax({
+        url: '/Product/UploadProductsFromExcel', // controller’da oluşturacağımız endpoint
+        type: 'POST',
+        data: formData,
+        contentType: false,
+        processData: false,
+        success: function (response) {
+            if (response.errors && response.errors.length > 0) {
+                Swal.fire({
+                    title: 'Kısmen Başarılı',
+                    html: `<p>Geçerli ürünler yüklendi ancak bazı satırlarda hata oluştu:</p><ul style="text-align:left;">` +
+                          response.errors.map(err => `<li>${err}</li>`).join('') +
+                          `</ul>`,
+                    icon: 'warning',
+                    width: 600
+                });
+            } else {
+                Swal.fire('Başarılı', 'Tüm ürünler başarıyla yüklendi.', 'success');
+            }
+            $("#productGrid").trigger("reloadGrid"); 
+        },
+        error: function () {
+            Swal.fire('Hata', 'Yükleme sırasında hata oluştu.', 'error');
+        }
+    });
+});
               // Özel butonu pager_left içerisine ekle
     $("#pager_left").append(`
         <i id="customRefreshBtn" class="fa-solid fa-arrows-rotate" title="Yenile" style="cursor: pointer; margin-left: 10px;"></i>

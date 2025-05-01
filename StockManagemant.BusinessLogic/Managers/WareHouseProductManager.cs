@@ -10,21 +10,26 @@ namespace StockManagemant.Business.Managers
 {
     private readonly IWarehouseProductRepository _warehouseProductRepository;
     private readonly IProductRepository _productRepository;
+    private readonly IProductManager _productManager;
     private readonly IMapper _mapper;
     private readonly IReceiptManager _receiptManager; 
     private readonly IReceiptDetailManager _receiptDetailManager; 
+    private readonly IWareHouseLocationRepository _wareHouseLocationRepository;
 
     public WarehouseProductManager(IWarehouseProductRepository warehouseProductRepository,
                                    IProductRepository productRepository,
                                    IMapper mapper,
                                    IReceiptManager receiptManager,           
-                                   IReceiptDetailManager receiptDetailManager) 
+                                   IReceiptDetailManager receiptDetailManager,
+                                   IWareHouseLocationRepository wareHouseLocationRepository, IProductManager productManager) 
     {
         _warehouseProductRepository = warehouseProductRepository;
         _productRepository = productRepository;
         _mapper = mapper;
         _receiptManager = receiptManager; 
         _receiptDetailManager = receiptDetailManager; 
+        _wareHouseLocationRepository = wareHouseLocationRepository;
+        _productManager = productManager;
     }
 
 
@@ -184,5 +189,105 @@ namespace StockManagemant.Business.Managers
                 Description = warehouseProduct.Product.Description
             };
         }
+
+public async Task<(int insertedCount, int updatedCount, List<string> errors)> UpsertWarehouseProductsFromExcelAsync(int warehouseId,List<WarehouseProductExcelDto> excelData)
+{
+    var insertList = new List<WarehouseProduct>();
+    var updateList = new List<WarehouseProduct>();
+    var errors = new List<string>();
+
+    foreach (var (row, index) in excelData.Select((val, i) => (val, i + 1)))
+    {
+        if (string.IsNullOrWhiteSpace(row.Barcode))
+        {
+            errors.Add($"Satır {index}: Barkod boş olamaz.");
+            continue;
+        }
+
+        var product = await _productRepository.GetProductByBarcodeAsync(row.Barcode);
+        if (product == null)
+        {
+            errors.Add($"Satır {index}: Barkodu '{row.Barcode}' olan ürün bulunamadı.");
+            continue;
+        }
+
+        bool existsInWarehouse = await _productRepository.IsProductInWarehouseAsync(product.Id, warehouseId);
+
+        if (existsInWarehouse)
+        {
+            var existing = (await _warehouseProductRepository
+                .FindAsync(wp => wp.ProductId == product.Id && wp.WarehouseId == warehouseId && !wp.IsDeleted))
+                .FirstOrDefault();
+
+            if (existing == null)
+            {
+                errors.Add($"Satır {index}: Ürün sistemsel hata nedeniyle depoda bulunamadı.");
+                continue;
+            }
+
+            if (row.QuantityChange < 0 && existing.StockQuantity + row.QuantityChange < 0)
+            {
+                errors.Add($"Satır {index}: Stok çıkışı fazla. Mevcut: {existing.StockQuantity}");
+                continue;
+            }
+
+            existing.StockQuantity += row.QuantityChange;
+
+            if (!string.IsNullOrWhiteSpace(row.StockCode))
+                existing.StockCode = row.StockCode;
+
+            updateList.Add(existing);
+        }
+        else
+        {
+            if (row.QuantityChange <= 0)
+            {
+                errors.Add($"Satır {index}: Ürün depoda yokken negatif stok eklenemez.");
+                continue;
+            }
+
+            var parsed = LocationParser.Parse(row.LocationText);
+            if (parsed == null)
+            {
+                errors.Add($"Satır {index}: Lokasyon formatı hatalı: '{row.LocationText}'");
+                continue;
+            }
+
+            int? locationId = await _wareHouseLocationRepository.GetLocationIdAsync(
+                warehouseId, parsed.Value.corridor, parsed.Value.shelf, parsed.Value.bin);
+
+            if (locationId == null)
+            {
+                errors.Add($"Satır {index}: Lokasyon bulunamadı: '{row.LocationText}'");
+                continue;
+            }
+
+            var newWp = new WarehouseProduct
+            {
+                ProductId = product.Id,
+                WarehouseId = warehouseId,
+                WarehouseLocationId = locationId.Value,
+                StockQuantity = row.QuantityChange,
+                StockCode = row.StockCode
+            };
+
+            insertList.Add(newWp);
+        }
+    }
+
+    // 🔁 Güncellemeleri sırayla kaydet
+    foreach (var item in updateList)
+    {
+        await _warehouseProductRepository.UpdateAsync(item);
+    }
+
+    // ⏫ Yeni ürünleri topluca ekle
+    if (insertList.Any())
+    {
+        await _warehouseProductRepository.BulkInsertAsync(insertList);
+    }
+
+    return (insertList.Count, updateList.Count, errors);
+}
     }
 }

@@ -24,6 +24,39 @@
         margin-bottom: 20px;
     }
 
+    /* İşlem Türü (Depo Giriş/Çıkış) Filtre Alanı */
+    .receipt-page .type-filter {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-left: 20px;
+    }
+
+    .receipt-page .type-label {
+        font-family: 'Poppins', sans-serif;
+        font-size: 16px;
+        font-weight: bold;
+        color: #002b5c;
+    }
+
+    .receipt-page select[name="receiptTypeFilter"] {
+        width: 180px;
+        max-width: 180px;
+        min-width: 180px;
+        padding: 6px;
+        font-size: 13px;
+        border: 1px solid #007bff;
+        border-radius: 5px;
+        background-color: #f8f9fa;
+        box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease-in-out;
+    }
+
+    .receipt-page select[name="receiptTypeFilter"]:focus {
+        border-color: #0056b3;
+        background-color: white;
+    }
+
     /* Tarih Seçici Label */
     .receipt-page .date-label {
         font-family: 'Poppins', sans-serif;

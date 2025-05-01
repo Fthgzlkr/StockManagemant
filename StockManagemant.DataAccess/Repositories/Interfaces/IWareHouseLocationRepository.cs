@@ -9,5 +9,6 @@ namespace StockManagemant.DataAccess.Repositories.Interfaces
         Task<IEnumerable<object>> GetCorridorsByWarehouseIdAsync(int warehouseId);
         Task<IEnumerable<object>> GetShelvesByWarehouseAsync(int warehouseId, string corridor);
         Task<IEnumerable<object>> GetBinsByWarehouseAsync(int warehouseId, string corridor, string shelf);
+        Task<int?> GetLocationIdAsync(int warehouseId, string corridor, string? shelf, string? bin);
     }
 }

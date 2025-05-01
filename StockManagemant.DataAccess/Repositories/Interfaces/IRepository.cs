@@ -13,6 +13,7 @@ namespace StockManagemant.DataAccess.Repositories.Interfaces
         Task UpdateAsync(T entity);
         Task DeleteAsync(int id); // Soft delete işlemi burada olacak
         Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate);
-        Task RestoreAsync(int id); // Silinmiş veriyi geri getirme
+        Task RestoreAsync(int id); // Silinmiş veriyi geri getirme  
+        Task BulkInsertAsync(List<T> entities);
     }
 }

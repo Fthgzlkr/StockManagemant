@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using StockManagemant.Business.Managers;
 using StockManagemant.Entities.Models;
+using ExcelDataReader;
 using StockManagemant.DataAccess.Filters;
 using Microsoft.AspNetCore.Authorization;
 using StockManagemant.Entities.DTO;
@@ -249,6 +250,63 @@ namespace StockManagemant.Controllers
                 return Json(new { success = false, message = "Ürün geri yüklenirken hata oluştu: " + ex.Message });
             }
         }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin,Operator")]
+    public async Task<IActionResult> UploadProductsFromExcel(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest("Dosya boş veya yüklenemedi.");
+        }
+
+        var rawProducts = new List<RawProductModel>();
+
+        try
+        {
+            using var stream = new MemoryStream();
+            await file.CopyToAsync(stream);
+            stream.Position = 0;
+
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+
+            using var reader = ExcelReaderFactory.CreateReader(stream);
+            var isFirstRow = true;
+
+            while (reader.Read())
+            {
+                if (isFirstRow)
+                {
+                    isFirstRow = false;
+                    continue; // başlık satırı atlanır
+                }
+
+                rawProducts.Add(new RawProductModel
+                {
+                    Name = reader.GetValue(0)?.ToString(),
+                    Price = reader.GetValue(1)?.ToString(),
+                    CategoryName = reader.GetValue(2)?.ToString(),
+                    CurrencyText = reader.GetValue(3)?.ToString(),
+                    Barcode = reader.GetValue(4)?.ToString(),
+                    ImageUrl = reader.GetValue(5)?.ToString(),
+                    Description = reader.GetValue(6)?.ToString()
+                });
+            }
+
+            var (insertedCount, errors) = await _productManager.AddProductsFromExcelAsync(rawProducts);
+
+            return Ok(new
+            {
+                success = true,
+                message = $"{insertedCount} ürün başarıyla eklendi.",
+                errors
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Excel işlenirken bir hata oluştu: {ex.Message}");
+        }
+    }
 
        
 

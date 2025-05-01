@@ -106,7 +106,91 @@ namespace StockManagemant.Business.Managers
             return await _productRepository.IsProductInWarehouseAsync(productId, warehouseId);
         }
 
+public async Task<(int insertedCount, List<string> errors)> AddProductsFromExcelAsync(List<RawProductModel> rawProducts)
+{
+    var errors = new List<string>();
+    var validProducts = new List<Product>();
+    int rowIndex = 2; 
 
+    foreach (var raw in rawProducts)
+    {
+        var errorPrefix = $"Satır {rowIndex}: ";
+        var rowErrors = new List<string>();
+
+        // 🔍 Zorunlu Alanlar
+        if (string.IsNullOrWhiteSpace(raw.Name))
+            rowErrors.Add("Ürün adı boş olamaz.");
+
+        if (string.IsNullOrWhiteSpace(raw.CategoryName))
+            rowErrors.Add("Kategori adı boş olamaz.");
+
+        if (string.IsNullOrWhiteSpace(raw.CurrencyText))
+            rowErrors.Add("Para birimi boş olamaz.");
+
+        // 💰 Para Birimi Enum'a Çevrilmesi
+        CurrencyType currency;
+        if (!Enum.TryParse(raw.CurrencyText.Trim(), true, out currency))
+        {
+            rowErrors.Add($"Geçersiz para birimi: {raw.CurrencyText}");
+        }
+        
+
+        // 💵 Fiyat Formatı
+        decimal? price = null;
+        if (!string.IsNullOrWhiteSpace(raw.Price))
+        {
+            if (decimal.TryParse(raw.Price, out var parsedPrice))
+            {
+                price = parsedPrice;
+            }
+            else
+            {
+                rowErrors.Add($"Geçersiz fiyat: {raw.Price}");
+            }
+        }
+
+        // 📁 Kategori Eşlemesi
+        var categoryList = await _categoryRepository
+            .FindAsync(c => c.Name.ToLower() == raw.CategoryName.Trim().ToLower() && !c.IsDeleted);
+
+        var matchedCategory = categoryList.FirstOrDefault();
+        if (matchedCategory == null)
+        {
+            rowErrors.Add($"Kategori bulunamadı: {raw.CategoryName}");
+        }
+
+        // ❌ Hatalı Satır
+        if (rowErrors.Any())
+        {
+            errors.Add(errorPrefix + string.Join(" | ", rowErrors));
+        }
+        // ✅ Geçerli Satır
+        else
+        {
+            validProducts.Add(new Product
+            {
+                Name = raw.Name.Trim(),
+                CategoryId = matchedCategory.Id,
+                Currency = currency,
+                Price = price,
+                Barcode = raw.Barcode?.Trim(),
+                ImageUrl = raw.ImageUrl?.Trim(),
+                Description = raw.Description?.Trim(),
+                IsDeleted = false
+            });
+        }
+
+        rowIndex++;
+    }
+
+    // 📦 Toplu Veri Ekleme (Bulk Insert)
+    if (validProducts.Any())
+    {
+        await _productRepository.BulkInsertAsync(validProducts);
+    }
+
+    return (validProducts.Count, errors);
+}
 
     }
 }

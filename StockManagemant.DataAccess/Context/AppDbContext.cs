@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Reflection.Emit;
-using Microsoft.EntityFrameworkCore;
-using StockManagemant.Entities.DTO;
+﻿using Microsoft.EntityFrameworkCore;
 using StockManagemant.Entities.Models;
 
 namespace StockManagemant.DataAccess.Context

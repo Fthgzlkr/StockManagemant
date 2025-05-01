@@ -43,6 +43,12 @@
     </div>
 </div>
 
+<div class="text-end my-3">
+    <input type="file" id="warehouseExcelFileInput" accept=".xlsx" hidden />
+    <button class="btn btn-outline-primary" id="uploadWarehouseExcelBtn">
+        <i class="bi bi-upload me-1"></i> Excel ile Ürün Yükle
+    </button>
+</div>
 
 <div class="table-container mt-4">
     <table id="warehouseProductGrid"></table>
@@ -113,3 +119,61 @@
 </div>
 
 <script src="~/js/WarehouseProducts.js" asp-append-version="true"></script>
+<script>
+    $("#uploadWarehouseExcelBtn").on("click", function () {
+        $("#warehouseExcelFileInput").click();
+    });
+
+    $("#warehouseExcelFileInput").on("change", function () {
+        const fileInput = this;
+        const formData = new FormData();
+        const file = fileInput.files[0];
+
+        if (!file) return;
+
+        formData.append("file", file);
+        const urlParams = new URLSearchParams(window.location.search);
+        const warehouseId = urlParams.get("warehouseId");
+        formData.append("warehouseId", warehouseId);
+
+        Swal.fire({
+            title: "Yükleniyor...",
+            text: "Excel dosyası işleniyor",
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        $.ajax({
+            url: "/WarehouseProduct/UploadWarehouseProductsFromExcel",
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                Swal.close();
+
+                if (response.success) {
+                    Swal.fire({
+                        title: "Başarılı!",
+                        html: `
+                            <p>${response.insertedCount} ürün eklendi.</p>
+                            <p>${response.updatedCount} ürün güncellendi.</p>
+                            ${response.errors.length > 0 ? `<p><strong>Hatalı Satırlar:</strong><br>${response.errors.join("<br>")}</p>` : ""}
+                        `,
+                        icon: "success"
+                    });
+
+                    $("#warehouseProductGrid").trigger("reloadGrid");
+                } else {
+                    Swal.fire("Hata!", "İşlem başarıyla tamamlanamadı.", "error");
+                }
+            },
+            error: function (xhr) {
+                Swal.close();
+                Swal.fire("Hata!", "Sunucu hatası oluştu: " + xhr.responseText, "error");
+            }
+        });
+    });
+</script>

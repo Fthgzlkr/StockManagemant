@@ -1,180 +1,87 @@
 ﻿@{
-    ViewData["Title"] = "Depodaki Fişler";
+    ViewData["Title"] = "Fiş Listesi" /* veya "Depodaki Fişler" */;
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/css/receiptlist.css" />
     <link rel="stylesheet" href="~/css/Product.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/GlobalStyles.css" asp-append-version="true" />
 }
+<style>
+.receipt-page {
+    padding: 20px;
+    max-width: 95%;
+    margin: 0 auto;
+}
+
+.receipt-page h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: bold;
+    font-style: italic;
+    color: #002b5c;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.filter-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.date-filter, .receipt-type-filter {
+    display: flex;
+    flex-direction: column;
+}
+
+.date-label, .receipt-type-label {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    color: #002b5c;
+    margin-bottom: 4px;
+}
+
+#receiptTypeSelect {
+    width: 200px;
+    height: 36px;
+    padding: 6px 10px;
+    font-size: 14px;
+    border-radius: 5px;
+    border: 1px solid #007bff;
+    background-color: #f8f9fa;
+    transition: border-color 0.3s ease-in-out;
+}
+</style>
 
 <div class="receipt-page">
     <h2>@ViewData["Title"]</h2>
 
-    <div class="date-filter">
-        <span class="date-label">Fiş Tarihi Seçin: </span>
-        <input type="text" name="daterange" placeholder="Tarih aralığı" value="pickedDate" />
+    <div class="filter-container">
+        <div class="date-filter">
+            <span class="date-label">Fiş Tarihi Seçin:</span>
+            <input type="text" name="daterange" placeholder="Tarih aralığı" value="pickedDate" />
+        </div>
+
+        <div class="receipt-type-filter">
+            <span class="receipt-type-label">İşlem Türü Seçin:</span>
+            <select id="receiptTypeSelect" class="form-select">
+                <option value="">Hepsi</option>
+                <option value="Entry">Depo Giriş</option>
+                <option value="Exit">Depo Çıkış</option>
+            </select>
+        </div>
     </div>
 
     <table id="receiptGrid"></table>
     <div id="receiptPager"></div>
 </div>
 
+<script src="~/js/ReceiptGridManager.js" asp-append-version="true"></script>
+<script src="~/js/ReceiptDetail.js" asp-append-version="true"></script>
 <script>
-    let selectedReceiptId = null;
-    let startDate = null;
-    let endDate = null;
-
-    $(document).ready(function () {
-        let warehouseId = localStorage.getItem("selectedWarehouseId") || "";
-
-        $("#receiptGrid").jqGrid({
-            url: `/Receipt/GetReceipts?warehouseId=${warehouseId}`, // ✅ Depoya göre fişleri çekiyoruz
-            datatype: "json",
-            mtype: "GET",
-            colNames: ['Fiş No', 'Tarih', 'Toplam Tutar','İşlem Türü' ,'İşlemler'],
-            colModel: [
-                { name: 'id', index: 'id', width: 50, align: "center", sortable: true, key: true, hidden: true },
-                { name: 'date', index: 'date', width: 60, align: "center", sortable: true },
-                { name: 'totalAmount', index: 'totalAmount', width: 60, align: "right", sortable: true },
-                {
-                    name: 'receiptType',
-                    index: 'receiptType',
-                    width: 60,
-                    align: "right",
-                    sortable: true,
-                       formatter: function (cellvalue) {
-                    if (cellvalue === "Entry") {
-                        return `<span class="text-success"><i class="fa-solid fa-arrow-down"></i> Depo Giriş</span>`;
-                    } else if (cellvalue === "Exit") {
-                        return `<span class="text-danger"><i class="fa-solid fa-arrow-up"></i> Depo Çıkış</span>`;
-                    }
-                    return cellvalue;
-                }
-                },
-                {
-                    name: "actions",
-                    label: "İşlemler",
-                    align: "center",
-                    width: 50,
-                    formatter: function (cellvalue, options, rowObject) {
-                        return `
-                        <div class="action-icons">
-                            <i class="fa-solid fa-pen text-primary fa-xs open-category-edit"
-                               data-id="${rowObject.id}" data-date="${rowObject.date}" title="Düzenle"></i>
-                            <i class="fa-solid fa-trash text-danger fa-xs delete-btn"
-                                data-id="${rowObject.id}" title="Sil"></i>
-                        </div>
-                        `;
-                    }
-                }
-            ],
-            pager: '#receiptPager',
-            rowNum: 10,
-            rowList: [10, 20, 30, 50, 100],
-            sortname: 'id',
-            sortorder: 'asc',
-            viewrecords: true,
-            height: 'auto',
-            loadonce: false,
-            autowidth: true,
-            shrinkToFit: true,
-            guiStyle: "bootstrap4",
-            jsonReader: {
-                root: "rows",
-                page: "page",
-                total: "total",
-                records: "records"
-            },
-            onSelectRow: function (id) {
-                selectedReceiptId = id;
-            },
-            ondblClickRow: function (rowid) {
-                if (rowid) {
-                    selectedReceiptId = rowid;
-                    if (selectedReceiptId) {
-                        const title = 'Fiş Detayları';
-                        openModal(`/Receipt/Details/${selectedReceiptId}`, title, setupReceiptProductsEvents);
-                    } else {
-                        alert('Lütfen bir satır seçin.');
-                    }
-                }
-            }
-        });
-
-        // Grid Yenileme
-        $("#receiptGrid").jqGrid('navGrid', '#receiptPager', { edit: false, add: false, del: false, search: false, refresh: true });
-
-        // Depo ID değiştiğinde fiş listesini güncelle
-        function refreshReceipts() {
-            let newWarehouseId = localStorage.getItem("selectedWarehouseId") || "";
-            $("#receiptGrid").jqGrid('setGridParam', {
-                url: `/Receipt/GetReceipts?warehouseId=${newWarehouseId}`,
-                page: 1
-            }).trigger("reloadGrid");
-        }
-
-        // Eğer localStorage’da depo değişirse, fişleri yenile
-        window.addEventListener("storage", function (event) {
-            if (event.key === "selectedWarehouseId") {
-                refreshReceipts();
-            }
-        });
-
-        // Tarih Filtreleme
-        $(function () {
-            $('input[name="daterange"]').daterangepicker({
-                opens: 'center',
-                minDate: "2025/1/3",
-                locale: { format: 'YYYY-MM-DD' }
-            }, function (start, end, label) {
-                startDate = start.format('YYYY-MM-DD');
-                endDate = end.format('YYYY-MM-DD');
-
-                $("#receiptGrid").setGridParam({
-                    url: `/Receipt/GetReceipts?warehouseId=${warehouseId}&startDate=${startDate}&endDate=${endDate}`,
-                    page: 1
-                }).trigger("reloadGrid");
-            });
-        });
-
-        // Fiş Silme İşlemi
-        $(document).on("click", ".delete-btn", function () {
-            let id = $(this).data("id");
-
-            Swal.fire({
-                title: "Silme İşlemi",
-                text: "Bu fişi silmek istediğinize emin misiniz?",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Evet, Sil!",
-                cancelButtonText: "Hayır, İptal"
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: `/Receipt/DeleteReceipt?receiptId=${id}`,
-                        type: 'POST',
-                        success: function (response) {
-                            Swal.fire({
-                                title: "Başarılı!",
-                                text: "Fiş başarıyla silindi.",
-                                icon: "success",
-                                confirmButtonColor: "#3085d6"
-                            });
-                            $("#receiptGrid").trigger("reloadGrid");
-                        },
-                        error: function (error) {
-                            Swal.fire({
-                                title: "Hata!",
-                                text: "Silme işlemi başarısız oldu!",
-                                icon: "error",
-                                confirmButtonColor: "#d33"
-                            });
-                        }
-                    });
-                }
-            });
-        });
-
-    });
+    const warehouseId = localStorage.getItem("selectedWarehouseId") || "";
+    initReceiptGrid({ warehouseId });
 </script>

@@ -53,6 +53,11 @@ namespace StockManagemant.DataAccess.Repositories
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
+       public async Task<Product?> GetProductByBarcodeAsync(string barcode)
+        {
+            return await _context.Products.FirstOrDefaultAsync(p => p.Barcode == barcode);
+        }
+
         public async Task<bool> IsProductInWarehouseAsync(int productId, int warehouseId)
         {
             return await _context.WarehouseProducts

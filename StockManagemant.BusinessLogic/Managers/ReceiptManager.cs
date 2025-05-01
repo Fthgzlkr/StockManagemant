@@ -16,14 +16,16 @@ namespace StockManagemant.Business.Managers
         private readonly IReceiptDetailRepository _receiptDetailRepository;
         private readonly IMapper _mapper;
         private readonly IWarehouseProductRepository _warehouseProductRepository;
+        private readonly IWarehouseRepository _warehouseRepository;
 
-        public ReceiptManager(IReceiptRepository receiptRepository, IReceiptDetailManager receiptDetailManager, IReceiptDetailRepository receiptDetailRepository, IMapper mapper, IWarehouseProductRepository warehouseProductRepository)
+        public ReceiptManager(IReceiptRepository receiptRepository, IReceiptDetailManager receiptDetailManager, IReceiptDetailRepository receiptDetailRepository, IMapper mapper, IWarehouseProductRepository warehouseProductRepository,IWarehouseRepository warehouseRepository)
         {
             _receiptRepository = receiptRepository;
             _receiptDetailManager = receiptDetailManager;
             _receiptDetailRepository = receiptDetailRepository;
             _mapper = mapper;
             _warehouseProductRepository = warehouseProductRepository;
+            _warehouseRepository = warehouseRepository;
         }
 
         public async Task<int> GetTotalReceiptCountAsync(ReceiptFilter filter)
@@ -97,10 +99,18 @@ namespace StockManagemant.Business.Managers
 
         // ✅ **ID’ye göre fiş bulma**
         public async Task<ReceiptDto> GetReceiptByIdAsync(int receiptId)
-        {
-            var receipt = await _receiptRepository.GetByIdAsync(receiptId);
-            return _mapper.Map<ReceiptDto>(receipt);
-        }
+{
+    var receipt = await _receiptRepository.GetByIdAsync(receiptId);
+    if (receipt == null) return null;
+
+    var receiptDto = _mapper.Map<ReceiptDto>(receipt);
+
+    // 🔥 Ek: Warehouse adını çekip ReceiptDto'ya ekliyoruz
+    var warehouse = await _warehouseRepository.GetByIdAsync(receipt.WarehouseId);
+    receiptDto.WareHouseName = warehouse?.Name ?? "Depo Adı Yok";
+
+    return receiptDto;
+}
 
         // ✅ **Fişin ürün detaylarını getirme**
         public async Task<List<ReceiptDetailDto>> GetReceiptDetailsAsync(int receiptId)

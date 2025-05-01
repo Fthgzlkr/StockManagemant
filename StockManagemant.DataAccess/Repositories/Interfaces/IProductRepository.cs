@@ -13,5 +13,6 @@ namespace StockManagemant.DataAccess.Repositories.Interfaces
         Task<Product> GetByIdAsync(int id);
         Task<Product> GetByIdWithDeletedAsync(int id);
         Task<bool> IsProductInWarehouseAsync(int productId, int warehouseId);
+        Task<Product?> GetProductByBarcodeAsync(string barcode);
     }
 }

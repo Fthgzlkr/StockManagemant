@@ -46,5 +46,19 @@ namespace StockManagemant.DataAccess.Repositories
                 })
                 .ToListAsync();
         }
+
+        public async Task<int?> GetLocationIdAsync(int warehouseId, string corridor, string? shelf, string? bin)
+        {
+            var location = await _context.WarehouseLocations
+                .Where(x =>
+                    x.WarehouseId == warehouseId &&
+                    x.Corridor == corridor &&
+                    x.Shelf == shelf &&
+                    x.Bin == bin &&
+                    !x.IsDeleted)
+                .FirstOrDefaultAsync();
+
+            return location?.Id;
+        }
     }
 }
