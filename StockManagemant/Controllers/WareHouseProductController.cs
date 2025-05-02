@@ -102,7 +102,7 @@ namespace StockManagemant.Controllers
 
 
 
-        [Authorize(Roles = "Admin,Operator")]
+        [Authorize(Roles = "Admin,Operator,BasicUser")]
         // Yeni Ürün ekleme depoya 
         [HttpPost]
         public async Task<IActionResult> AddProductToWarehouse([FromBody] WarehouseProductDto dto)

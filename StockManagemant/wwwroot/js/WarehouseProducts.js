@@ -41,6 +41,8 @@
                            <div class="stock-container" style="display: flex; align-items: center; justify-content: center;">
                                <input type="number" class="stock-input" 
                                    data-id="${rowObject.id}"
+                                   data-product-id="${rowObject.product_id}"
+                                   data-price="${rowObject.price}"
                                    data-product-name="${rowObject.name}"
                                    data-stockcode="${rowObject.stockcode}"
                                    data-barcode="${rowObject.barcode}"
@@ -49,11 +51,11 @@
                                    readonly
                                    style="width: 70px; height: 25px; text-align: center; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; cursor: pointer;">
                                <div class="stock-controls" style="display: flex; flex-direction: column; margin-left: 3px;">
-                                   <button class="increaseStockBtn" data-id="${rowObject.id}" data-product-name="${rowObject.name}" data-stockcode="${rowObject.stockcode}" data-barcode="${rowObject.barcode}" title="Stok Artır"
+                                   <button class="increaseStockBtn" data-id="${rowObject.id}" data-product-id="${rowObject.product_id}" data-price="${rowObject.price}" data-product-name="${rowObject.name}" data-stockcode="${rowObject.stockcode}" data-barcode="${rowObject.barcode}" title="Stok Artır"
                                        style="border: none; background: transparent; cursor: pointer; font-size: 10px; padding: 2px;">
                                        ▲
                                    </button>
-                                   <button class="decreaseStockBtn" data-id="${rowObject.id}" data-product-name="${rowObject.name}" data-stockcode="${rowObject.stockcode}" data-barcode="${rowObject.barcode}" title="Stok Azalt"
+                                   <button class="decreaseStockBtn" data-id="${rowObject.id}" data-product-id="${rowObject.product_id}" data-price="${rowObject.price}" data-product-name="${rowObject.name}" data-stockcode="${rowObject.stockcode}" data-barcode="${rowObject.barcode}" title="Stok Azalt"
                                        style="border: none; background: transparent; cursor: pointer; font-size: 10px; padding: 2px;">
                                        ▼
                                    </button>
@@ -114,7 +116,7 @@
 
           
            rowattr: function (rowObject) {
-               if (rowObject.stock < 15) {
+               if (rowObject.stock < 16) {
                    return { "class": "low-stock-row" };
                }
            },
@@ -170,7 +172,7 @@ $(document).on("click", ".increaseStockBtn", function () {
     let input = $(`input.stock-input[data-id="${warehouseProductId}"]`);
     let current = parseInt(input.val());
     let originalValue = current;
-
+    // Optionally, could use data-product-id and data-price here too if needed
     updateStock(warehouseProductId, current + 1, productName, stockCode, barcode, originalValue);
 });
 
@@ -183,7 +185,6 @@ $(document).on("click", ".decreaseStockBtn", function () {
     let input = $(`input.stock-input[data-id="${warehouseProductId}"]`);
     let current = parseInt(input.val());
     let originalValue = current;
-
     if (current > 0) updateStock(warehouseProductId, current - 1, productName, stockCode, barcode, originalValue);
 });
 
@@ -233,41 +234,15 @@ function updateStock(warehouseProductId, newStock, productName, stockCode, barco
     trackStockChange(warehouseProductId, originalValue, newStock, productName, stockCode, barcode);
 }
 
-// Stok değişimlerini izleme fonksiyonu (güncellenmiş: fiyat dahil)
+// Stok değişimlerini izleme fonksiyonu (güncellenmiş: fiyat dahil, grid bağımsız)
 function trackStockChange(warehouseProductId, oldStock, newStock, productName, stockCode, barcode) {
     const difference = newStock - oldStock;
     if (difference === 0) return;
 
-    // Grid'in verisini al
-    const gridData = $("#warehouseProductGrid").jqGrid("getGridParam", "data");
-    let productPrice = 0;
-    let productId = null;
-
-    // ID'ye göre depo ürününü bul ve product_id'yi çek
-    if (gridData && gridData.length > 0) {
-        const productRow = gridData.find(row => String(row.id) === String(warehouseProductId));
-        if (productRow) {
-            productPrice = productRow.price;
-            productId = productRow.product_id; // ⭐️ Burada product_id alıyoruz
-        }
-    }
-
-    if (!productPrice) {
-        $.ajax({
-            url: `/WarehouseProduct/GetWarehouseProducts?warehouseId=${warehouseId}`,
-            type: 'GET',
-            async: false,
-            success: function(response) {
-                if (response && response.rows) {
-                    const product = response.rows.find(item => String(item.id) === String(warehouseProductId));
-                    if (product) {
-                        productPrice = product.price;
-                        productId = product.product_id;
-                    }
-                }
-            }
-        });
-    }
+    // Her zaman input'tan data-product-id ve data-price çek (grid page bağımsızlığı için)
+    let input = $(`input.stock-input[data-id="${warehouseProductId}"]`);
+    let productId = input.data("product-id");
+    let productPrice = input.data("price");
 
     if (!productId) {
         console.error("Ürünün ProductId bilgisi bulunamadı!");
@@ -281,7 +256,7 @@ function trackStockChange(warehouseProductId, oldStock, newStock, productName, s
         }
     } else {
         stockChanges[productId] = {
-            id: productId,  // ✅ Artık productId gönderiyoruz
+            id: productId,
             productName: productName,
             quantity: difference,
             price: productPrice,

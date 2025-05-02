@@ -9,6 +9,7 @@ namespace StockManagemant.Business.Managers
   public class WarehouseProductManager : IWarehouseProductManager
 {
     private readonly IWarehouseProductRepository _warehouseProductRepository;
+    private readonly IWarehouseRepository _warehouseRepository;
     private readonly IProductRepository _productRepository;
     private readonly IProductManager _productManager;
     private readonly IMapper _mapper;
@@ -21,7 +22,8 @@ namespace StockManagemant.Business.Managers
                                    IMapper mapper,
                                    IReceiptManager receiptManager,           
                                    IReceiptDetailManager receiptDetailManager,
-                                   IWareHouseLocationRepository wareHouseLocationRepository, IProductManager productManager) 
+                                   IWareHouseLocationRepository wareHouseLocationRepository, IProductManager productManager,
+                                  IWarehouseRepository warehouseRepository ) 
     {
         _warehouseProductRepository = warehouseProductRepository;
         _productRepository = productRepository;
@@ -30,6 +32,7 @@ namespace StockManagemant.Business.Managers
         _receiptDetailManager = receiptDetailManager; 
         _wareHouseLocationRepository = wareHouseLocationRepository;
         _productManager = productManager;
+        _warehouseRepository = warehouseRepository;
     }
 
 
@@ -190,10 +193,12 @@ namespace StockManagemant.Business.Managers
             };
         }
 
-public async Task<(int insertedCount, int updatedCount, List<string> errors)> UpsertWarehouseProductsFromExcelAsync(int warehouseId,List<WarehouseProductExcelDto> excelData)
+public async Task<(int insertedCount, int updatedCount, List<string> errors)> UpsertWarehouseProductsFromExcelAsync(int warehouseId, List<WarehouseProductExcelDto> excelData)
 {
     var insertList = new List<WarehouseProduct>();
     var updateList = new List<WarehouseProduct>();
+    var receiptEntryDetails = new List<(int ProductId, int Quantity)>();
+    var receiptExitDetails = new List<(int ProductId, int Quantity)>();
     var errors = new List<string>();
 
     foreach (var (row, index) in excelData.Select((val, i) => (val, i + 1)))
@@ -237,6 +242,11 @@ public async Task<(int insertedCount, int updatedCount, List<string> errors)> Up
                 existing.StockCode = row.StockCode;
 
             updateList.Add(existing);
+
+            if (row.QuantityChange > 0)
+                receiptEntryDetails.Add((existing.ProductId, row.QuantityChange));
+            else if (row.QuantityChange < 0)
+                receiptExitDetails.Add((existing.ProductId, Math.Abs(row.QuantityChange)));
         }
         else
         {
@@ -272,19 +282,54 @@ public async Task<(int insertedCount, int updatedCount, List<string> errors)> Up
             };
 
             insertList.Add(newWp);
+            receiptEntryDetails.Add((newWp.ProductId, row.QuantityChange));
         }
     }
 
-    // 🔁 Güncellemeleri sırayla kaydet
     foreach (var item in updateList)
     {
         await _warehouseProductRepository.UpdateAsync(item);
     }
 
-    // ⏫ Yeni ürünleri topluca ekle
     if (insertList.Any())
     {
         await _warehouseProductRepository.BulkInsertAsync(insertList);
+    }
+
+    // 📋 Fiş oluşturma işlemi
+    var warehouse = await _warehouseRepository.GetByIdAsync(warehouseId);
+    string warehouseName = warehouse?.Name ?? "Depo";
+
+    if (receiptEntryDetails.Any())
+    {
+        var receipt = new ReceiptDto
+        {
+            WareHouseId = warehouseId,
+            ReceiptType = ReceiptType.Entry,
+            Description = $"{warehouseName} deposuna Excel dosyasıyla toplu ürün girişi yapıldı."
+        };
+
+        int receiptId = await _receiptManager.AddReceiptAsync(receipt);
+        foreach (var item in receiptEntryDetails)
+        {
+            await _receiptDetailManager.AddProductToReceiptAsync(receiptId, item.ProductId, item.Quantity);
+        }
+    }
+
+    if (receiptExitDetails.Any())
+    {
+        var receipt = new ReceiptDto
+        {
+            WareHouseId = warehouseId,
+            ReceiptType = ReceiptType.Exit,
+            Description = $"{warehouseName} deposundan Excel dosyasıyla toplu ürün çıkışı yapıldı."
+        };
+
+        int receiptId = await _receiptManager.AddReceiptAsync(receipt);
+        foreach (var item in receiptExitDetails)
+        {
+            await _receiptDetailManager.AddProductToReceiptAsync(receiptId, item.ProductId, item.Quantity);
+        }
     }
 
     return (insertList.Count, updateList.Count, errors);

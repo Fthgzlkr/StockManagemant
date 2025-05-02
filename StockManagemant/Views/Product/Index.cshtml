@@ -42,13 +42,11 @@
 <div class="table-container mt-4">
     <table id="productGrid"></table>
     <div id="pager"></div>
-</div>
-
-<div class="text-end my-3">
-    <input type="file" id="excelFileInput" accept=".xlsx" style="display: none;" />
-    <button type="button" class="btn btn-primary" id="uploadExcelBtn">
-        <i class="fa-solid fa-file-excel me-1"></i> Excel ile Toplu Ürün Ekle
-    </button>
+    <div class="text-end mt-4">
+        <button class="btn btn-success" id="uploadProductExcelBtn">
+            <i class="bi bi-file-earmark-excel me-2"></i> Excel ile Ürün Ekle
+        </button>
+    </div>
 </div>
 
 
@@ -147,43 +145,6 @@
          );
 
 
-         $("#uploadExcelBtn").on("click", function () {
-    $("#excelFileInput").click(); // gizli inputu tetikle
-});
-
-$("#excelFileInput").on("change", function () {
-    const file = this.files[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    $.ajax({
-        url: '/Product/UploadProductsFromExcel', // controller’da oluşturacağımız endpoint
-        type: 'POST',
-        data: formData,
-        contentType: false,
-        processData: false,
-        success: function (response) {
-            if (response.errors && response.errors.length > 0) {
-                Swal.fire({
-                    title: 'Kısmen Başarılı',
-                    html: `<p>Geçerli ürünler yüklendi ancak bazı satırlarda hata oluştu:</p><ul style="text-align:left;">` +
-                          response.errors.map(err => `<li>${err}</li>`).join('') +
-                          `</ul>`,
-                    icon: 'warning',
-                    width: 600
-                });
-            } else {
-                Swal.fire('Başarılı', 'Tüm ürünler başarıyla yüklendi.', 'success');
-            }
-            $("#productGrid").trigger("reloadGrid"); 
-        },
-        error: function () {
-            Swal.fire('Hata', 'Yükleme sırasında hata oluştu.', 'error');
-        }
-    });
-});
               // Özel butonu pager_left içerisine ekle
     $("#pager_left").append(`
         <i id="customRefreshBtn" class="fa-solid fa-arrows-rotate" title="Yenile" style="cursor: pointer; margin-left: 10px;"></i>
@@ -280,7 +241,6 @@ $("#excelFileInput").on("change", function () {
             page: 1
         }).trigger("reloadGrid");
     });
-    });
 
         // 🔹 Dinamik Arama (Gerçek Zamanlı Filtreleme)
     $("#productSearch").on("input", function () {
@@ -293,5 +253,93 @@ $("#excelFileInput").on("change", function () {
         }).trigger("reloadGrid");
     });
 
+         // Excel ile Ürün Ekle (SweetAlert2 Popup)
+         $("#uploadProductExcelBtn").on("click", function () {
+             Swal.fire({
+                 title: '<span style="font-size: 1.5rem; color: #1f3c88;">🛒 Excel ile Ürün Ekleme</span>',
+                 width: '900px',
+                 html: `
+                     <div class="d-flex justify-content-between text-start" style="gap: 20px;">
+                         <div class="flex-fill bg-light p-3 rounded shadow-sm border">
+                             <h6 class="text-primary">📌 Açıklamalar</h6>
+                             <ul class="small">
+                                 <li><strong>Name:</strong> Ürün adı (zorunlu)</li>
+                                 <li><strong>Price:</strong> Fiyat (opsiyonel, sayı)</li>
+                                 <li><strong>CategoryName:</strong> Kategori adı (zorunlu, sistemde kayıtlı olmalı)</li>
+                                 <li><strong>CurrencyText:</strong> Para birimi (zorunlu, örn: TL, USD)</li>
+                                 <li><strong>Barcode:</strong> Barkod (opsiyonel)</li>
+                                 <li><strong>ImageUrl:</strong> Resim URL (opsiyonel)</li>
+                                 <li><strong>Description:</strong> Açıklama (opsiyonel)</li>
+                             </ul>
+                         </div>
+                         <div class="flex-fill bg-warning-subtle p-3 rounded shadow-sm border">
+                             <h6 class="text-danger">⚠️ Hatalı Girişler</h6>
+                             <ul class="small">
+                                 <li>Kategori sistemde yoksa satır işlenmez.</li>
+                                 <li>Geçersiz para birimi girilirse satır atlanır.</li>
+                                 <li>Fiyat alanı sayı değilse hata alınır.</li>
+                             </ul>
+                         </div>
+                     </div>
+                     <hr class="my-3" />
+                     <a href="/files/Product_Excel_Template.xlsx" download class="btn btn-sm btn-outline-secondary">
+                         📥 Şablon İndir
+                     </a>
+                     <input type="file" id="swalExcelInput" accept=".xlsx" class="form-control mt-3">
+                 `,
+                 showCancelButton: true,
+                 confirmButtonText: "Yüklemeyi Başlat",
+                 preConfirm: () => {
+                     const fileInput = document.getElementById('swalExcelInput');
+                     return fileInput.files[0] || Swal.showValidationMessage("Lütfen bir dosya seçin!");
+                 }
+             }).then(result => {
+                 if (result.isConfirmed) {
+                     const file = result.value;
+                     const formData = new FormData();
+                     formData.append("file", file);
+
+                     Swal.fire({
+                         title: "Yükleniyor...",
+                         text: "Excel dosyası işleniyor",
+                         allowOutsideClick: false,
+                         didOpen: () => {
+                             Swal.showLoading();
+                         }
+                     });
+
+                     $.ajax({
+                         url: "/Product/UploadProductsFromExcel",
+                         type: "POST",
+                         data: formData,
+                         processData: false,
+                         contentType: false,
+                         success: function (response) {
+                             Swal.close();
+
+                             if (response.errors && response.errors.length > 0) {
+                                 Swal.fire({
+                                     title: 'Kısmen Başarılı',
+                                     html: `<p>Geçerli ürünler yüklendi ancak bazı satırlarda hata oluştu:</p><ul style="text-align:left;">` +
+                                         response.errors.map(err => `<li>${err}</li>`).join('') +
+                                         `</ul>`,
+                                     icon: 'warning',
+                                     width: 600
+                                 });
+                             } else {
+                                 Swal.fire('Başarılı', 'Tüm ürünler başarıyla yüklendi.', 'success');
+                             }
+
+                             $("#productGrid").trigger("reloadGrid");
+                         },
+                         error: function () {
+                             Swal.close();
+                             Swal.fire("Hata!", "Dosya yüklenemedi.", "error");
+                         }
+                     });
+                 }
+             });
+         });
+    });
 
 </script>
