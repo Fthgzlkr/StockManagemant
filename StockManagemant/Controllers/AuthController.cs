@@ -78,5 +78,11 @@ namespace StockManagemant.Web.Controllers
         {
             return View();
         }
+
+          [Authorize]
+        public IActionResult Permissions()
+        {
+            return View();
+        }
     }
 }

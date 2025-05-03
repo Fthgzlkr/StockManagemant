@@ -1,0 +1,229 @@
+@{
+    ViewData["Title"] = "Yetkilerim";
+}
+<style>
+    .container {
+        max-width: 850px;
+        padding: 20px;
+    }
+    h4 {
+        font-size: 1.2rem;
+        margin-bottom: 12px;
+    }
+    p {
+        font-size: 0.95rem;
+        line-height: 1.4;
+    }
+    img.img-fluid {
+        max-width: 100%;
+        height: auto;
+        margin-top: 10px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        border-radius: 5px;
+    }
+    .card ul {
+        margin-bottom: 0;
+    }
+    .card-header {
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
+    }
+    .card-body ul {
+        padding-left: 20px;
+    }
+    .alert {
+        font-size: 0.95rem;
+    }
+}
+</style>
+@{
+    var role = User.IsInRole("Admin") ? "Admin" :
+               User.IsInRole("Operator") ? "Operator" : "User";
+}
+
+<div class="container mt-4">
+    <h2 class="text-center mb-4">🔐 Yetki ve Kullanım Bilgisi</h2>
+
+    <div class="alert alert-info text-center">
+        <strong>Aktif Rol:</strong> @role <br />
+        <strong>Kullanıcı Adı:</strong> @User.Identity?.Name <br />
+
+    </div>
+
+    @if (User.IsInRole("Admin"))
+    {
+        <div class="card shadow mb-4 border-left-primary">
+            <div class="card-header bg-primary text-white">👑 Admin Yetkileri</div>
+            <div class="card-body">
+                <ul>
+                    <li>Tüm sayfalara erişebilir</li>
+                    <li>Kullanıcı, ürün, depo, lokasyon ve fiş işlemlerini yönetebilir</li>
+                    <li>Excel ile ürün ve depo girişi yapabilir</li>
+                    <li>Logları görebilir</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card shadow mb-4 border-left-warning">
+            <div class="card-header bg-warning text-dark">🛠 Ayrıca Operator Yetkileri:</div>
+            <div class="card-body">
+                <ul>
+                    <li>Ürün ve depo sayfalarına erişebilir</li>
+                    <li>Depoya ürün girişi ve çıkışı yapabilir</li>
+                    <li>Fiş oluşturabilir</li>
+                    <li>Excel ile ürün yükleyebilir</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card shadow mb-4 border-left-secondary">
+            <div class="card-header bg-secondary text-white">👤 Ayrıca Temel Kullanıcı Yetkileri:</div>
+            <div class="card-body">
+                <ul>
+                    <li>Sadece atandığı depo ile ilgili sayfalara erişebilir</li>
+                    <li>Stok güncelleme yapamaz</li>
+                    <li>Ürün veya depo ekleyemez</li>
+                    <li>Fiş oluşturamaz</li>
+                    <li>Excel ile işlem yapamaz</li>
+                </ul>
+            </div>
+        </div>
+    }
+    else if (User.IsInRole("Operator"))
+    {
+        <div class="card shadow mb-4 border-left-warning">
+            <div class="card-header bg-warning text-dark">🛠 Operator Yetkileri</div>
+            <div class="card-body">
+                <ul>
+                    <li>Ürün ve depo sayfalarına erişebilir</li>
+                    <li>Depoya ürün girişi ve çıkışı yapabilir</li>
+                    <li>Fiş oluşturabilir</li>
+                    <li>Excel ile ürün yükleyebilir</li>
+                    <li>Kullanıcı yönetimi yapamaz</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card shadow mb-4 border-left-secondary">
+            <div class="card-header bg-secondary text-white">👤 Ayrıca Temel Kullanıcı Yetkileri:</div>
+            <div class="card-body">
+                <ul>
+                    <li>Sadece atandığı depo ile ilgili sayfalara erişebilir</li>
+                    <li>Stok güncelleme yapamaz</li>
+                    <li>Ürün veya depo ekleyemez</li>
+                    <li>Fiş oluşturamaz</li>
+                    <li>Excel ile işlem yapamaz</li>
+                </ul>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow mb-4 border-left-secondary">
+            <div class="card-header bg-secondary text-white">👤 Temel Kullanıcı Yetkileri</div>
+            <div class="card-body">
+                <ul>
+                    <li>Sadece atandığı depo ile ilgili sayfalara erişebilir</li>
+                    <li>Stok güncelleme yapamaz</li>
+                    <li>Ürün veya depo ekleyemez</li>
+                    <li>Fiş oluşturamaz</li>
+                    <li>Excel ile işlem yapamaz</li>
+                </ul>
+            </div>
+        </div>
+    }
+</div>
+@if (User.IsInRole("Admin") || User.IsInRole("Operator"))
+{
+      <div class="container mt-5">
+        <h4 class="text-primary mb-3">🏬 Depo Seçimi Sayfası</h4>
+        <p>
+            Bu sayfa yalnızca <strong>Admin</strong> ve <strong>Operator</strong> yetkisine sahip kullanıcılar tarafından görüntülenebilir.
+            Uygulamada işlem yapılacak aktif depo bu sayfa üzerinden seçilir. Seçilen depo ID’si localStorage’a kaydedilir
+            ve uygulamadaki diğer depo-bağlantılı işlemlerde (depo ürünleri, depo fişleri, lokasyon yönetimi vb.) otomatik olarak kullanılır.
+        </p>
+        <img src="~/uploads/Ekran Resmi 2025-05-03 13.45.44.png" alt="Depo Seçimi Sayfası" class="img-fluid rounded shadow-sm mt-3" />
+    </div>
+    <div class="container mt-5">
+        <h4 class="text-primary mb-3">🧾 Ürün Listesi Sayfası</h4>
+        <p>
+            Bu sayfa yalnızca <strong>Admin</strong> ve <strong>Operator</strong> yetkisine sahip kullanıcılar tarafından görüntülenebilir.
+            Kullanıcılar burada sistemde kayıtlı tüm ürünleri listeleyebilir, filtreleyebilir ve üzerinde düzenleme veya silme işlemleri gerçekleştirebilir.
+            Ayrıca Excel dosyası ile toplu ürün yükleme imkanı da sunulmaktadır.
+        </p>
+        <img src="~/uploads/Ekran Resmi 2025-05-03 13.40.13.png" alt="Ürün Listesi Sayfası" class="img-fluid rounded shadow-sm mt-3" />
+    </div>
+
+     <div class="container mt-5">
+        <h4 class="text-primary mb-3">🧾 Genel Fiş Listesi Sayfası</h4>
+        <p>
+            This sayfa yalnızca <strong>Admin</strong> ve <strong>Operator</strong> yetkisine sahip kullanıcılar tarafından görüntülenebilir.
+            Kullanıcılar burada sistemde kayıtlı tüm depolara aktif fişleri listeleyebilir, filtreleyebilir ve üzerinde düzenleme veya silme işlemleri gerçekleştirebilir.
+            burada tüm depolara ait giriş veya çıkış fişleri görüntülenebilir Yukarıdaki alanlardan ise tarih aralığına göre listeleme gibi yada fiş tipine göre listeleme yapılabilir. 
+        </p>
+        <img src="~/uploads/Ekran Resmi 2025-05-03 13.46.52.png" alt="Ürün Listesi Sayfası" class="img-fluid rounded shadow-sm mt-3" />
+    </div>
+
+    @* Wrapped Fiş Oluşturma Sayfası block inside Admin or Operator check *@
+    <div class="container mt-5">
+        <h4 class="text-primary mb-3">📝 Fiş Oluşturma Sayfası</h4>
+        <p>
+            Bu sayfa yalnızca <strong>Admin</strong> ve <strong>Operator</strong> yetkisine sahip kullanıcılar tarafından görüntülenebilir.
+            Kullanıcılar, seçilen aktif depoya göre depo ürünlerinden giriş veya çıkış işlemleri gerçekleştirebilir.
+            Ürün barkodu ile arama yapılarak fişe ürün eklenebilir, işlem tipi (giriş/çıkış) seçilir ve toplam hesaplanarak fiş tamamlanır.
+            Tüm işlemler kayıt altına alınır ve fiş listesine eklenir.
+        </p>
+        <img src="~/uploads/Ekran Resmi 2025-05-03 13.47.31.png" alt="Fiş Oluşturma Sayfası" class="img-fluid rounded shadow-sm mt-3" />
+    </div>
+}
+<div class="container mt-5">
+    <h4 class="text-primary mb-3">📄 Depo Fişleri Sayfası</h4>
+    <p>
+        Bu sayfa her kullanıcı rolü için farklı kapsamda görüntülenebilir.
+        <strong>Admin</strong> ve <strong>Operator</strong> yetkisine sahip kullanıcılar sistemdeki tüm depoların fişlerini görüntüleyebilirken,
+        <strong>Temel Kullanıcılar</strong> sadece kendilerine atanmış depoya ait fişleri görebilir.
+        Fişler; giriş ve çıkış olarak filtrelenebilir ve tarih aralığına göre listelenebilir.
+    </p>
+    <img src="~/uploads/Ekran Resmi 2025-05-03 13.46.52.png" alt="Depo Fişleri Sayfası" class="img-fluid rounded shadow-sm mt-3" />
+</div>
+<div class="container mt-5">
+    <h4 class="text-primary mb-3">📦 Depodaki Ürünler Sayfası</h4>
+    <p>
+        Bu sayfa tüm kullanıcı rollerine açık olmakla birlikte, <strong>Temel Kullanıcılar</strong> yalnızca atandıkları depoya ait ürünleri görüntüleyebilir.
+        <strong>Admin</strong> ve <strong>Operator</strong> kullanıcıları ise tüm depolardaki ürünleri listeleyebilir, filtreleyebilir, stok miktarlarını güncelleyebilir ve ürünleri silebilir.
+        Ayrıca Excel ile toplu ürün yükleme işlemleri de yapılabilir.
+    </p>
+    <img src="~/uploads/Ekran Resmi 2025-05-03 13.47.37.png" alt="Depo Ürünleri Sayfası" class="img-fluid rounded shadow-sm mt-3" />
+</div>
+@if (User.IsInRole("Admin"))
+{
+    <div class="container mt-5">
+        <h4 class="text-primary mb-3">👥 Kullanıcı Yönetimi Sayfası</h4>
+        <p>
+            Bu sayfa yalnızca <strong>Admin</strong> yetkisine sahip kullanıcılar tarafından görüntülenebilir.
+            Sistem kullanıcıları buradan listelenebilir, yeni kullanıcılar oluşturulabilir ve mevcut kullanıcıların rol ve depo bilgileri düzenlenebilir.
+            Kullanıcı silme işlemleri de bu sayfadan yapılabilir.
+        </p>
+        <img src="~/uploads/Ekran Resmi 2025-05-03 13.47.15.png" alt="Kullanıcı Yönetimi" class="img-fluid rounded shadow-sm mt-3" />
+    </div>
+
+    <div class="container mt-5">
+        <h4 class="text-primary mb-3">🏢 Depo Yönetimi Sayfası</h4>
+        <p>
+            Bu sayfa yalnızca <strong>Admin</strong> yetkisine sahip kullanıcılar tarafından görüntülenebilir.
+            Sistemdeki depoların listelendiği, yeni depo eklenebildiği ve mevcut depoların düzenlenip silinebildiği alandır.
+            Ayrıca hver deponun lokasyon yönetimine erişim bu sayfadan sağlanır.
+        </p>
+        <img src="~/uploads/Ekran Resmi 2025-05-03 13.47.08.png" alt="Depo Yönetimi" class="img-fluid rounded shadow-sm mt-3" />
+    </div>
+
+    <div class="container mt-5">
+        <h4 class="text-primary mb-3">🗂 Kategori Yönetimi Sayfası</h4>
+        <p>
+            This sayfa yalnızca <strong>Admin</strong> yetkisine sahip kullanıcılar tarafından görüntülenebilir.
+            Ürünler için kategori tanımlamalarının yapıldığı alandır. Yeni kategori eklenebilir, mevcut kategoriler güncellenebilir veya silinebilir.
+        </p>
+        <img src="~/uploads/Ekran Resmi 2025-05-03 13.47.01.png" alt="Kategori Yönetimi" class="img-fluid rounded shadow-sm mt-3" />
+    </div>
+  
+}
