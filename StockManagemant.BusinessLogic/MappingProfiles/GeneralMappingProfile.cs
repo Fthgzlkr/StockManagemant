@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using StockManagemant.Entities.Models;
 using StockManagemant.Entities.DTO;
+using StockManagemant.DataAccess.LoggingModels;
 
 
 namespace StockManagemant.Business.MappingProfiles
@@ -40,6 +41,9 @@ namespace StockManagemant.Business.MappingProfiles
             // AppUser Mappings
             CreateMap<AppUser, AppUserDto>().ReverseMap();
             CreateMap<AppUserCreateDto, AppUser>().ReverseMap();
+
+            //Logger Dto
+            CreateMap<AppLogEntry ,AppLogDto>().ReverseMap();
             
         }
     }

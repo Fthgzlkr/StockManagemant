@@ -203,7 +203,7 @@ function setupAddProductEvents() {
     console.log(`📦 Depo ID bulundu: ${warehouseId}`);
     $("#warehouseIdInput").val(warehouseId).prop("disabled", true);
 
-    $("#searchProductBtn").off("click").on("click", searchProductById);
+    $("#searchProductBtn").off("click").on("click", searchProductByBarcode);
 
     $("#addStockBtn").off("click").on("click", function () {
         addProductToWarehouse(warehouseId);
@@ -224,18 +224,23 @@ function setupAddProductEvents() {
 }
 
 
-function searchProductById() {
-    let productId = $("#productIdInput").val();
-    if (!productId) {
-        alert("Lütfen bir ürün ID giriniz.");
+function searchProductByBarcode() {
+    let barcode = $("#productIdInput").val().trim();
+    
+    if (!barcode) {
+        alert("Lütfen bir ürün barkodu giriniz.");
         return;
     }
 
     $.ajax({
-        url: `/Product/GetProductById?id=${productId}`,
+        url: `/Product/GetProductByBarcode?barcode=${barcode}`,
         type: "GET",
         success: function (response) {
             let currencyLabel = response.currency === 0 ? "TL" : "USD";
+
+            
+            $("#selectedProductId").val(response.id);
+
             let productRow = `
                 <tr>
                     <td>${response.id}</td>
@@ -247,13 +252,14 @@ function searchProductById() {
             $("#productDetailsTable").html(productRow);
         },
         error: function () {
+            $("#selectedProductId").val(""); // Hata durumunda sıfırla
             $("#productDetailsTable").html('<tr><td colspan="4" class="text-danger">Ürün bulunamadı!</td></tr>');
         }
     });
 }
 
 function addProductToWarehouse(warehouseId) {
-    let productId = $("#productIdInput").val();
+    let productId = $("#selectedProductId").val();
     let stockQuantity = $("#stockQuantityInput").val();
     let stockCode = $("#stockCodeInput").val();
 

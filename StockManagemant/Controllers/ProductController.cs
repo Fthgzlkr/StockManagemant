@@ -103,6 +103,36 @@ namespace StockManagemant.Controllers
             return Json(product);
         }
 
+        [Authorize(Roles = "Admin,Operator,BasicUser")]
+[HttpGet]
+public async Task<IActionResult> GetProductByBarcode(string barcode)
+{
+    var product = await _productManager.GetProductByBarcode(barcode);
+
+    if (product == null)
+    {
+        return NotFound(new { message = "Ürün bulunamadı." });
+    }
+
+    // BasicUser ise kontrol et: ürün kendi deposuna mı ait?
+    if (User.IsInRole("BasicUser"))
+    {
+        var assignedWarehouseId = User.FindFirst("AssignedWarehouseId")?.Value;
+        if (string.IsNullOrEmpty(assignedWarehouseId))
+        {
+            return RedirectToAction("AccessDenied", "Auth");
+        }
+
+        var productIsInUserWarehouse = await _productManager.IsProductInWarehouseAsync(product.Id ?? 0, int.Parse(assignedWarehouseId));
+        if (!productIsInUserWarehouse)
+        {
+            return RedirectToAction("AccessDenied", "Auth");
+        }
+    }
+
+    return Json(product);
+}
+
 
 
 

@@ -6,8 +6,10 @@
     Layout = null;
 
     <link rel="stylesheet" href="~/css/GlobalStyles.css" asp-append-version="true" />
-}
-
+}<script>
+    var userRole = '@User.FindFirst("http://schemas.microsoft.com/ws/2008/06/identity/claims/role")?.Value';
+    var assignedWarehouseId = '@User.FindFirst("AssignedWarehouseId")?.Value';
+</script>
 
 <!-- Fiş Bilgileri -->
 <div class="receipt-card">

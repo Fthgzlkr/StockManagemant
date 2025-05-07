@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using StockManagemant.Entities.Models;
+using StockManagemant.DataAccess.LoggingModels;
 
 namespace StockManagemant.DataAccess.Context
 {
@@ -16,6 +17,7 @@ namespace StockManagemant.DataAccess.Context
         public DbSet<WarehouseProduct> WarehouseProducts { get; set; }
         public DbSet<WarehouseLocation> WarehouseLocations {get;set;}
         public DbSet<AppUser> AppUsers { get; set; }
+        public DbSet<AppLogEntry> AppLogs { get; set; }
 
         // Model yapılandırmaları
         protected override void OnModelCreating(ModelBuilder modelBuilder)

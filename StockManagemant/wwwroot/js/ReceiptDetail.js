@@ -35,8 +35,11 @@ function initReceiptGrid({ warehouseId = null }) {
                     name: "actions",
                     label: "İşlemler",
                     align: "center",
-                    width: 60,  // 📏 Burası küçüldü! 50-60 civarı ideal
+                    width: 60, 
                     formatter: function (cellvalue, options, rowObject) {
+                        if (userRole === "BasicUser") {
+                            return "";
+                        }
                         return `
                             <div class="action-icons">
                                 <i class="fa-solid fa-pen text-primary fa-xs open-category-edit" data-id="${rowObject.id}" data-date="${rowObject.date}" title="Düzenle"></i>
@@ -198,13 +201,16 @@ function setupReceiptProductsEvents() {
                         label: "Actions",
                         align: "center",
                         formatter: function (cellvalue, options, rowObject) {
+                            if (userRole === "BasicUser") {
+                                return "";
+                            }
                             return `
-                            <div class="action-icons">
-                                <i class="fa-solid fa-pen text-primary fa-xl edit-btn"
-                                    data-id="${rowObject.id}" title="Düzenle"></i>
-                                <i class="fa-solid fa-trash text-danger fa-xl delete-btn"
-                                    data-id="${rowObject.id}" title="Sil"></i>
-                            </div>
+                                <div class="action-icons">
+                                    <i class="fa-solid fa-pen text-primary fa-xl edit-btn"
+                                        data-id="${rowObject.id}" title="Düzenle"></i>
+                                    <i class="fa-solid fa-trash text-danger fa-xl delete-btn"
+                                        data-id="${rowObject.id}" title="Sil"></i>
+                                </div>
                             `;
                         }
                     }

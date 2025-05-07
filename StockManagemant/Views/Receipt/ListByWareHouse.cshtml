@@ -5,6 +5,10 @@
     <link rel="stylesheet" href="~/css/Product.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/GlobalStyles.css" asp-append-version="true" />
 }
+<script>
+    var userRole = '@User.FindFirst("http://schemas.microsoft.com/ws/2008/06/identity/claims/role")?.Value';
+    var assignedWarehouseId = '@User.FindFirst("AssignedWarehouseId")?.Value';
+</script>
 <style>
 .receipt-page {
     padding: 20px;
@@ -79,7 +83,7 @@
     <div id="receiptPager"></div>
 </div>
 
-<script src="~/js/ReceiptGridManager.js" asp-append-version="true"></script>
+
 <script src="~/js/ReceiptDetail.js" asp-append-version="true"></script>
 <script>
     const warehouseId = localStorage.getItem("selectedWarehouseId") || "";

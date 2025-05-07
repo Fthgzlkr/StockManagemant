@@ -92,6 +92,14 @@ namespace StockManagemant.Business.Managers
             return _mapper.Map<ProductDto>(product);
         }
 
+         public async Task<ProductDto> GetProductByBarcode(string barcode)
+        {
+            var product = await _productRepository.GetProductByBarcodeAsync(barcode);
+            if (product == null) return null;
+
+            return _mapper.Map<ProductDto>(product);
+        }
+
         // ID’ye göre ürün bulma (Silinmiş ürünler dahil)
         public async Task<ProductDto> GetProductByIdWithDeletedAsync(int productId)
         {

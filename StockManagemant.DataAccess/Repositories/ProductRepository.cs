@@ -55,7 +55,9 @@ namespace StockManagemant.DataAccess.Repositories
 
        public async Task<Product?> GetProductByBarcodeAsync(string barcode)
         {
-            return await _context.Products.FirstOrDefaultAsync(p => p.Barcode == barcode);
+            return await _context.Products
+                .Include(p => p.Category) 
+                .FirstOrDefaultAsync(p => p.Barcode == barcode);
         }
 
         public async Task<bool> IsProductInWarehouseAsync(int productId, int warehouseId)

@@ -47,11 +47,15 @@
 <div class="table-container mt-4">
     <table id="warehouseProductGrid"></table>
     <div id="pager"></div>
-    <div class="text-end mt-4">
-        <button class="btn btn-success" id="uploadWarehouseExcelBtn">
-            <i class="bi bi-file-earmark-excel me-2"></i> Excel ile Ürün Yükle
-        </button>
-    </div>
+
+    @if (User.IsInRole("Admin") || User.IsInRole("Operator"))
+    {
+        <div class="text-end mt-4">
+            <button class="btn btn-success" id="uploadWarehouseExcelBtn">
+                <i class="bi bi-file-earmark-excel me-2"></i> Excel ile Ürün Yükle
+            </button>
+        </div>
+    }
 </div>
 
 <!-- Fişleri Tamamla Butonu -->

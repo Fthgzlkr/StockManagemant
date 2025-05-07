@@ -185,8 +185,10 @@
 
         $("#addProductBtn").off("click").on("click", function () {
             let quantity = parseInt($("#productQuantity").val());
-            if (quantity < 1 || quantity > product.stockQuantity) {
-                Swal.fire("Hata!", "Geçerli bir miktar girin!", "error");
+            let isExit = document.querySelector("#exitRadio").checked;
+
+            if (quantity < 1 || (isExit && quantity > product.stockQuantity)) {
+                Swal.fire("Hata!", isExit ? "Çıkış için geçerli bir miktar girin! Mevcut stok yetersiz." : "Geçerli bir miktar girin!", "error");
                 return;
             }
             addProductToReceipt(product, quantity);

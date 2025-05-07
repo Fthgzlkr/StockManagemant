@@ -37,6 +37,9 @@
                    sortable: true, 
                    editable: false, 
                    formatter: function (cellvalue, options, rowObject) {
+                       if (userRole === "BasicUser") {
+                           return `<span>${cellvalue}</span>`;
+                       }
                        return `
                            <div class="stock-container" style="display: flex; align-items: center; justify-content: center;">
                                <input type="number" class="stock-input" 
@@ -78,6 +81,9 @@
                    label: "İşlemler",
                    align: "center",
                    formatter: function (cellvalue, options, rowObject) {
+                       if (userRole === "BasicUser") {
+                           return ""; // Butonları göstermiyoruz
+                       }
                        return `
                            <div class="action-icons">                            
                                <i class="fa-solid fa-trash text-danger fa-xl deleteWarehouseProductBtn"
@@ -446,9 +452,11 @@ $("#completeReceiptsBtn").on("click", function() {
             <i id="customRefreshBtn" class="fa-solid fa-arrows-rotate" title="Yenile" style="cursor: pointer; margin-left: 10px;"></i>
         `);
 
-                    $("#pager_left").append(`
-        <i class="fa-solid fa-plus fa-2xl openProductaddModal" title="Yeni Ürün Ekle" style="cursor: pointer; margin-left: 10px;"></i>
-    `);
+        if (userRole !== "BasicUser") {
+            $("#pager_left").append(`
+                <i class="fa-solid fa-plus fa-2xl openProductaddModal" title="Yeni Ürün Ekle" style="cursor: pointer; margin-left: 10px;"></i>
+            `);
+        }
 
             
         $("#customRefreshBtn").on("click", function () {
