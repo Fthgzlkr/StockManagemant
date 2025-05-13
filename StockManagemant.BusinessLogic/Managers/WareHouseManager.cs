@@ -1,5 +1,6 @@
 ﻿using StockManagemant.Entities.Models;
 using StockManagemant.Entities.DTO;
+using StockManagemant.Entities.Enums;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;

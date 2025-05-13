@@ -1,0 +1,37 @@
+@model StockManagemant.Entities.DTO.CustomersDto
+
+@{
+    ViewData["Title"] = "Müşteri Oluşturma";
+    Layout = null;
+
+}
+<link rel="stylesheet" href="~/css/Site.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/product-form.css" asp-append-version="true" />
+
+<div class="container">
+    <form id="createCustomerForm" class="p-3">
+        <div class="mb-3">
+            <label for="customerName" class="form-label">Müşteri Adı</label>
+            <input type="text" class="form-control" id="customerName" placeholder="Müşteri adı girin" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="customerPhone" class="form-label">Telefon</label>
+            <input type="text" class="form-control" id="customerPhone" placeholder="Telefon numarası girin">
+        </div>
+
+        <div class="mb-3">
+            <label for="customerEmail" class="form-label">Email</label>
+            <input type="email" class="form-control" id="customerEmail" placeholder="Email adresi girin">
+        </div>
+
+        <div class="mb-3">
+            <label for="customerAddress" class="form-label">Adres</label>
+            <textarea class="form-control" id="customerAddress" rows="3" placeholder="Adres girin"></textarea>
+        </div>
+
+        <div class="text-end">
+            <button type="button" id="saveCustomerBtn" class="btn btn-success">Kaydet</button>
+        </div>
+    </form>
+</div>

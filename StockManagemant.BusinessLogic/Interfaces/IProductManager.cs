@@ -16,7 +16,7 @@ namespace StockManagemant.Business.Managers
         Task<ProductDto> GetProductByIdAsync(int productId);
         Task<ProductDto> GetProductByIdWithDeletedAsync(int productId);
         Task<bool> IsProductInWarehouseAsync(int productId, int warehouseId);
-        Task<(int insertedCount, List<string> errors)> AddProductsFromExcelAsync(List<RawProductModel> rawProducts);
+        Task<(int insertedCount, List<string> errors)> AddProductsFromExcelAsync(List<RawProductModel> rawProducts, int userId, string fileName);
         Task<ProductDto> GetProductByBarcode(string barcode);
     }
 }

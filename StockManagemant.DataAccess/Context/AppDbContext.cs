@@ -18,6 +18,7 @@ namespace StockManagemant.DataAccess.Context
         public DbSet<WarehouseLocation> WarehouseLocations {get;set;}
         public DbSet<AppUser> AppUsers { get; set; }
         public DbSet<AppLogEntry> AppLogs { get; set; }
+        public DbSet<Customers> Customers { get; set; }
 
         // Model yapılandırmaları
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -91,6 +92,7 @@ namespace StockManagemant.DataAccess.Context
             modelBuilder.Entity<WarehouseProduct>().HasQueryFilter(wp => !wp.IsDeleted);
             modelBuilder.Entity<WarehouseLocation>().HasQueryFilter(wl => !wl.IsDeleted);
             modelBuilder.Entity<AppUser>().HasQueryFilter(au => !au.IsDeleted);
+            modelBuilder.Entity<Customers>().HasQueryFilter(c => !c.IsDeleted);
 
         }
     }

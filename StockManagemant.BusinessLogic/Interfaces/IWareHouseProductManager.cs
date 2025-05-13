@@ -18,6 +18,6 @@ namespace StockManagemant.Business.Managers
         Task<List<WarehouseProductDto>> GetPagedWarehouseProductsAsync(WarehouseProductFilter filter, int warehouseId, int page, int pageSize);
         Task<int> GetTotalWarehouseProductCountAsync(WarehouseProductFilter filter, int WarehouseId);
         Task<WarehouseProductDto> GetProductInWarehouseByBarcodeAsync(int warehouseId, string barcode);
-        Task<(int insertedCount, int updatedCount, List<string> errors)> UpsertWarehouseProductsFromExcelAsync(int warehouseId,List<WarehouseProductExcelDto> excelData);
+        Task<(int insertedCount, int updatedCount, List<string> errors)> UpsertWarehouseProductsFromExcelAsync( int warehouseId,List<WarehouseProductExcelDto> excelData,string fileName,int userId);
     }
 }

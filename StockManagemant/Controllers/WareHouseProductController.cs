@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using StockManagemant.Business.Managers;
 using StockManagemant.Entities.DTO;
@@ -8,6 +8,10 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using StockManagemant.DataAccess.Repositories.Filters;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
+using System.IO;
+using System.Collections.Generic;
 
 namespace StockManagemant.Controllers
 {
@@ -219,8 +223,14 @@ namespace StockManagemant.Controllers
                     });
                 }
 
+                string fileName = file.FileName;
+                int? userId = null;
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (int.TryParse(userIdClaim, out int parsedUserId))
+                    userId = parsedUserId;
+
                 var (insertedCount, updatedCount, errors) = await _warehouseProductManager
-                    .UpsertWarehouseProductsFromExcelAsync(warehouseId, warehouseExcelList);
+                    .UpsertWarehouseProductsFromExcelAsync(warehouseId, warehouseExcelList, fileName, userId ?? 0);
 
                 return Ok(new
                 {

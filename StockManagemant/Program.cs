@@ -5,6 +5,7 @@ using StockManagemant.DataAccess.Repositories;
 using StockManagemant.Business.MappingProfiles;
 using StockManagemant.Web.Extensions;
 using StockManagemant.DataAccess.Repositories.Interfaces;
+using StockManagemant.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,16 +32,15 @@ catch (Exception ex)
     throw;
 }
 
-// ✅ Generic Repository Bağımlılığını Ekleme
+
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
-// ✅ Repository ve Managerları Reflection ile Ekleyelim
 builder.Services.AddRepositoriesAndManagers();
+builder.Services.AddScoped<ILogRepository, LogRepository>();
 
-// ✅ AutoMapper Bağlantısı
+
 builder.Services.AddAutoMapper(typeof(GeneralMappingProfile));
 
-// ✅ Cookie Authentication Ekle
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -49,7 +49,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
     });
 
-// ✅ MVC Controller'ları ve View'leri Yükleme
+
 builder.Services.AddControllersWithViews();
 
 // ✅ Session Services
@@ -75,7 +75,7 @@ app.UseRouting();
 
 app.UseSession();
 
-// ✅ Authentication ve Authorization sıralı
+
 app.UseAuthentication();
 app.UseAuthorization();
 

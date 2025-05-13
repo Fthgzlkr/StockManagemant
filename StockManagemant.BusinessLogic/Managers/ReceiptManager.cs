@@ -2,9 +2,7 @@
 using StockManagemant.Entities.Models;
 using StockManagemant.Entities.DTO;
 using StockManagemant.DataAccess.Filters;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+using StockManagemant.Entities.Enums;
 using StockManagemant.DataAccess.Repositories.Interfaces;
 
 namespace StockManagemant.Business.Managers
@@ -15,10 +13,11 @@ namespace StockManagemant.Business.Managers
         private readonly IReceiptDetailManager _receiptDetailManager;
         private readonly IReceiptDetailRepository _receiptDetailRepository;
         private readonly IMapper _mapper;
+        private readonly ICustomerRepository _customerRepository;
         private readonly IWarehouseProductRepository _warehouseProductRepository;
         private readonly IWarehouseRepository _warehouseRepository;
 
-        public ReceiptManager(IReceiptRepository receiptRepository, IReceiptDetailManager receiptDetailManager, IReceiptDetailRepository receiptDetailRepository, IMapper mapper, IWarehouseProductRepository warehouseProductRepository,IWarehouseRepository warehouseRepository)
+        public ReceiptManager(IReceiptRepository receiptRepository, IReceiptDetailManager receiptDetailManager, IReceiptDetailRepository receiptDetailRepository, IMapper mapper, IWarehouseProductRepository warehouseProductRepository,IWarehouseRepository warehouseRepository, ICustomerRepository customerRepository)
         {
             _receiptRepository = receiptRepository;
             _receiptDetailManager = receiptDetailManager;
@@ -26,6 +25,7 @@ namespace StockManagemant.Business.Managers
             _mapper = mapper;
             _warehouseProductRepository = warehouseProductRepository;
             _warehouseRepository = warehouseRepository;
+            _customerRepository=customerRepository;
         }
 
         public async Task<int> GetTotalReceiptCountAsync(ReceiptFilter filter)
@@ -52,7 +52,9 @@ namespace StockManagemant.Business.Managers
                 IsDeleted = false,
                 WarehouseId = receiptDto.WareHouseId,
                 ReceiptType = receiptDto.ReceiptType,
-                Description = receiptDto.Description
+                Description = receiptDto.Description,
+                SourceType=receiptDto.SourceType,
+                SourceId=receiptDto.SourceId,
             };
 
             return await _receiptRepository.AddReceiptAsync(receipt);

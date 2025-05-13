@@ -2,6 +2,7 @@
 using StockManagemant.Business.Managers;
 using StockManagemant.Entities.DTO;
 using StockManagemant.Entities.Models;
+using StockManagemant.Entities.Enums;
 using StockManagemant.Web.Helpers;
 using StockManagemant.DataAccess.Filters;
 using Microsoft.AspNetCore.Authorization;
@@ -16,13 +17,17 @@ namespace StockManagemant.Controllers
         private readonly IReceiptDetailManager _receiptDetailManager;
         private readonly IProductManager _productManager;
         private readonly IWarehouseProductManager _warehouseProductManager;
+        private readonly ICustomerManager _customerManager;
+        private readonly IWarehouseManager _warehouseManager;
 
-        public ReceiptController(IReceiptManager receiptManager, IReceiptDetailManager receiptDetailManager, IProductManager productManager, IWarehouseProductManager warehouseProductManager)
+        public ReceiptController(IReceiptManager receiptManager, IReceiptDetailManager receiptDetailManager, IProductManager productManager, IWarehouseProductManager warehouseProductManager,ICustomerManager customerManager,IWarehouseManager warehouseManager)
         {
             _receiptManager = receiptManager;
             _receiptDetailManager = receiptDetailManager;
             _productManager = productManager;
             _warehouseProductManager = warehouseProductManager;
+            _customerManager=customerManager;
+            _warehouseManager= warehouseManager;
         }
 
         // Fişleri listeleme sayfası
@@ -61,8 +66,7 @@ namespace StockManagemant.Controllers
         [HttpGet]
         public async Task<IActionResult> GetReceipts([FromQuery] ReceiptFilter filter, int page = 1, int rows = 10, string sidx = "id", string sord = "asc")
         {
-
-             if (User.IsInRole("BasicUser"))
+            if (User.IsInRole("BasicUser"))
             {
                 var assignedWarehouseId = User.FindFirst("AssignedWarehouseId")?.Value;
                 if (string.IsNullOrEmpty(assignedWarehouseId) || filter.WarehouseId.ToString() != assignedWarehouseId)
@@ -74,7 +78,6 @@ namespace StockManagemant.Controllers
             var totalReceipts = await _receiptManager.GetTotalReceiptCountAsync(filter);
             var receipts = await _receiptManager.GetPagedReceiptAsync(page, rows, filter);
 
-            // 
             receipts = sidx switch
             {
                 "id" => sord == "asc" ? receipts.OrderBy(r => r.Id).ToList() : receipts.OrderByDescending(r => r.Id).ToList(),
@@ -84,20 +87,38 @@ namespace StockManagemant.Controllers
 
             var totalPages = (int)Math.Ceiling((double)totalReceipts / rows);
 
-            var jsonData = new
+            var rowsData = new List<object>();
+
+            foreach (var r in receipts)
             {
-                total = totalPages,
-                page = page,
-                records = totalReceipts,
-                rows = receipts.Select(r => new
+                string sourceName = null;
+
+                if (r.SourceType == ReceiptSourceType.Customer && r.SourceId.HasValue)
+                {
+                    var customer = await _customerManager.GetCustomerByIdAsync(r.SourceId.Value);
+                    sourceName = customer.Name;
+                }
+
+                rowsData.Add(new
                 {
                     id = r.Id,
                     date = r.FormattedDate,
                     totalAmount = r.TotalAmount.ToString("C"),
                     receiptType = r.ReceiptType.ToString(),
                     receiptNumber = r.ReceiptNumber,
-                    description = r.Description
-                })
+                    description = r.Description,
+                    sourcetype = r.SourceType?.ToString(),
+                    sourceid = r.SourceId,
+                    sourcename=sourceName
+                });
+            }
+
+            var jsonData = new
+            {
+                total = totalPages,
+                page = page,
+                records = totalReceipts,
+                rows = rowsData
             };
 
             return Json(jsonData);
@@ -121,6 +142,16 @@ namespace StockManagemant.Controllers
                     return RedirectToAction("AccessDenied", "Auth");
                 }
             }
+             if (receipt.SourceType == ReceiptSourceType.Customer && receipt.SourceId.HasValue)
+    {
+        var customer = await _customerManager.GetCustomerByIdAsync(receipt.SourceId.Value);
+        receipt.SourceName = customer?.Name;
+    }
+    else if (receipt.SourceType == ReceiptSourceType.Warehouse && receipt.SourceId.HasValue)
+    {
+        var warehouse = await _warehouseManager.GetWarehouseByIdAsync(receipt.SourceId.Value);
+        receipt.SourceName = warehouse?.Name;
+    }
 
             return View("Details", receipt);
         }

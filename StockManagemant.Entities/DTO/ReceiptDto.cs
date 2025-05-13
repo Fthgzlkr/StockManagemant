@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
-using StockManagemant.Entities.Models;
+using DocumentFormat.OpenXml.Bibliography;
+using StockManagemant.Entities.Enums;
 
 
 namespace StockManagemant.Entities.DTO
@@ -46,6 +47,9 @@ namespace StockManagemant.Entities.DTO
         }
 
         public string? Description { get; set; } // Açıklama alanı (isteğe bağlı)
+        public ReceiptSourceType? SourceType { get; set; }
+        public int? SourceId { get; set; }
+         public string? SourceName { get; set; }
 
         public ICollection<ReceiptDetailDto>? ReceiptDetails { get; set; } // Create ve Update işlemlerinde opsiyonel olabilir
     }

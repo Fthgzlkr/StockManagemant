@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using StockManagemant.Entities.Enums;
 
 namespace StockManagemant.Entities.Models
 {
@@ -27,12 +28,11 @@ namespace StockManagemant.Entities.Models
 
         public ICollection<ReceiptDetail> ReceiptDetails { get; set; } = new List<ReceiptDetail>();
 
+        public ReceiptSourceType? SourceType { get; set; } // Enum'a karşılık gelir
+        public int? SourceId { get; set; }   // Depo, Müşteri ya da Tedarikçi ID'si
+
         public bool IsDeleted { get; set; } = false; // Soft Delete
     }
 
-     public enum ReceiptType 
-    {
-        Entry = 1,
-        Exit = 2
-    }
+ 
 }

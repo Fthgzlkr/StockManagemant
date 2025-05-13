@@ -1,0 +1,35 @@
+@model StockManagemant.Entities.DTO.CustomersDto
+
+@{
+    Layout = null;
+}
+
+<div class="container">
+    <form id="editCustomerForm" class="p-3">
+        <input type="hidden" id="customerId" value="@Model.Id" />
+
+        <div class="mb-3">
+            <label for="customerName" class="form-label">Müşteri Adı</label>
+            <input type="text" class="form-control" id="customerName" value="@Model.Name" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="customerPhone" class="form-label">Telefon</label>
+            <input type="text" class="form-control" id="customerPhone" value="@Model.Phone">
+        </div>
+
+        <div class="mb-3">
+            <label for="customerEmail" class="form-label">Email</label>
+            <input type="email" class="form-control" id="customerEmail" value="@Model.Email">
+        </div>
+
+        <div class="mb-3">
+            <label for="customerAddress" class="form-label">Adres</label>
+            <textarea class="form-control" id="customerAddress" rows="3">@Model.Address</textarea>
+        </div>
+
+        <div class="text-end">
+            <button type="button" id="saveCustomerBtn" class="btn btn-primary">Güncelle</button>
+        </div>
+    </form>
+</div>

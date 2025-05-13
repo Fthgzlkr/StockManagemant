@@ -1,4 +1,5 @@
 ﻿using StockManagemant.Entities.Models;
+using StockManagemant.Entities.Enums;
 using System;
 using System.Linq;
 using System.Linq.Expressions;

@@ -340,6 +340,89 @@ function loadBins(warehouseId) {
     });
 }
 
+function SetupProductDetail(productId) {
+    const modal = document.getElementById("generalModal");
+    if (!modal || !productId || isNaN(productId)) {
+        modal.querySelector("#loadingText").innerText = "Geçersiz ürün ID.";
+        return;
+    }
+
+    fetch(`/Product/GetProductById?id=${productId}`)
+        .then(res => {
+            if (!res.ok) throw new Error("Ürün bulunamadı");
+            return res.json();
+        })
+        .then(product => {
+            modal.querySelector("#productName").innerText = product.name || "—";
+            modal.querySelector("#productCategory").innerText = product.categoryName || "—";
+            modal.querySelector("#productPrice").innerText = (product.price || 0) + " " + (product.currency === 1 ? "USD" : "TL");
+            modal.querySelector("#productBarcode").innerText = product.barcode || "Yok";
+            modal.querySelector("#productCurrency").innerText = product.currency === 1 ? "USD" : "TL";
+            modal.querySelector("#productDescription").innerText = product.description || "Açıklama girilmemiş";
+
+            const imageUrl = product.imageUrl ? `/uploads/${product.imageUrl}` : "/uploads/default-placeholder.png";
+            modal.querySelector("#productImage").src = imageUrl;
+
+            modal.querySelector("#loadingText").style.display = "none";
+            modal.querySelector("#productDetailContainer").style.display = "flex";
+        })
+        .catch(err => {
+            modal.querySelector("#loadingText").innerText = "Ürün bulunamadı.";
+            console.error("Detay yüklenirken hata:", err);
+        });
+}
+
+function setupCreateCustomerEvents() {
+    $("#saveCustomerBtn").click(function () {
+        const data = {
+            name: $("#customerName").val(),
+            phone: $("#customerPhone").val(),
+            email: $("#customerEmail").val(),
+            address: $("#customerAddress").val()
+        };
+
+        $.ajax({
+            url: '/Customer/Create',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function (response) {
+                if (response.success) {
+                    Swal.fire("Başarılı", response.message, "success");
+                    $("#generalModal").modal('hide');
+                    $("#customerGrid").trigger("reloadGrid");
+                }
+            }
+        });
+    });
+}
+
+function setupEditCustomerEvents() {
+    $("#saveCustomerBtn").click(function () {
+        const data = {
+            id: $("#customerId").val(),
+            name: $("#customerName").val(),
+            phone: $("#customerPhone").val(),
+            email: $("#customerEmail").val(),
+            address: $("#customerAddress").val()
+        };
+
+        $.ajax({
+            url: '/Customer/Edit',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function (response) {
+                if (response.success) {
+                    Swal.fire("Başarılı", response.message, "success");
+                    $("#generalModal").modal('hide');
+                    $("#customerGrid").trigger("reloadGrid");
+                }
+            }
+        });
+    });
+}
+
 // SAYFALARI MODAL OLARAK BUTONLAR SAYESİNDE AÇMAYA YARAYAN KISIM
 
 
@@ -380,7 +463,15 @@ document.querySelectorAll('.open-category-edit-modal').forEach(button => {
 });
 
 
+$("#addCustomerBtn").click(function () {
+    openModal("/Customer/Create", "Yeni Müşteri", setupCreateCustomerEvents);
+});
 
+// Düzenleme
+$(document).on("click", ".editCustomerBtn", function () {
+    const id = $(this).data("id");
+    openModal(`/Customer/Edit/${id}`, "Müşteri Düzenle", setupEditCustomerEvents);
+});
 
 
 $(document).on('click', '.openProductaddModal', function () {

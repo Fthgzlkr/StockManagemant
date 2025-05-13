@@ -76,7 +76,7 @@
             url: '/Product/GetProducts',
             datatype: "json",
             mtype: "GET",
-            colNames: ['ID','Barcode', 'Name', 'Price', 'Currency', 'Category','Actions'],
+            colNames: ['ID','Ürün Barkodu', 'Ürün Adı', 'Sabit Fiyat', 'Para Birimi', 'Kategori','İşlemler'],
             colModel: [
                 { name: 'id', index: 'id', align: "center", sortable: true, key: true ,hidden:true },
                 { name: 'barcode', index: 'barcode', align: "center", sortable: true ,hidden:false },
@@ -130,13 +130,14 @@
                 total: "total",
                 records: "records"
             },
-            ondblClickRow: function (rowid) {
-                if (rowid) {
-                    const rowData = $("#productGrid").jqGrid("getRowData", rowid);
-                    const productId = rowData.id;
-                    window.open('/Product/ProductDetail/' + productId, '_blank');
-                }
-            },
+          ondblClickRow: function (rowid) {
+        if (rowid) {
+            const rowData = $("#productGrid").jqGrid("getRowData", rowid);
+            const productId = rowData.id;
+            const title = 'Ürün Detayları';
+            openModal(`/Product/ProductDetail/${productId}`, title, () => SetupProductDetail(productId));
+        }
+     }
         });
 
         $("#productGrid").jqGrid('navGrid', '#pager',

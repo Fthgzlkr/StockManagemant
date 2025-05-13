@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using StockManagemant.Entities.Models;
+using StockManagemant.Entities.Enums;
 
 
 namespace StockManagemant.Entities.DTO

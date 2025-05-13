@@ -44,6 +44,9 @@ namespace StockManagemant.Business.MappingProfiles
 
             //Logger Dto
             CreateMap<AppLogEntry ,AppLogDto>().ReverseMap();
+
+            //Customer Dto
+            CreateMap<Customers ,CustomersDto>().ReverseMap();
             
         }
     }

@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Reflection;
+using StockManagemant.Entities.Enums;
 
 namespace StockManagemant.Entities.Models
 {
@@ -28,11 +29,6 @@ namespace StockManagemant.Entities.Models
         public ICollection<ReceiptDetail> ReceiptDetails { get; set; }
         public ICollection<WarehouseProduct> WarehouseProducts { get; set; } = new List<WarehouseProduct>();
     }
-
-    public enum CurrencyType
-    {
-        TL = 0,
-        USD = 1
-    }
+ 
 }
     

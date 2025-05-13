@@ -10,7 +10,7 @@ namespace StockManagemant.Web.Extensions
         public static IServiceCollection AddRepositoriesAndManagers(this IServiceCollection services)
         {
             var assemblies = AppDomain.CurrentDomain.GetAssemblies()
-                .Where(a => a.FullName.StartsWith("StockManagemant.Business") || a.FullName.StartsWith("StockManagemant.DataAccess"));
+                .Where(a => a.FullName.StartsWith("StockManagemant.Business") || a.FullName.StartsWith("StockManagemant.DataAccess") || a.FullName.StartsWith("StockManagemant.Logging"));
 
             foreach (var assembly in assemblies)
             {

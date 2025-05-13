@@ -3,6 +3,7 @@ using StockManagemant.Entities.Models;
 using StockManagemant.Entities.DTO;
 using AutoMapper;
 using StockManagemant.DataAccess.Repositories.Interfaces;
+using StockManagemant.Entities.Enums;
 
 namespace StockManagemant.Business.Managers
 {
@@ -16,6 +17,7 @@ namespace StockManagemant.Business.Managers
     private readonly IReceiptManager _receiptManager; 
     private readonly IReceiptDetailManager _receiptDetailManager; 
     private readonly IWareHouseLocationRepository _wareHouseLocationRepository;
+    private readonly ILogManager _logManager;
 
     public WarehouseProductManager(IWarehouseProductRepository warehouseProductRepository,
                                    IProductRepository productRepository,
@@ -23,7 +25,8 @@ namespace StockManagemant.Business.Managers
                                    IReceiptManager receiptManager,           
                                    IReceiptDetailManager receiptDetailManager,
                                    IWareHouseLocationRepository wareHouseLocationRepository, IProductManager productManager,
-                                  IWarehouseRepository warehouseRepository ) 
+                                  IWarehouseRepository warehouseRepository,
+                                  ILogManager logManager ) 
     {
         _warehouseProductRepository = warehouseProductRepository;
         _productRepository = productRepository;
@@ -33,6 +36,7 @@ namespace StockManagemant.Business.Managers
         _wareHouseLocationRepository = wareHouseLocationRepository;
         _productManager = productManager;
         _warehouseRepository = warehouseRepository;
+        _logManager = logManager;
     }
 
 
@@ -95,6 +99,9 @@ namespace StockManagemant.Business.Managers
     {
         WareHouseId = dto.WarehouseId,
         ReceiptType = ReceiptType.Entry, // GİRİŞ fişi olacak
+        SourceType=ReceiptSourceType.None,
+        SourceId=null,
+        SourceName="Depo giriş sağlayıcıs",
         Description = $"{productName} depoya eklendi.",
     };
 
@@ -119,6 +126,9 @@ namespace StockManagemant.Business.Managers
     {
         WareHouseId = warehouseProduct.WarehouseId,
         ReceiptType = ReceiptType.Exit,
+        SourceType=ReceiptSourceType.None,
+        SourceId=null,
+        SourceName="Depodan Çıkış",
         Description = $"{product.Name} ürünü depodan kaldırıldı.",
     };
 
@@ -193,8 +203,24 @@ namespace StockManagemant.Business.Managers
             };
         }
 
-public async Task<(int insertedCount, int updatedCount, List<string> errors)> UpsertWarehouseProductsFromExcelAsync(int warehouseId, List<WarehouseProductExcelDto> excelData)
+private async Task LogExcelErrorAsync(int rowIndex, string message, string? target, string batchId, string fileName, int userId)
 {
+    await _logManager.LogAsync(new AppLogDto
+    {
+        UserId = userId,
+        Action = "Excel Depo Ürün Yükleme",
+        Message = $"Satır {rowIndex}: {message}",
+        Level = "Error",
+        FileName = fileName,
+        BatchId = batchId,
+        Target = target,
+        Timestamp = DateTime.Now
+    });
+}
+
+public async Task<(int insertedCount, int updatedCount, List<string> errors)> UpsertWarehouseProductsFromExcelAsync(int warehouseId, List<WarehouseProductExcelDto> excelData, string fileName, int userId)
+{
+    var batchId = Guid.NewGuid().ToString();
     var insertList = new List<WarehouseProduct>();
     var updateList = new List<WarehouseProduct>();
     var receiptEntryDetails = new List<(int ProductId, int Quantity)>();
@@ -205,14 +231,18 @@ public async Task<(int insertedCount, int updatedCount, List<string> errors)> Up
     {
         if (string.IsNullOrWhiteSpace(row.Barcode))
         {
-            errors.Add($"Satır {index}: Barkod boş olamaz.");
+            var errorMsg = "Barkod boş olamaz.";
+            errors.Add($"Satır {index}: {errorMsg}");
+            await LogExcelErrorAsync(index, errorMsg, row.Barcode, batchId, fileName, userId);
             continue;
         }
 
         var product = await _productRepository.GetProductByBarcodeAsync(row.Barcode);
         if (product == null)
         {
-            errors.Add($"Satır {index}: Barkodu '{row.Barcode}' olan ürün bulunamadı.");
+            var errorMsg = $"Barkodu '{row.Barcode}' olan ürün bulunamadı.";
+            errors.Add($"Satır {index}: {errorMsg}");
+            await LogExcelErrorAsync(index, errorMsg, row.Barcode, batchId, fileName, userId);
             continue;
         }
 
@@ -226,13 +256,17 @@ public async Task<(int insertedCount, int updatedCount, List<string> errors)> Up
 
             if (existing == null)
             {
-                errors.Add($"Satır {index}: Ürün sistemsel hata nedeniyle depoda bulunamadı.");
+                var errorMsg = "Ürün sistemsel hata nedeniyle depoda bulunamadı.";
+                errors.Add($"Satır {index}: {errorMsg}");
+                await LogExcelErrorAsync(index, errorMsg, row.Barcode, batchId, fileName, userId);
                 continue;
             }
 
             if (row.QuantityChange < 0 && existing.StockQuantity + row.QuantityChange < 0)
             {
-                errors.Add($"Satır {index}: Stok çıkışı fazla. Mevcut: {existing.StockQuantity}");
+                var errorMsg = $"Stok çıkışı fazla. Mevcut: {existing.StockQuantity}";
+                errors.Add($"Satır {index}: {errorMsg}");
+                await LogExcelErrorAsync(index, errorMsg, row.Barcode, batchId, fileName, userId);
                 continue;
             }
 
@@ -252,14 +286,18 @@ public async Task<(int insertedCount, int updatedCount, List<string> errors)> Up
         {
             if (row.QuantityChange <= 0)
             {
-                errors.Add($"Satır {index}: Ürün depoda yokken negatif stok eklenemez.");
+                var errorMsg = "Ürün depoda yokken negatif stok eklenemez.";
+                errors.Add($"Satır {index}: {errorMsg}");
+                await LogExcelErrorAsync(index, errorMsg, row.Barcode, batchId, fileName, userId);
                 continue;
             }
 
             var parsed = LocationParser.Parse(row.LocationText);
             if (parsed == null)
             {
-                errors.Add($"Satır {index}: Lokasyon formatı hatalı: '{row.LocationText}'");
+                var errorMsg = $"Lokasyon formatı hatalı: '{row.LocationText}'";
+                errors.Add($"Satır {index}: {errorMsg}");
+                await LogExcelErrorAsync(index, errorMsg, row.Barcode, batchId, fileName, userId);
                 continue;
             }
 
@@ -268,7 +306,9 @@ public async Task<(int insertedCount, int updatedCount, List<string> errors)> Up
 
             if (locationId == null)
             {
-                errors.Add($"Satır {index}: Lokasyon bulunamadı: '{row.LocationText}'");
+                var errorMsg = $"Lokasyon bulunamadı: '{row.LocationText}'";
+                errors.Add($"Satır {index}: {errorMsg}");
+                await LogExcelErrorAsync(index, errorMsg, row.Barcode, batchId, fileName, userId);
                 continue;
             }
 

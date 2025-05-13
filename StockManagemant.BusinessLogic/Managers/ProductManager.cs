@@ -1,11 +1,8 @@
 ﻿using StockManagemant.Entities.Models;
 using StockManagemant.Entities.DTO;
 using StockManagemant.DataAccess.Filters;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using StockManagemant.Entities.Enums;
 using AutoMapper;
-using System.Linq;
 using StockManagemant.DataAccess.Repositories.Interfaces;
 
 
@@ -14,14 +11,16 @@ namespace StockManagemant.Business.Managers
     public class ProductManager : IProductManager
     {
         private readonly IProductRepository _productRepository;
+        private readonly ILogManager _logManager;
         private readonly IMapper _mapper;
         private readonly ICategoryRepository _categoryRepository;
 
-        public ProductManager(IProductRepository productRepository,IMapper mapper, ICategoryRepository categoryRepository)
+        public ProductManager(IProductRepository productRepository,IMapper mapper, ICategoryRepository categoryRepository,ILogManager logManager)
         {
             _productRepository = productRepository;
             _mapper = mapper;
             _categoryRepository = categoryRepository;
+            _logManager=logManager;
         }
 
         //  Toplam ürün sayısını getir (Silinmemiş olanlar)
@@ -42,9 +41,31 @@ namespace StockManagemant.Business.Managers
 
         public async Task<int> AddProductAsync(ProductDto productDto)
         {
+            var optionalWarnings = new List<string>();
+
+            if (string.IsNullOrWhiteSpace(productDto.Barcode))
+                optionalWarnings.Add("Barcode");
+            if (string.IsNullOrWhiteSpace(productDto.ImageUrl))
+                optionalWarnings.Add("ImageUrl");
+            if (string.IsNullOrWhiteSpace(productDto.Description))
+                optionalWarnings.Add("Description");
+
+            if (optionalWarnings.Any())
+            {
+                await _logManager.LogAsync(new AppLogDto
+                {
+                    UserId = 0,
+                    Action = " Uygulamadan Ürün Oluşturma",
+                    Level = "Warning",
+                    FileName = "Dosyasız İşlem",
+                    Message = $" Boş olan alan yada alanlar: {string.Join(", ", optionalWarnings)}",
+                    Target = productDto.Name ?? productDto.Barcode ?? "Bilinmeyen",
+                    Timestamp = DateTime.Now
+                });
+            }
+
             var product = _mapper.Map<Product>(productDto);
 
-            // ✅ Category nesnesini manuel yükleyelim
             product.Category = await _categoryRepository.GetByIdAsync(productDto.CategoryId);
             if (product.Category == null)
             {
@@ -114,18 +135,19 @@ namespace StockManagemant.Business.Managers
             return await _productRepository.IsProductInWarehouseAsync(productId, warehouseId);
         }
 
-public async Task<(int insertedCount, List<string> errors)> AddProductsFromExcelAsync(List<RawProductModel> rawProducts)
+public async Task<(int insertedCount, List<string> errors)> AddProductsFromExcelAsync(
+    List<RawProductModel> rawProducts, int userId, string fileName)
 {
     var errors = new List<string>();
     var validProducts = new List<Product>();
-    int rowIndex = 2; 
+    int rowIndex = 2;
+    var batchId = Guid.NewGuid().ToString();
 
     foreach (var raw in rawProducts)
     {
         var errorPrefix = $"Satır {rowIndex}: ";
         var rowErrors = new List<string>();
 
-        // 🔍 Zorunlu Alanlar
         if (string.IsNullOrWhiteSpace(raw.Name))
             rowErrors.Add("Ürün adı boş olamaz.");
 
@@ -135,31 +157,22 @@ public async Task<(int insertedCount, List<string> errors)> AddProductsFromExcel
         if (string.IsNullOrWhiteSpace(raw.CurrencyText))
             rowErrors.Add("Para birimi boş olamaz.");
 
-        // 💰 Para Birimi Enum'a Çevrilmesi
-        CurrencyType currency;
-        if (!Enum.TryParse(raw.CurrencyText.Trim(), true, out currency))
+        if (!Enum.TryParse(raw.CurrencyText?.Trim(), true, out CurrencyType currency))
         {
             rowErrors.Add($"Geçersiz para birimi: {raw.CurrencyText}");
         }
-        
 
-        // 💵 Fiyat Formatı
         decimal? price = null;
         if (!string.IsNullOrWhiteSpace(raw.Price))
         {
             if (decimal.TryParse(raw.Price, out var parsedPrice))
-            {
                 price = parsedPrice;
-            }
             else
-            {
                 rowErrors.Add($"Geçersiz fiyat: {raw.Price}");
-            }
         }
 
-        // 📁 Kategori Eşlemesi
-        var categoryList = await _categoryRepository
-            .FindAsync(c => c.Name.ToLower() == raw.CategoryName.Trim().ToLower() && !c.IsDeleted);
+        var categoryList = await _categoryRepository.FindAsync(c =>
+            c.Name.ToLower() == raw.CategoryName.Trim().ToLower() && !c.IsDeleted);
 
         var matchedCategory = categoryList.FirstOrDefault();
         if (matchedCategory == null)
@@ -167,12 +180,23 @@ public async Task<(int insertedCount, List<string> errors)> AddProductsFromExcel
             rowErrors.Add($"Kategori bulunamadı: {raw.CategoryName}");
         }
 
-        // ❌ Hatalı Satır
         if (rowErrors.Any())
         {
-            errors.Add(errorPrefix + string.Join(" | ", rowErrors));
+            string combinedError = errorPrefix + string.Join(" | ", rowErrors);
+            errors.Add(combinedError);
+
+            await _logManager.LogAsync(new AppLogDto
+            {
+                UserId = userId,
+                Action = "Excel Ürün Yükleme",
+                Message = combinedError,
+                Level = "Error",
+                FileName = fileName,
+                BatchId = batchId,
+                Target = raw.Barcode ?? raw.Name ?? "Bilinmeyen",
+                Timestamp = DateTime.Now
+            });
         }
-        // ✅ Geçerli Satır
         else
         {
             validProducts.Add(new Product
@@ -191,7 +215,6 @@ public async Task<(int insertedCount, List<string> errors)> AddProductsFromExcel
         rowIndex++;
     }
 
-    // 📦 Toplu Veri Ekleme (Bulk Insert)
     if (validProducts.Any())
     {
         await _productRepository.BulkInsertAsync(validProducts);

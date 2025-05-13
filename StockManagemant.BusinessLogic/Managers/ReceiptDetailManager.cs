@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using StockManagemant.Entities.Models;
 using StockManagemant.Entities.DTO;
+using StockManagemant.Entities.Enums;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;

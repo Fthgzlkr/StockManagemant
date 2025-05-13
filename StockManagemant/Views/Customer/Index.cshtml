@@ -1,0 +1,98 @@
+@{
+    ViewData["Title"] = "Müşteri Yönetimi";
+    Layout = "_Layout";
+}
+<link rel="stylesheet" href="~/css/Product.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/GlobalStyles.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/Site.css" asp-append-version="true" />
+
+<h2 class="mt-4 mb-3">👤 Müşteri Yönetimi</h2>
+
+<div class="table-container mt-3">
+    <table id="customerGrid"></table>
+    <div id="pager"></div>
+
+    <div class="text-end mt-3">
+        <button id="addCustomerBtn" class="btn btn-success">
+            <i class="bi bi-plus-lg me-1"></i> Müşteri Ekle
+        </button>
+    </div>
+</div>
+
+
+<script>
+    $(document).ready(function () {
+        $("#customerGrid").jqGrid({
+            url: '/Customer/GetCustomers',
+            datatype: "json",
+            mtype: "GET",
+            colNames: ['ID', 'Müşteri Adı', 'Telefon', 'Email', 'Adres', 'İşlemler'],
+            colModel: [
+                { name: 'id', index: 'id', key: true, hidden: true },
+                { name: 'name', index: 'name', sortable: true },
+                { name: 'phone', index: 'phone', sortable: true },
+                { name: 'email', index: 'email', sortable: true },
+                { name: 'address', index: 'address', sortable: true },
+                {
+                    name: "actions",
+                    align: "center",
+                    formatter: function (cellvalue, options, rowObject) {
+                        return `
+                            <div class="action-icons">
+                                <i class="fa-solid fa-pen text-primary fa-xl editCustomerBtn" data-id="${rowObject.id}" title="Düzenle"></i>
+                                <i class="fa-solid fa-trash text-danger fa-xl deleteCustomerBtn" data-id="${rowObject.id}" title="Sil"></i>
+                            </div>
+                        `;
+                    }
+                }
+            ],
+            pager: '#pager',
+            rowNum: 10,
+            rowList: [10, 20, 30],
+            sortname: 'id',
+            sortorder: 'desc',
+            viewrecords: true,
+            height: 'auto',
+            autowidth: true,
+            shrinkToFit: true,
+            guiStyle: "bootstrap4",
+            caption: "Müşteri Listesi",
+            jsonReader: {
+                root: "rows",
+                page: "page",
+                total: "total",
+                records: "records"
+            }
+        });
+
+        // Müşteri Ekle
+       
+
+        // Silme
+        $(document).on("click", ".deleteCustomerBtn", function () {
+            const id = $(this).data("id");
+            Swal.fire({
+                title: "Emin misiniz?",
+                text: "Bu müşteriyi silmek istiyor musunuz?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Evet, Sil",
+                cancelButtonText: "İptal"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post(`/Customer/Delete/${id}`, function (response) {
+                        if (response.success) {
+                            Swal.fire("Başarılı", response.message, "success");
+                            $("#customerGrid").trigger("reloadGrid");
+                        } else {
+                            Swal.fire("Hata", response.message, "error");
+                        }
+                    });
+                }
+            });
+        });
+
+    });
+
+    
+</script>

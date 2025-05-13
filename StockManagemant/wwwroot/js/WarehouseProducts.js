@@ -113,12 +113,14 @@
            },
 
              ondblClickRow: function (rowid) {
-                if (rowid) {
-                    const rowData = $("#warehouseProductGrid").jqGrid("getRowData", rowid);
-                    const productId = rowData.product_id;
-                    window.open('/Product/ProductDetail/' + productId, '_blank');
-                }
-            },
+                 if (rowid) {
+                     const rowData = $("#warehouseProductGrid").jqGrid("getRowData", rowid);
+                     const productId = rowData.product_id;
+
+                     const title = 'Ürün Detayları';
+                     openModal(`/Product/ProductDetail/${productId}`, title, () => SetupProductDetail(productId));
+                 }
+             },
 
           
            rowattr: function (rowObject) {
