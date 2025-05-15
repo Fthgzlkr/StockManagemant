@@ -367,7 +367,8 @@ $("#completeReceiptsBtn").on("click", function() {
                 data: JSON.stringify({
                     warehouseId: warehouseId,
                     description: entryDescription,
-                    changes: entryChanges
+                    changes: entryChanges,
+                    
                 })
             })
         );

@@ -18,7 +18,7 @@
     <p><strong>Depo Adı:</strong> @Model.WareHouseName</p>
     <p><strong>Tarih:</strong> @Model.FormattedDate</p>
     <p><strong>Açıklama:</strong> @Model.Description</p>
-    <p><strong>Müşteri:</strong> @Model.SourceName</p>
+    <p><strong>Müşteri:</strong> @(Model.SourceType == StockManagemant.Entities.Enums.ReceiptSourceType.None ? "Yok" : Model.SourceName)</p>
     <p><strong>Toplam Tutar:</strong> @CurrencyHelper.FormatPrice(@Model.TotalAmount, "TL")</p>
     <p><strong>İşlem Türü:</strong> @Model.FormattedReceiptType</p>
     <div class="receipt-buttons">

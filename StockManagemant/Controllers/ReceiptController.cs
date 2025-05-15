@@ -338,6 +338,8 @@ namespace StockManagemant.Controllers
                     WareHouseId = dto.WarehouseId,
                     ReceiptType = ReceiptType.Entry,
                     Description = dto.Description ?? "",
+                    SourceType=ReceiptSourceType.None,
+                    SourceId=null,
                     TotalAmount = 0
                 };
 
@@ -372,6 +374,8 @@ namespace StockManagemant.Controllers
                 WareHouseId = dto.WarehouseId,
                 ReceiptType = ReceiptType.Exit,
                 Description = dto.Description ?? "",
+                SourceType=ReceiptSourceType.None,
+                SourceId=null,
                 TotalAmount = 0
             };
 

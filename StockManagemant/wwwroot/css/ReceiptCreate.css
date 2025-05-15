@@ -1,0 +1,59 @@
+
+    body {
+        background: linear-gradient(to bottom right, #f9fbfd, #e6edf3);
+        font-family: "Segoe UI", sans-serif;
+    }
+
+    .card {
+        border-radius: 10px;
+        background-color: #fff;
+        border: 1px solid #e3e6ea;
+    }
+
+    .btn {
+        font-size: 13px;
+        border-radius: 6px;
+        padding: 6px 12px;
+        transition: 0.2s ease-in-out;
+    }
+
+    .btn-outline-primary:hover {
+        background-color: #0d6efd;
+        color: #fff;
+    }
+
+    .form-control {
+        font-size: 13px;
+    }
+
+    #receiptItems .item-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        border-bottom: 1px dashed #ddd;
+    }
+
+    #receiptItems .item-row:last-child {
+        border-bottom: none;
+    }
+
+    .remove-product {
+        font-size: 11px;
+        padding: 2px 6px;
+    }
+
+    .btn-group-lg > .btn {
+        font-size: 16px;
+        padding: 10px 20px;
+    }
+
+    .btn-check:checked + .btn-outline-success {
+        background-color: #198754;
+        color: #fff;
+    }
+
+    .btn-check:checked + .btn-outline-danger {
+        background-color: #dc3545;
+        color: #fff;
+    }

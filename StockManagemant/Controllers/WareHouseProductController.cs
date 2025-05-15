@@ -15,7 +15,7 @@ using System.Collections.Generic;
 
 namespace StockManagemant.Controllers
 {
-    
+
     public class WarehouseProductController : Controller
     {
         private readonly IWarehouseProductManager _warehouseProductManager;
@@ -43,7 +43,7 @@ namespace StockManagemant.Controllers
                 return BadRequest("Geçersiz depo ID!");
             }
 
-            return View("WarehouseProducts", warehouseId); 
+            return View("WarehouseProducts", warehouseId);
         }
 
         [HttpGet]
@@ -87,10 +87,10 @@ namespace StockManagemant.Controllers
                         currencyType = p.Currency?.ToString(),
                         stock = p.StockQuantity,
                         location = p.LocationDisplay,
-                        stockcode=p.StockCode,
+                        stockcode = p.StockCode,
                         barcode = p.Barcode,
-                        image_url =p.ImageUrl,
-                        description= p.Description,
+                        image_url = p.ImageUrl,
+                        description = p.Description,
                     })
                 };
 
@@ -124,7 +124,7 @@ namespace StockManagemant.Controllers
             }
         }
 
-        
+
         //Depo ürünü stok yönetimi 
         [HttpPost]
         public async Task<IActionResult> UpdateStock([FromBody] UpdateStockDto dto)
@@ -144,7 +144,7 @@ namespace StockManagemant.Controllers
         }
 
 
-       
+
         // Depo ürün kaldıerma
         [HttpPost]
         public async Task<IActionResult> RemoveProductFromWarehouse(int warehouseProductId)
@@ -250,6 +250,26 @@ namespace StockManagemant.Controllers
         public IActionResult AddProduct()
         {
             return View();
+        }
+        
+        [Authorize(Roles = "Admin,Operator")]
+        [HttpPost]
+        public async Task<IActionResult> EnsureWarehouseProductExists([FromBody] WarehouseProductExistCheckDto dto)
+        {
+            try
+            {
+                if (dto == null || dto.WarehouseId == 0 || dto.ProductId == 0)
+                    return BadRequest(new { success = false, message = "Eksik veri!" });
+
+                await _warehouseProductManager.EnsureWarehouseProductExistsAsync(dto.WarehouseId, dto.ProductId);
+
+                return Ok(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[EnsureWarehouseProductExists] Hata: {ex.Message}");
+                return StatusCode(500, new { success = false, message = "Ürün kontrolü yapılırken hata oluştu." });
+            }
         }
     }
 }

@@ -5,6 +5,7 @@
 @{
     ViewData["Title"] = "Fiş Oluşturma";
 }
+  <link rel="stylesheet" href="~/css/ReceiptCreate.css" asp-append-version="true" />
 
 <!-- 🔥 Başlık -->
 <h2 class="text-center my-4 fw-semibold fs-5">📄 Fiş Oluştur</h2>
@@ -16,13 +17,15 @@
         <div class="col-md-6">
             <div class="card shadow-sm p-3">
                 <h6 class="fw-bold mb-3 text-primary">🔍 Ürün Arama</h6>
+                <!-- Bilgilendirme alanı -->
+                <div id="productSearchInfo" class="small text-muted mb-2"></div>
                 <div class="input-group input-group-sm mb-2">
                     <input type="text" id="productBarcodeInput" class="form-control" placeholder="Ürün barkodunu girin">
                     <button id="searchProductBtn" class="btn btn-outline-primary px-3">
                         <i class="fas fa-search"></i>
                     </button>
                 </div>
-
+                <div id="barcodeInputHelper" class="form-text text-muted"></div>
                 <!-- Aranan Ürün Bilgisi -->
                 <div id="searchedProduct" class="mt-3 d-none">
                     <div class="border rounded p-3 bg-light-subtle">
@@ -68,6 +71,24 @@
         </div>
     </div>
 
+    <div class="row mb-3" id="sourceSelectionArea" >
+        <div class="col-md-6">
+            <label for="sourceType" class="form-label">Fiş Kaynağı Tipi:</label>
+            <select id="sourceType" class="form-select">
+                <option value="1">Depo</option>
+                <option value="2">Müşteri</option>
+                <option value="3">Yok</option>
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label for="sourceSelect" class="form-label">Kaynak Seçimi:</label>
+            <select id="sourceSelect" class="form-select">
+                <option value="">Önce kaynak tipi seçiniz</option>
+            </select>
+        </div>
+    </div>
+</div>
+
     <!-- Description area moved outside of the receipt card -->
     <div class="container mt-3">
         <label for="receiptDescription" class="form-label fw-semibold">Açıklama:</label>
@@ -83,221 +104,10 @@
 <!-- 🔗 FontAwesome -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-<!-- 🎨 Ek CSS -->
-<style>
-    body {
-        background: linear-gradient(to bottom right, #f9fbfd, #e6edf3);
-        font-family: "Segoe UI", sans-serif;
-    }
 
-    .card {
-        border-radius: 10px;
-        background-color: #fff;
-        border: 1px solid #e3e6ea;
-    }
 
-    .btn {
-        font-size: 13px;
-        border-radius: 6px;
-        padding: 6px 12px;
-        transition: 0.2s ease-in-out;
-    }
 
-    .btn-outline-primary:hover {
-        background-color: #0d6efd;
-        color: #fff;
-    }
-
-    .form-control {
-        font-size: 13px;
-    }
-
-    #receiptItems .item-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 6px 0;
-        border-bottom: 1px dashed #ddd;
-    }
-
-    #receiptItems .item-row:last-child {
-        border-bottom: none;
-    }
-
-    .remove-product {
-        font-size: 11px;
-        padding: 2px 6px;
-    }
-
-    .btn-group-lg > .btn {
-        font-size: 16px;
-        padding: 10px 20px;
-    }
-</style>
-<style>
-    .btn-check:checked + .btn-outline-success {
-        background-color: #198754;
-        color: #fff;
-    }
-
-    .btn-check:checked + .btn-outline-danger {
-        background-color: #dc3545;
-        color: #fff;
-    }
-</style>
-
-<script>
-    let warehouseId = new URLSearchParams(window.location.search).get("warehouseId");
-    let receiptItems = [];
-
-    // Ürün Arama Butonu
-        $("#searchProductBtn").click(function () {
-        let barcode = $("#productBarcodeInput").val();
-        if (!barcode) {
-            Swal.fire("Hata!", "Lütfen geçerli bir ürün barkodu girin!", "error");
-            return;
-        }
-
-        $.get(`/Receipt/GetWarehouseProduct?warehouseId=${warehouseId}&barcode=${barcode}`, function (response) {
-            if (response.success) {
-                showSearchedProduct(response.data);
-            } else {
-                Swal.fire("Hata!", response.message, "error");
-            }
-        }).fail(function () {
-            Swal.fire("Hata!", "Ürün getirilirken bir hata oluştu!", "error");
-        });
-    });
-
-    // Aranan Ürünü Gösterme
-    function showSearchedProduct(product) {
-        if (!product || !product.productId) {
-            Swal.fire("Hata!", "Geçerli bir ürün bulunamadı!", "error");
-            return;
-        }
-
-        $("#productName").text(product.productName);
-        $("#productCategory").text(product.categoryName);
-        $("#productPrice").text(product.price);
-        $("#productStock").text(product.stockQuantity);
-        $("#productQuantity").attr("max", product.stockQuantity);
-        $("#searchedProduct").removeClass("d-none");
-
-        $("#addProductBtn").off("click").on("click", function () {
-            let quantity = parseInt($("#productQuantity").val());
-            let isExit = document.querySelector("#exitRadio").checked;
-
-            if (quantity < 1 || (isExit && quantity > product.stockQuantity)) {
-                Swal.fire("Hata!", isExit ? "Çıkış için geçerli bir miktar girin! Mevcut stok yetersiz." : "Geçerli bir miktar girin!", "error");
-                return;
-            }
-            addProductToReceipt(product, quantity);
-        });
-    }
-
-    // Ürünü Fişe Ekleme
-    function addProductToReceipt(product, quantity) {
-        let existingProduct = receiptItems.find(item => item.productId === product.productId);
-        if (existingProduct) {
-            Swal.fire("Hata!", "Bu ürün zaten fişe eklenmiş!", "error");
-            return;
-        }
-
-        let newItem = `
-            <div class="d-flex justify-content-between mb-1" data-id="${product.productId}">
-                <div>
-                    <span class="fw-bold">${product.productName}</span>
-                    <span class="small text-muted">(${product.categoryName})</span>
-                    <span class="small">x ${quantity}</span>
-                </div>
-                <div>
-                    <span>${(product.price * quantity).toFixed(2)} TL</span>
-                    <button class="btn btn-danger btn-sm ms-2 remove-product">X</button>
-                </div>
-            </div>
-        `;
-
-        $("#receiptItems").append(newItem);
-
-        receiptItems.push({
-            productId: product.productId,
-            quantity: quantity,
-            price: product.price
-        });
-
-        updateTotal();
-    }
-
-    // Ürünü Fişten Silme
-    $(document).on("click", ".remove-product", function () {
-        let row = $(this).closest("div[data-id]");
-        let productId = parseInt(row.attr("data-id"));
-
-        receiptItems = receiptItems.filter(p => p.productId !== productId);
-        row.remove();
-
-        updateTotal();
-    });
-
-    // Toplam Tutarı Güncelle
-    function updateTotal() {
-        let total = receiptItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        $("#totalAmount").text(total.toFixed(2) + " TL");
-    }
-
-    // ✅ Fişi Tamamla
-    $("#createReceiptBtn").click(function () {
-        if (receiptItems.length === 0) {
-            Swal.fire("Hata!", "Fişe en az bir ürün eklemelisiniz!", "warning");
-            return;
-        }
-
-        // Adım 1: Fiş oluştur
-        $.ajax({
-            url: "/Receipt/CreateReceipt",
-            method: "POST",
-            contentType: "application/json",
-            data: JSON.stringify({
-                wareHouseId: parseInt(warehouseId),
-                totalAmount: receiptItems.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-                date: new Date().toISOString(),
-                receiptType: parseInt(document.querySelector("input[name='receiptType']:checked").value),
-                description: $("#receiptDescription").val()
-            }),
-            success: function (res) {
-                if (!res.success) {
-                    Swal.fire("Hata!", res.message, "error");
-                    return;
-                }
-
-                const receiptId = res.receiptId;
-
-                // Adım 2: Ürünleri fişe ekle
-                $.ajax({
-                    url: `/Receipt/AddProductsToReceipt?receiptId=${receiptId}`,
-                    method: "POST",
-                    contentType: "application/json",
-                    data: JSON.stringify(receiptItems),
-                    success: function (res2) {
-                        if (res2.success) {
-                            Swal.fire("Başarılı!", "Fiş başarıyla oluşturuldu.", "success").then(() => {
-                                window.location.href = `/Receipt/ListByWarehouse?warehouseId=${warehouseId}`;
-                            });
-                        } else {
-                            Swal.fire("Hata!", res2.message, "error");
-                        }
-                    },
-                    error: function () {
-                        Swal.fire("Hata!", "Ürünler fişe eklenemedi!", "error");
-                    }
-                });
-            },
-            error: function () {
-                Swal.fire("Hata!", "Fiş oluşturulamadı!", "error");
-            }
-        });
-    });
-</script>
+<script src="~/js/ReceiptCreate.js" asp-append-version="true"></script>
 
 <!-- FontAwesome CDN (İkonlar İçin) -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
