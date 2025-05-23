@@ -1,4 +1,5 @@
 ﻿using StockManagemant.Entities.Models;
+using StockManagemant.Entities.Enums;
 using System;
 using System.Linq;
 using System.Linq.Expressions;
@@ -13,6 +14,7 @@ namespace StockManagemant.DataAccess.Filters
         public string? Barcode { get; set; }
         public int? CategoryId { get; set; } // Eğer kategoriye göre filtreleme istersek
         public bool IncludeDeleted { get; set; } = false; // Silinmiş ürünleri dahil etme
+        public StorageType? StorageType { get; set; }
 
         public Expression<Func<Product, bool>> GetFilterExpression()
         {
@@ -27,7 +29,8 @@ namespace StockManagemant.DataAccess.Filters
                 (string.IsNullOrEmpty(Barcode) || product.Barcode.Contains(Barcode)) &&
                 (!MinPrice.HasValue || product.Price >= MinPrice.Value) &&
                 (!MaxPrice.HasValue || product.Price <= MaxPrice.Value) &&
-                (!CategoryId.HasValue || product.CategoryId == CategoryId.Value);
+                (!CategoryId.HasValue || product.CategoryId == CategoryId.Value)&&
+                (!StorageType.HasValue || product.StorageType == StorageType.Value);
         }
     }
 }

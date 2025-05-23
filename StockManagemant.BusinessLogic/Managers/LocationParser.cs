@@ -1,23 +1,22 @@
-
 namespace StockManagemant.Business.Managers
 {
-  public static class LocationParser
+    public static class LocationParser
 {
-    public static (string corridor, string? shelf, string? bin)? Parse(string locationText)
+   
+    public static List<string>? ParseDynamic(string locationText)
     {
         if (string.IsNullOrWhiteSpace(locationText))
             return null;
 
-        var parts = locationText.Split('-');
+        var separators = new[] { '>', '|' };
 
-        if (parts.Length == 0 || string.IsNullOrWhiteSpace(parts[0]))
-            return null;
+        var parts = locationText
+            .Split(separators, StringSplitOptions.RemoveEmptyEntries)
+            .Select(p => p.Trim())
+            .Where(p => !string.IsNullOrWhiteSpace(p))
+            .ToList();
 
-        string corridor = parts[0];
-        string? shelf = parts.Length > 1 ? parts[1] : null;
-        string? bin = parts.Length > 2 ? parts[2] : null;
-
-        return (corridor, shelf, bin);
+        return parts.Count > 0 ? parts : null;
     }
 }
 }

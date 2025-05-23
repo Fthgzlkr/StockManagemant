@@ -86,7 +86,7 @@ namespace StockManagemant.Controllers
                         category = p.CategoryName,
                         currencyType = p.Currency?.ToString(),
                         stock = p.StockQuantity,
-                        location = p.LocationDisplay,
+                        location = p.WarehouseLocationId,
                         stockcode = p.StockCode,
                         barcode = p.Barcode,
                         image_url = p.ImageUrl,

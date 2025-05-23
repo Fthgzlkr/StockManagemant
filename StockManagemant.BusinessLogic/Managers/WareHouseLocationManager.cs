@@ -1,6 +1,7 @@
 using AutoMapper;
 using StockManagemant.BusinessLogic.Managers.Interfaces;
 using StockManagemant.DataAccess.Repositories.Interfaces;
+using StockManagemant.Entities.Enums;
 using StockManagemant.Entities.DTO;
 using StockManagemant.Entities.Models;
 using System.Collections.Generic;
@@ -36,12 +37,13 @@ namespace StockManagemant.BusinessLogic.Managers
             var entity = _mapper.Map<WarehouseLocation>(locationDto);
             await _repository.AddAsync(entity);
         }
-
         public async Task<IEnumerable<WarehouseLocationDto>> GetLocationsByWarehouseIdAsync(int warehouseId)
         {
-                 var locations = await _repository.FindAsync(x => x.WarehouseId == warehouseId);
-                return _mapper.Map<IEnumerable<WarehouseLocationDto>>(locations);
+            var locations = await _repository.GetLocationsByWarehouseIdAsync(warehouseId);
+            return _mapper.Map<IEnumerable<WarehouseLocationDto>>(locations);
         }
+
+
 
         public async Task UpdateAsync(WarehouseLocationDto locationDto)
         {
@@ -58,20 +60,26 @@ namespace StockManagemant.BusinessLogic.Managers
         {
             await _repository.RestoreAsync(id);
         }
-
-        public async Task<IEnumerable<object>> GetCorridorsByWarehouseIdAsync(int warehouseId)
+        
+        //  Parent-child alt lokasyonları getir
+        public async Task<List<WarehouseLocationDto>> GetChildrenAsync(int parentId)
         {
-            return await _repository.GetCorridorsByWarehouseIdAsync(warehouseId);
+            var children = await _repository.GetChildrenAsync(parentId);
+            return _mapper.Map<List<WarehouseLocationDto>>(children);
         }
 
-        public async Task<IEnumerable<object>> GetShelvesByWarehouseAsync(int warehouseId, string corridor)
+        //  StorageType’a göre filtreleme
+        public async Task<List<WarehouseLocationDto>> GetLocationsByStorageTypeAsync(int warehouseId, StorageType storageType)
         {
-            return await _repository.GetShelvesByWarehouseAsync(warehouseId, corridor);
+            var locations = await _repository.GetLocationsByStorageTypeAsync(warehouseId, storageType);
+            return _mapper.Map<List<WarehouseLocationDto>>(locations);
         }
 
-        public async Task<IEnumerable<object>> GetBinsByWarehouseAsync(int warehouseId, string corridor, string shelf)
+        //  Level + StorageType’a göre filtreleme
+        public async Task<List<WarehouseLocationDto>> GetLocationsByLevelAndStorageTypeAsync(int warehouseId, LocationLevel level, StorageType storageType)
         {
-            return await _repository.GetBinsByWarehouseAsync(warehouseId, corridor, shelf);
+            var locations = await _repository.GetLocationsByLevelAndStorageTypeAsync(warehouseId, level, storageType);
+            return _mapper.Map<List<WarehouseLocationDto>>(locations);
         }
     }
 }

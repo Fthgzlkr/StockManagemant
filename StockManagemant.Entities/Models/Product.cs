@@ -24,6 +24,7 @@ namespace StockManagemant.Entities.Models
         public string? Barcode { get; set; }
         public string? ImageUrl { get; set; }
         public string? Description { get; set; }
+        public StorageType StorageType { get; set; } = StorageType.Undefined;
         
         public bool IsDeleted { get; set; } = false; // Soft Delete için
         public ICollection<ReceiptDetail> ReceiptDetails { get; set; }

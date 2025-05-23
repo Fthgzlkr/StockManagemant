@@ -1,4 +1,5 @@
 using StockManagemant.Entities.Models;
+using StockManagemant.Entities.Enums;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -6,9 +7,13 @@ namespace StockManagemant.DataAccess.Repositories.Interfaces
 {
     public interface IWareHouseLocationRepository : IRepository<WarehouseLocation>
     {
-        Task<IEnumerable<object>> GetCorridorsByWarehouseIdAsync(int warehouseId);
-        Task<IEnumerable<object>> GetShelvesByWarehouseAsync(int warehouseId, string corridor);
-        Task<IEnumerable<object>> GetBinsByWarehouseAsync(int warehouseId, string corridor, string shelf);
-        Task<int?> GetLocationIdAsync(int warehouseId, string corridor, string? shelf, string? bin);
+        Task<List<WarehouseLocation>> GetLocationsByWarehouseIdAsync(int warehouseId);
+        Task<List<WarehouseLocation>> GetRootLocationsAsync(int warehouseId);
+        Task<List<WarehouseLocation>> GetChildrenAsync(int parentId);
+        Task<bool> HasChildrenAsync(int id);
+        Task<WarehouseLocation?> GetLocationByIdAsync(int locationId);
+        Task<List<WarehouseLocation>> GetLocationsByStorageTypeAsync(int warehouseId, StorageType storageType);
+        Task<List<WarehouseLocation>> GetLocationsByLevelAndStorageTypeAsync(int warehouseId, LocationLevel level, StorageType storageType);
+        Task<int?> GetLocationIdByLevelPathAsync(int warehouseId, List<string> levelPath);
     }
 }

@@ -1,0 +1,292 @@
+/* Müşteri Yönetimi - Modern jqGrid CSS */
+
+/* Genel sayfa düzenlemeleri */
+body {
+    background: linear-gradient(to bottom right, #f9fbfd, #e6edf3);
+    font-family: "Segoe UI", sans-serif;
+}
+
+/* Başlık modernizasyonu */
+h2.mt-4.mb-3 {
+    color: #495057;
+    font-weight: 600;
+    font-size: 1.4rem;
+    margin: 1rem 0 1.5rem 0 !important;
+    padding-left: 0.5rem;
+    border-left: 4px solid #0d6efd;
+}
+
+/* Ana tablo container */
+.table-container {
+    background: #fff;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e3e6ea;
+    margin-top: 1rem;
+}
+
+/* jqGrid genel stil düzenlemeleri */
+.ui-jqgrid {
+    border: 1px solid #e3e6ea !important;
+    border-radius: 8px !important;
+    overflow: hidden;
+}
+
+.ui-jqgrid .ui-jqgrid-view {
+    border: none !important;
+}
+
+/* Grid başlık */
+.ui-jqgrid .ui-jqgrid-titlebar {
+    background: linear-gradient(135deg, #0d6efd, #0056b3) !important;
+    border: none !important;
+    color: white !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    padding: 12px 15px !important;
+    text-align: center;
+}
+
+/* Grid header */
+.ui-jqgrid .ui-jqgrid-htable thead th {
+    background: #f8f9fa !important;
+    border-right: 1px solid #e9ecef !important;
+    border-bottom: 2px solid #e9ecef !important;
+    color: #495057 !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    padding: 10px 8px !important;
+    text-align: center;
+}
+
+.ui-jqgrid .ui-jqgrid-htable thead th:last-child {
+    border-right: none !important;
+}
+
+/* Grid satırları */
+.ui-jqgrid .ui-jqgrid-bdiv table tr td {
+    padding: 8px !important;
+    border-right: 1px solid #f1f3f4 !important;
+    border-bottom: 1px solid #f1f3f4 !important;
+    font-size: 13px !important;
+    color: #495057;
+}
+
+.ui-jqgrid .ui-jqgrid-bdiv table tr td:last-child {
+    border-right: none !important;
+}
+
+/* Satır hover efekti */
+.ui-jqgrid .ui-jqgrid-bdiv table tr:hover td {
+    background-color: #f8f9fa !important;
+}
+
+/* Seçili satır */
+.ui-jqgrid .ui-jqgrid-bdiv table tr.ui-state-highlight td {
+    background-color: #e7f3ff !important;
+    border-color: #b3d9ff !important;
+}
+
+/* Pager */
+.ui-jqgrid .ui-jqgrid-pager {
+    background: #f8f9fa !important;
+    border-top: 2px solid #e9ecef !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    height: 45px !important;
+    padding: 0 10px !important;
+}
+
+.ui-jqgrid .ui-jqgrid-pager .ui-paging-info {
+    color: #6c757d !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+}
+
+/* Pager butonları */
+.ui-jqgrid .ui-jqgrid-pager .ui-pg-table td {
+    border: none !important;
+    padding: 2px !important;
+}
+
+.ui-jqgrid .ui-jqgrid-pager .ui-pg-button {
+    background: transparent !important;
+    border: 1px solid #ced4da !important;
+    border-radius: 4px !important;
+    color: #495057 !important;
+    font-size: 12px !important;
+    padding: 4px 8px !important;
+    margin: 0 2px !important;
+}
+
+.ui-jqgrid .ui-jqgrid-pager .ui-pg-button:hover {
+    background: #e9ecef !important;
+    border-color: #adb5bd !important;
+}
+
+.ui-jqgrid .ui-jqgrid-pager .ui-pg-button.ui-state-disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+}
+
+/* Satır sayısı dropdown */
+.ui-jqgrid .ui-jqgrid-pager select {
+    border: 1px solid #ced4da !important;
+    border-radius: 4px !important;
+    padding: 2px 6px !important;
+    font-size: 12px !important;
+    background: white !important;
+    color: #495057 !important;
+}
+
+/* Action icons container */
+.action-icons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+}
+
+.action-icons i {
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    padding: 4px;
+    border-radius: 4px;
+}
+
+.action-icons i:hover {
+    transform: scale(1.1);
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.action-icons .fa-pen:hover {
+    color: #0d6efd !important;
+    background: rgba(13, 110, 253, 0.1) !important;
+}
+
+.action-icons .fa-trash:hover {
+    color: #dc3545 !important;
+    background: rgba(220, 53, 69, 0.1) !important;
+}
+
+/* Müşteri Ekle butonu */
+.btn.btn-success {
+    background: #198754 !important;
+    border-color: #198754 !important;
+    border-radius: 6px !important;
+    padding: 8px 16px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn.btn-success:hover {
+    background: #157347 !important;
+    border-color: #146c43 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(25, 135, 84, 0.2);
+}
+
+/* Text alignment düzenlemeleri */
+.text-end {
+    margin-top: 1rem !important;
+}
+
+/* Grid loading overlay */
+.ui-jqgrid .ui-jqgrid-load {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid #e9ecef !important;
+    border-radius: 4px !important;
+    color: #495057 !important;
+    font-size: 13px !important;
+}
+
+/* Scroll bar styling */
+.ui-jqgrid .ui-jqgrid-bdiv::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.ui-jqgrid .ui-jqgrid-bdiv::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.ui-jqgrid .ui-jqgrid-bdiv::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.ui-jqgrid .ui-jqgrid-bdiv::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Responsive düzenlemeler */
+@media (max-width: 768px) {
+    .table-container {
+        padding: 1rem;
+        margin: 0.5rem;
+    }
+    
+    h2.mt-4.mb-3 {
+        font-size: 1.2rem;
+        margin: 0.5rem 0 1rem 0 !important;
+    }
+    
+    .ui-jqgrid .ui-jqgrid-htable thead th,
+    .ui-jqgrid .ui-jqgrid-bdiv table tr td {
+        font-size: 12px !important;
+        padding: 6px 4px !important;
+    }
+    
+    .action-icons {
+        gap: 8px;
+    }
+    
+    .action-icons i {
+        font-size: 14px;
+    }
+    
+    .btn.btn-success {
+        width: 100%;
+        margin-top: 1rem;
+    }
+}
+
+/* Grid yeniden boyutlandırma için */
+.ui-jqgrid .ui-jqgrid-resize {
+    border-color: #0d6efd !important;
+}
+
+/* Sıralama ok işaretleri */
+.ui-jqgrid .ui-jqgrid-htable .ui-th-column .s-ico {
+    margin-top: 2px;
+}
+
+.ui-jqgrid .ui-jqgrid-htable .ui-th-column .ui-grid-ico-sort {
+    color: #6c757d !important;
+}
+
+.ui-jqgrid .ui-jqgrid-htable .ui-th-column .ui-icon-asc,
+.ui-jqgrid .ui-jqgrid-htable .ui-th-column .ui-icon-desc {
+    color: #0d6efd !important;
+}
+
+/* Caption gizleme seçeneği (isteğe bağlı) */
+.ui-jqgrid .ui-jqgrid-titlebar.ui-widget-header {
+    display: block; /* block yapmak isterseniz, none yaparak gizleyebilirsiniz */
+}
+
+/* Border ve köşe düzenlemeleri */
+.ui-jqgrid .ui-jqgrid-htable,
+.ui-jqgrid .ui-jqgrid-btable {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+}
+
+/* Son satır border düzenlemesi */
+.ui-jqgrid .ui-jqgrid-bdiv table tr:last-child td {
+    border-bottom: none !important;
+}

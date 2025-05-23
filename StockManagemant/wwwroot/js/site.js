@@ -74,6 +74,27 @@ function setupEditProductEvents() {
         })
         .catch(error => console.error("Kategori yüklenirken hata oluştu:", error));
 
+    // 🔹 Depolama Türlerini Yükle
+    fetch('/Product/GetStorageTypeOptions')
+        .then(response => response.json())
+        .then(storageTypes => {
+            let storageDropdown = document.getElementById("productStorageType");
+            storageDropdown.innerHTML = "";
+
+            for (const [id, name] of Object.entries(storageTypes)) {
+                let option = document.createElement("option");
+                option.value = id;
+                option.textContent = name;
+
+                if (id == storageDropdown.getAttribute("data-selected")) {
+                    option.selected = true;
+                }
+
+                storageDropdown.appendChild(option);
+            }
+        })
+        .catch(error => console.error("Depolama türleri yüklenirken hata oluştu:", error));
+
     // 🔹 Güncelle Butonuna Event Bağla
     document.getElementById("updateProductBtn").addEventListener("click", function () {
         updateProduct();
@@ -86,7 +107,7 @@ function updateProduct() {
 
   
     let productData = Object.fromEntries([...formData.entries()].map(([key, value]) => {
-        if (["Price", "CategoryId", "Currency", "Id"].includes(key)) {
+        if (["Price", "CategoryId", "Currency", "Id", "StorageType"].includes(key)) {
             return [key, Number(value)];
         }
         return [key, value]; // string kalsın
@@ -142,6 +163,22 @@ function setupCreateProductEvents() {
         })
         .catch(error => console.error("Kategori yüklenirken hata oluştu:", error));
 
+    // 🔹 Depolama Türlerini yükle
+    fetch('/Product/GetStorageTypeOptions')
+        .then(response => response.json())
+        .then(storageTypes => {
+            let storageDropdown = document.getElementById("productStorageType");
+            storageDropdown.innerHTML = "";
+
+            for (const [id, name] of Object.entries(storageTypes)) {
+                let option = document.createElement("option");
+                option.value = id;
+                option.textContent = name;
+                storageDropdown.appendChild(option);
+            }
+        })
+        .catch(error => console.error("Depolama türleri yüklenirken hata oluştu:", error));
+
     // 🔹 Ekle Butonuna Event Bağla
     document.getElementById("createProductBtn").addEventListener("click", function () {
         createProduct();
@@ -154,7 +191,7 @@ function createProduct() {
 
     
     let productData = Object.fromEntries([...formData.entries()].map(([key, value]) => {
-        if (["Price", "CategoryId", "Currency", "Id"].includes(key)) {
+        if (["Price", "CategoryId", "Currency", "Id", "StorageType"].includes(key)) {
             return [key, Number(value)];
         }
         return [key, value];
@@ -209,20 +246,9 @@ function setupAddProductEvents() {
         addProductToWarehouse(warehouseId);
     });
 
-    loadCorridors(warehouseId);
-
-    $("#corridorSelect").on("change", function () {
-        const corridorId = $(this).val();
-        loadShelves(warehouseId, corridorId);
-    });
-
-    $("#shelfSelect").on("change", function () {
-        const corridorId = $("#corridorSelect").val();
-        const shelfId = $(this).val();
-        loadBins(warehouseId, corridorId, shelfId);
-    });
+    // Yeni dinamik lokasyon yükleme
+    loadDynamicLocations(warehouseId);
 }
-
 
 function searchProductByBarcode() {
     let barcode = $("#productIdInput").val().trim();
@@ -237,9 +263,19 @@ function searchProductByBarcode() {
         type: "GET",
         success: function (response) {
             let currencyLabel = response.currency === 0 ? "TL" : "USD";
-
+            
+            // StorageType mapping
+            const storageTypeNames = {
+                1: 'Tanımsız',
+                2: 'Soğuk Depolama', 
+                3: 'Yanıcı',
+                4: 'Kırılgan',
+                5: 'Standart',
+                6: 'Nem Korumalı'
+            };
             
             $("#selectedProductId").val(response.id);
+            $("#selectedProductStorageType").val(response.storageType || 5); // Default standart
 
             let productRow = `
                 <tr>
@@ -247,13 +283,18 @@ function searchProductByBarcode() {
                     <td>${response.name}</td>
                     <td>${response.categoryName}</td>
                     <td>${response.price} ${currencyLabel}</td>
+                    <td><span class="badge bg-info">${storageTypeNames[response.storageType] || 'Standart'}</span></td>
                 </tr>
             `;
             $("#productDetailsTable").html(productRow);
+            
+            // Lokasyon seçimlerini kontrol et (eğer ürün seçildikten sonra lokasyon filtrelemek istiyorsak)
+            filterLocationsByStorageType();
         },
         error: function () {
-            $("#selectedProductId").val(""); // Hata durumunda sıfırla
-            $("#productDetailsTable").html('<tr><td colspan="4" class="text-danger">Ürün bulunamadı!</td></tr>');
+            $("#selectedProductId").val("");
+            $("#selectedProductStorageType").val("");
+            $("#productDetailsTable").html('<tr><td colspan="5" class="text-danger">Ürün bulunamadı!</td></tr>');
         }
     });
 }
@@ -262,24 +303,23 @@ function addProductToWarehouse(warehouseId) {
     let productId = $("#selectedProductId").val();
     let stockQuantity = $("#stockQuantityInput").val();
     let stockCode = $("#stockCodeInput").val();
-
-    let binId = $("#binSelect").val();
-    let shelfId = $("#shelfSelect").val();
-    let corridorId = $("#corridorSelect").val();
-
-    // Hiyerarşi: bin > shelf > corridor
-    let locationId = binId || shelfId || corridorId;
+    let locationId = $("#selectedLocationId").val();
 
     if (!productId || !stockQuantity || !locationId) {
         alert("Lütfen tüm alanları doldurun.");
         return;
     }
 
+    // StorageType uyumluluğu kontrolü
+    if (!validateStorageTypeCompatibility()) {
+        return;
+    }
+
     let productData = {
         productId: parseInt(productId),
         warehouseId: parseInt(warehouseId),
-        stockQuantity: parseInt(stockQuantity),
         warehouseLocationId: parseInt(locationId),
+        stockQuantity: parseInt(stockQuantity),
         stockCode: stockCode 
     };
 
@@ -301,45 +341,205 @@ function addProductToWarehouse(warehouseId) {
     });
 }
 
-function loadCorridors(warehouseId) {
-    $.get(`/WarehouseLocation/GetCorridors?warehouseId=${warehouseId}`, function (data) {
-        const select = $("#corridorSelect");
-        select.empty().append('<option value="">Koridor Seçin</option>');
-        data.forEach(item => {
-            select.append(`<option value="${item.id}" data-name="${item.name}">${item.name}</option>`);
-        });
+// Dinamik lokasyon yükleme
+function loadDynamicLocations(warehouseId) {
+    console.log(`📍 Depo ${warehouseId} için lokasyonlar yükleniyor...`);
+    
+    $.ajax({
+        url: `/WarehouseLocation/GetLocationsByWarehouseId?warehouseId=${warehouseId}`,
+        type: "GET",
+        success: function (locations) {
+            window.allLocations = locations; // Global değişkende sakla
+            createLocationLevel(1, null); // İlk seviyeyi oluştur
+        },
+        error: function () {
+            $("#dynamicLocationSelectors").html('<div class="alert alert-danger">Lokasyonlar yüklenemedi!</div>');
+        }
     });
 }
 
-function loadShelves(warehouseId) {
-    const corridorName = $("#corridorSelect option:selected").data("name");
-    if (!corridorName) return;
+// Belirli seviye için dropdown oluştur
+function createLocationLevel(level, parentId) {
+    const containerSelector = "#dynamicLocationSelectors";
+    
+    // Bu seviyedeki lokasyonları filtrele
+    let levelLocations;
+    if (parentId === null) {
+        // İlk seviye: parent'ı olmayan lokasyonlar
+        levelLocations = window.allLocations.filter(loc => !loc.parentId);
+    } else {
+        // Alt seviyeler: belirtilen parent'ın children'ları
+        levelLocations = window.allLocations.filter(loc => loc.parentId === parentId);
+    }
 
-    $.get(`/WarehouseLocation/GetShelves?warehouseId=${warehouseId}&corridor=${corridorName}`, function (data) {
-        const select = $("#shelfSelect");
-        $("#shelfSelectContainer").show();
-        select.empty().append('<option value="">Raf Seçin</option>');
-        data.forEach(item => {
-            select.append(`<option value="${item.id}" data-name="${item.name}">${item.name}</option>`);
-        });
+    if (levelLocations.length === 0) {
+        return; // Bu seviyede lokasyon yoksa dropdown oluşturma
+    }
+
+    // Dropdown HTML'i oluştur
+    const dropdownId = `locationSelect_${level}`;
+    const dropdownHtml = `
+        <div class="mb-2" id="locationContainer_${level}">
+            <label for="${dropdownId}" class="form-label">Seviye ${level}:</label>
+            <select id="${dropdownId}" class="form-select" data-level="${level}">
+                <option value="">Seçin...</option>
+            </select>
+        </div>
+    `;
+    
+    $(containerSelector).append(dropdownHtml);
+    
+    // Dropdown'ı doldur
+    const select = $(`#${dropdownId}`);
+    levelLocations.forEach(location => {
+        const storageTypeIcon = getStorageTypeIcon(location.storageType);
+        select.append(`
+            <option value="${location.id}" 
+                    data-name="${location.name}" 
+                    data-storage-type="${location.storageType}"
+                    data-has-children="${location.hasChildren}">
+                ${storageTypeIcon} ${location.name}
+            </option>
+        `);
+    });
+    
+    // Event listener ekle
+    select.on('change', function() {
+        const selectedId = parseInt($(this).val());
+        const selectedOption = $(this).find('option:selected');
+        const hasChildren = selectedOption.data('has-children');
+        
+        if (selectedId) {
+            // Seçilen lokasyonu kaydet
+            $("#selectedLocationId").val(selectedId);
+            
+            // Alt seviyeleri temizle
+            clearLowerLevels(level);
+            
+            // Breadcrumb güncelle
+            updateLocationBreadcrumb();
+            
+            // Alt seviye varsa dropdown oluştur
+            if (hasChildren) {
+                createLocationLevel(level + 1, selectedId);
+            }
+            
+            // StorageType kontrolü
+            validateStorageTypeCompatibility();
+        } else {
+            // Seçim temizlendi
+            $("#selectedLocationId").val('');
+            clearLowerLevels(level);
+            hideLocationPath();
+        }
     });
 }
 
-function loadBins(warehouseId) {
-    const corridorName = $("#corridorSelect option:selected").data("name");
-    const shelfName = $("#shelfSelect option:selected").data("name");
-    if (!corridorName || !shelfName) return;
-
-    $.get(`/WarehouseLocation/GetBins?warehouseId=${warehouseId}&corridor=${corridorName}&shelf=${shelfName}`, function (data) {
-        const select = $("#binSelect");
-        $("#binSelectContainer").show();
-        select.empty().append('<option value="">Göz Seçin</option>');
-        data.forEach(item => {
-            select.append(`<option value="${item.id}" data-name="${item.name}">${item.name}</option>`);
-        });
-    });
+// Alt seviyeleri temizle
+function clearLowerLevels(fromLevel) {
+    let levelToRemove = fromLevel + 1;
+    while ($(`#locationContainer_${levelToRemove}`).length > 0) {
+        $(`#locationContainer_${levelToRemove}`).remove();
+        levelToRemove++;
+    }
 }
 
+// Lokasyon yolunu (breadcrumb) güncelle
+function updateLocationBreadcrumb() {
+    let breadcrumb = [];
+    let level = 1;
+    
+    while ($(`#locationSelect_${level}`).length > 0) {
+        const select = $(`#locationSelect_${level}`);
+        const selectedOption = select.find('option:selected');
+        const selectedName = selectedOption.data('name');
+        
+        if (selectedName) {
+            breadcrumb.push(selectedName);
+        }
+        level++;
+    }
+    
+    if (breadcrumb.length > 0) {
+        $("#locationBreadcrumb").text(breadcrumb.join(' > '));
+        $("#selectedLocationPath").show();
+    } else {
+        hideLocationPath();
+    }
+}
+
+function hideLocationPath() {
+    $("#selectedLocationPath").hide();
+    $("#storageTypeWarning").hide();
+}
+
+// StorageType uyumluluğunu kontrol et
+function validateStorageTypeCompatibility() {
+    const productStorageType = parseInt($("#selectedProductStorageType").val());
+    const selectedLocationId = $("#selectedLocationId").val();
+    
+    if (!productStorageType || !selectedLocationId) {
+        $("#storageTypeWarning").hide();
+        return true;
+    }
+    
+    // Seçilen lokasyonun StorageType'ını bul
+    const selectedLocation = window.allLocations.find(loc => loc.id == selectedLocationId);
+    if (!selectedLocation) {
+        return true;
+    }
+    
+    const locationStorageType = selectedLocation.storageType;
+    
+    // StorageType isimleri
+    const storageTypeNames = {
+        1: 'Tanımsız',
+        2: 'Soğuk Depolama',
+        3: 'Yanıcı', 
+        4: 'Kırılgan',
+        5: 'Standart',
+        6: 'Nem Korumalı'
+    };
+    
+    // Uyumluluk kontrolü (Standart ve Tanımsız her yerde saklanabilir)
+    const isCompatible = 
+        productStorageType === locationStorageType || 
+        productStorageType === 5 || // Standart ürün
+        productStorageType === 1 || // Tanımsız ürün
+        locationStorageType === 5 || // Standart lokasyon
+        locationStorageType === 1;   // Tanımsız lokasyon
+    
+    if (!isCompatible) {
+        const warningText = `Ürün depolama türü (${storageTypeNames[productStorageType]}) ile lokasyon türü (${storageTypeNames[locationStorageType]}) uyumlu değil!`;
+        $("#storageWarningText").text(warningText);
+        $("#storageTypeWarning").show();
+        return false;
+    } else {
+        $("#storageTypeWarning").hide();
+        return true;
+    }
+}
+
+// Lokasyon seçimlerini StorageType'a göre filtrele (opsiyonel)
+function filterLocationsByStorageType() {
+    // Bu fonksiyon ürün seçildikten sonra sadece uyumlu lokasyonları göstermek için kullanılabilir
+    // Şimdilik boş bırakıyoruz, ihtiyaç halinde implement edilebilir
+}
+
+// StorageType'a göre ikon al
+function getStorageTypeIcon(storageType) {
+    const icons = {
+        1: '❓', // Tanımsız
+        2: '❄️', // Soğuk Depolama
+        3: '🔥', // Yanıcı
+        4: '📦', // Kırılgan
+        5: '📋', // Standart
+        6: '💧'  // Nem Korumalı
+    };
+    return icons[storageType] || '📋';
+}
+
+// Diğer fonksiyonlar değişmeden kalıyor...
 function SetupProductDetail(productId) {
     const modal = document.getElementById("generalModal");
     if (!modal || !productId || isNaN(productId)) {

@@ -44,12 +44,6 @@ namespace StockManagemant.DataAccess.Context
                 .HasForeignKey(wp => wp.ProductId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // ✅ WarehouseProduct - WarehouseLocation ilişkisi
-            modelBuilder.Entity<WarehouseProduct>()
-                .HasOne(wp => wp.WarehouseLocation)
-                .WithMany()
-                .HasForeignKey(wp => wp.WarehouseLocationId)
-                .OnDelete(DeleteBehavior.Restrict);
 
             // ✅ ReceiptDetail - Receipt ilişkisi
             modelBuilder.Entity<ReceiptDetail>()
@@ -84,6 +78,21 @@ namespace StockManagemant.DataAccess.Context
                 .WithMany()
                 .HasForeignKey(u => u.AssignedWarehouseId)
                 .OnDelete(DeleteBehavior.Restrict);    
+
+            // ✅ WarehouseLocation - Parent ilişkisi (Kendi kendine ilişki)
+            modelBuilder.Entity<WarehouseLocation>()
+                .HasOne(wl => wl.Parent)
+                .WithMany(p => p.Children)
+                .HasForeignKey(wl => wl.ParentId)
+                .OnDelete(DeleteBehavior.Restrict);
+          
+
+            // ✅ WarehouseProduct - WarehouseLocation ilişkisi
+            modelBuilder.Entity<WarehouseProduct>()
+                .HasOne(wp => wp.WarehouseLocation)
+                .WithMany(wl => wl.WarehouseProducts)
+                .HasForeignKey(wp => wp.WarehouseLocationId)
+                .OnDelete(DeleteBehavior.Restrict);
 
 
             // ✅ Soft Delete için Global Query Filter

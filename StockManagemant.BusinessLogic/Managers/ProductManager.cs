@@ -162,6 +162,13 @@ public async Task<(int insertedCount, List<string> errors)> AddProductsFromExcel
             rowErrors.Add($"Geçersiz para birimi: {raw.CurrencyText}");
         }
 
+        StorageType storageType = StorageType.Undefined;
+        if (!string.IsNullOrWhiteSpace(raw.StorageTypeText))
+        {
+            if (!Enum.TryParse(raw.StorageTypeText.Trim(), true, out storageType))
+                rowErrors.Add($"Geçersiz depolama türü: {raw.StorageTypeText}");
+        }
+
         decimal? price = null;
         if (!string.IsNullOrWhiteSpace(raw.Price))
         {
@@ -208,6 +215,7 @@ public async Task<(int insertedCount, List<string> errors)> AddProductsFromExcel
                 Barcode = raw.Barcode?.Trim(),
                 ImageUrl = raw.ImageUrl?.Trim(),
                 Description = raw.Description?.Trim(),
+                StorageType = storageType,
                 IsDeleted = false
             });
         }

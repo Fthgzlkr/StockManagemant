@@ -76,7 +76,7 @@
             url: '/Product/GetProducts',
             datatype: "json",
             mtype: "GET",
-            colNames: ['ID','Ürün Barkodu', 'Ürün Adı', 'Sabit Fiyat', 'Para Birimi', 'Kategori','İşlemler'],
+            colNames: ['ID','Ürün Barkodu', 'Ürün Adı', 'Sabit Fiyat', 'Para Birimi', 'Kategori','Depolama Türü','İşlemler'],
             colModel: [
                 { name: 'id', index: 'id', align: "center", sortable: true, key: true ,hidden:true },
                 { name: 'barcode', index: 'barcode', align: "center", sortable: true ,hidden:false },
@@ -94,6 +94,23 @@
                     edittype: "select",
                     formatter: categoryFormatter,
                     editoptions: { value: Object.entries(categoryDropdown).map(([key, value]) => `${key}:${value}`).join(";") }
+                },
+                {
+                    name: 'storage',
+                    index: 'storage',
+                    sortable: true,
+                    editable: false,
+                    formatter: function (cellValue) {
+                        const displayNames = {
+                            'Undefined': 'Belirsiz',
+                            'ColdStorage': 'Soğuk Hava Deposu',
+                            'Flammable': 'Yanıcı Madde',
+                            'Fragile': 'Kırılabilir',
+                            'Standart': 'Standart',
+                            'HumidProtected': 'Neme Duyarlı'
+                        };
+                        return displayNames[cellValue] || cellValue;
+                    }
                 },
                  
                 {
@@ -271,6 +288,7 @@
                                  <li><strong>Barcode:</strong> Barkod (opsiyonel)</li>
                                  <li><strong>ImageUrl:</strong> Resim URL (opsiyonel)</li>
                                  <li><strong>Description:</strong> Açıklama (opsiyonel)</li>
+                                 <li><strong>StorageTypeText:</strong> Depolama türü (opsiyonel, örn: Soğuk Hava, Yanıcı, Kırılgan, Neme Duyarlı)</li>
                              </ul>
                          </div>
                          <div class="flex-fill bg-warning-subtle p-3 rounded shadow-sm border">
@@ -279,6 +297,7 @@
                                  <li>Kategori sistemde yoksa satır işlenmez.</li>
                                  <li>Geçersiz para birimi girilirse satır atlanır.</li>
                                  <li>Fiyat alanı sayı değilse hata alınır.</li>
+                                 <li>Geçersiz depolama türü girilirse satır işlenmez.</li>
                              </ul>
                          </div>
                      </div>

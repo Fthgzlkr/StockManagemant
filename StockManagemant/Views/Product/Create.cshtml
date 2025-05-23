@@ -8,70 +8,80 @@
 <link rel="stylesheet" href="~/css/Site.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/product-form.css" asp-append-version="true" />
 
+
 <!-- Yeni Ürün Ekleme Formu -->
 <div class="container mt-4">
     <h2 class="text-center mb-4">Yeni Ürün Ekle</h2>
 
-    <form id="createProductForm" class="card p-4 shadow-sm">
-        <div class="row g-3">
-            <!-- Ürün Adı -->
-            <div class="col-md-6">
-                <label for="productName" class="form-label">Ürün Adı:</label>
-                <input type="text" id="productName" name="Name" class="form-control"
-                       placeholder="Ürün adını girin" required minlength="3" maxlength="100">
-                <div class="invalid-feedback">Ürün adı en az 3, en fazla 100 karakter olmalıdır.</div>
-            </div>
-
-            <!-- Fiyat -->
-            <div class="col-md-6">
-                <label for="productPrice" class="form-label">Fiyat:</label>
-                <input type="number" id="productPrice" name="Price" class="form-control"
-                       placeholder="Ürün fiyatını girin" required min="10.00" step="0.01" inputmode="decimal">
-                <div class="invalid-feedback">Geçerli bir fiyat giriniz (0.01 ve üzeri).</div>
-            </div>
-
-            <!-- Kategori -->
-            <div class="col-md-6">
-                <label for="productCategory" class="form-label">Kategori:</label>
-                <select id="productCategory" name="CategoryId" class="form-select" data-selected="" required>
-                    <option value="">Kategoriler yükleniyor...</option>
-                </select>
-                <div class="invalid-feedback">Lütfen bir kategori seçiniz.</div>
-            </div>
-
-            <!-- Para Birimi -->
-            <div class="col-md-6">
-                <label for="productCurrency" class="form-label">Para Birimi:</label>
-                <select id="productCurrency" name="Currency" class="form-select" required>
-                    <option value="0">TL</option>
-                    <option value="1">USD</option>
-                </select>
-                <div class="invalid-feedback">Lütfen bir para birimi seçiniz.</div>
-            </div>
-
-            <!-- Barkod -->
-            <div class="col-md-6">
-                <label for="productBarcode" class="form-label">Barkod:</label>
-                <input type="text" id="productBarcode" name="Barcode" class="form-control" placeholder="Ürün barkodunu girin">
-            </div>
-
-            <!-- Görsel URL -->
-            <div class="col-md-6">
-                <label for="productImageUrl" class="form-label">Görsel URL:</label>
-                <input type="url" id="productImageUrl" name="ImageUrl" class="form-control" placeholder="Ürün görselinin URL'sini girin">
-            </div>
-
-            <!-- Açıklama -->
-            <div class="col-12">
-                <label for="productDescription" class="form-label">Açıklama:</label>
-                <textarea id="productDescription" name="Description" class="form-control"
-                          placeholder="Ürün açıklamasını girin" rows="3"></textarea>
-            </div>
-
-            <!-- Ekle Butonu -->
-            <div class="col-12 text-center mt-2">
-                <button type="button" class="btn btn-success px-4" id="createProductBtn">Ekle</button>
-            </div>
+   <form id="createProductForm" class="card p-4 shadow-sm">
+    <div class="row g-3">
+        <!-- Ürün Adı -->
+        <div class="col-md-6">
+            <label for="productName" class="form-label">Ürün Adı:</label>
+            <input type="text" id="productName" name="Name" class="form-control"
+                   placeholder="Ürün adını girin" required minlength="3" maxlength="100">
+            <div class="invalid-feedback">Ürün adı en az 3, en fazla 100 karakter olmalıdır.</div>
         </div>
-    </form>
+
+        <!-- Fiyat -->
+        <div class="col-md-6">
+            <label for="productPrice" class="form-label">Fiyat:</label>
+            <input type="number" id="productPrice" name="Price" class="form-control"
+                   placeholder="Ürün fiyatını girin" required min="10.00" step="0.01" inputmode="decimal">
+            <div class="invalid-feedback">Geçerli bir fiyat giriniz (0.01 ve üzeri).</div>
+        </div>
+
+        <!-- Kategori -->
+        <div class="col-md-6">
+            <label for="productCategory" class="form-label">Kategori:</label>
+            <select id="productCategory" name="CategoryId" class="form-select" required>
+                <option value="">Kategoriler yükleniyor...</option>
+            </select>
+            <div class="invalid-feedback">Lütfen bir kategori seçiniz.</div>
+        </div>
+
+        <!-- 🔹 Depolama Türü (StorageType) -->
+        <div class="col-md-6">
+            <label for="productStorageType" class="form-label">Depolama Türü:</label>
+            <select id="productStorageType" name="StorageType" class="form-select" required>
+                <option value="">Depolama türü seçiniz...</option>
+            </select>
+            <div class="invalid-feedback">Lütfen bir depolama türü seçiniz.</div>
+        </div>
+
+        <!-- Para Birimi -->
+        <div class="col-md-6">
+            <label for="productCurrency" class="form-label">Para Birimi:</label>
+            <select id="productCurrency" name="Currency" class="form-select" required>
+                <option value="0">TL</option>
+                <option value="1">USD</option>
+            </select>
+            <div class="invalid-feedback">Lütfen bir para birimi seçiniz.</div>
+        </div>
+
+        <!-- Barkod -->
+        <div class="col-md-6">
+            <label for="productBarcode" class="form-label">Barkod:</label>
+            <input type="text" id="productBarcode" name="Barcode" class="form-control" placeholder="Ürün barkodunu girin">
+        </div>
+
+        <!-- Görsel URL -->
+        <div class="col-md-6">
+            <label for="productImageUrl" class="form-label">Görsel URL:</label>
+            <input type="url" id="productImageUrl" name="ImageUrl" class="form-control" placeholder="Ürün görselinin URL'sini girin">
+        </div>
+
+        <!-- Açıklama -->
+        <div class="col-12">
+            <label for="productDescription" class="form-label">Açıklama:</label>
+            <textarea id="productDescription" name="Description" class="form-control"
+                      placeholder="Ürün açıklamasını girin" rows="3"></textarea>
+        </div>
+
+        <!-- Ekle Butonu -->
+        <div class="col-12 text-center mt-2">
+            <button type="button" class="btn btn-success px-4" id="createProductBtn">Ekle</button>
+        </div>
+    </div>
+</form>
 </div>

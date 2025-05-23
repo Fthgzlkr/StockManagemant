@@ -3,9 +3,10 @@
     Layout = null;
 }
 
+    <link rel="stylesheet" href="~/css/GlobalStyles.css" asp-append-version="true" />
 <div class="container mt-4">
     <h3>📦 Ürün Stok Yönetimi</h3>
-
+    
     <!-- Ürün Arama -->
     <div class="card p-3 mb-3">
         <h5>🔍 Ürün Ara</h5>
@@ -13,9 +14,10 @@
             <input type="text" id="productIdInput" class="form-control" placeholder="Ürün Barkodu Girin">
             <button class="btn btn-primary" id="searchProductBtn">Ara</button>
             <input type="hidden" id="selectedProductId" name="ProductId" />
+            <input type="hidden" id="selectedProductStorageType" name="ProductStorageType" />
         </div>
     </div>
-
+    
     <!-- Ürün Detayları -->
     <div class="card p-3">
         <h5>📜 Ürün Detayları</h5>
@@ -26,6 +28,7 @@
                     <th>Ürün Adı</th>
                     <th>Kategori</th>
                     <th>Fiyat</th>
+                    <th>Depolama Türü</th>
                 </tr>
             </thead>
             <tbody id="productDetailsTable">
@@ -33,45 +36,50 @@
             </tbody>
         </table>
     </div>
-
+    
     <!-- Stok Ekleme -->
     <div class="card p-3">
         <h5>➕ Depoya Stok Ekle</h5>
         
-        <div class="mb-2">
-            <label for="corridorSelect">Koridor Seç:</label>
-            <select id="corridorSelect" class="form-select">
-                <option selected disabled>Koridor Seçin</option>
-            </select>
+        <!-- Dinamik Lokasyon Seçimi -->
+        <div class="mb-3">
+            <label class="form-label">📍 Lokasyon Seç:</label>
+            <div id="dynamicLocationSelectors">
+                <!-- İlk seviye dropdown buraya eklenecek -->
+            </div>
+            
+            <!-- Seçilen lokasyon yolu -->
+            <div id="selectedLocationPath" class="mt-2" style="display:none;">
+                <div class="alert alert-info py-2">
+                    <small><strong>Seçilen lokasyon:</strong> <span id="locationBreadcrumb"></span></small>
+                </div>
+            </div>
+            
+            <!-- Depolama türü uyarısı -->
+            <div id="storageTypeWarning" class="mt-2" style="display:none;">
+                <div class="alert alert-warning py-2">
+                    <small><i class="fas fa-exclamation-triangle"></i> <span id="storageWarningText"></span></small>
+                </div>
+            </div>
         </div>
-        <div class="mb-2" id="shelfSelectContainer" style="display:none;">
-            <label for="shelfSelect">Raf Seç:</label>
-            <select id="shelfSelect" class="form-select">
-                <option selected disabled>Raf Seçin</option>
-            </select>
-        </div>
-        <div class="mb-2" id="binSelectContainer" style="display:none;">
-            <label for="binSelect">Göz Seç:</label>
-            <select id="binSelect" class="form-select">
-                <option selected disabled>Göz Seçin</option>
-            </select>
-        </div>
+        
         <input type="hidden" id="selectedLocationId" />
+        
         <div class="mb-2">
             <label>Stok Miktarı:</label>
             <input type="number" id="stockQuantityInput" class="form-control" placeholder="Stok Miktarı Girin">
         </div>
-
-         <div class="mb-2">
-                 <label>Stok Kodu:</label>
-                <input type="text" id="stockCodeInput" class="form-control" placeholder="Stok Kodu Girin">
+        
+        <div class="mb-2">
+            <label>Stok Kodu:</label>
+            <input type="text" id="stockCodeInput" class="form-control" placeholder="Stok Kodu Girin">
         </div>
-
-          <div class="mb-2"></div>
-                 <label>Açıklama:</label>
-                <input type="text" id="DescriptionInput" class="form-control" placeholder="Açıklama Girin">
+        
+        <div class="mb-2">
+            <label>Açıklama:</label>
+            <input type="text" id="DescriptionInput" class="form-control" placeholder="Açıklama Girin">
         </div>
-
+        
         <button class="btn btn-success" id="addStockBtn">Stok Ekle</button>
         <div id="stockMessage" class="mt-2"></div>
     </div>

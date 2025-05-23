@@ -1,4 +1,5 @@
 using StockManagemant.Entities.DTO;
+using StockManagemant.Entities.Enums;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -15,8 +16,8 @@ namespace StockManagemant.BusinessLogic.Managers.Interfaces
         Task RestoreAsync(int id);
 
         // Lokasyon hiyerarşisi
-        Task<IEnumerable<object>> GetCorridorsByWarehouseIdAsync(int warehouseId);
-        Task<IEnumerable<object>> GetShelvesByWarehouseAsync(int warehouseId, string corridor);
-        Task<IEnumerable<object>> GetBinsByWarehouseAsync(int warehouseId, string corridor, string shelf);
+        Task<List<WarehouseLocationDto>> GetChildrenAsync(int parentId);
+        Task<List<WarehouseLocationDto>> GetLocationsByStorageTypeAsync(int warehouseId, StorageType storageType);
+        Task<List<WarehouseLocationDto>> GetLocationsByLevelAndStorageTypeAsync(int warehouseId, LocationLevel level, StorageType storageType);
     }
 }

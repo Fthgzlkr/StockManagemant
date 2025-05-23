@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using StockManagemant.Business.Managers;
 using StockManagemant.Entities.Models;
+using StockManagemant.Entities.Enums;
 using ExcelDataReader;
 using StockManagemant.DataAccess.Filters;
 using Microsoft.AspNetCore.Authorization;
@@ -56,12 +57,13 @@ namespace StockManagemant.Controllers
                         id = p.Id,
                         name = p.Name,
                         price = p.Price,
-                        category = p.CategoryName, 
+                        category = p.CategoryName,
                         categoryId = p.CategoryId,
-                        barcode =p.Barcode,
-                        image=p.ImageUrl,
-                        description=p.Description,
-                        currencyType = p.Currency.ToString()
+                        barcode = p.Barcode,
+                        image = p.ImageUrl,
+                        description = p.Description,
+                        currencyType = p.Currency.ToString(),
+                        storage=p.StorageType.ToString()
                     })
                 };
 
@@ -144,6 +146,26 @@ public async Task<IActionResult> GetProductByBarcode(string barcode)
 
             return Json(categoryDropdown);
         }
+
+        [HttpGet]
+        public IActionResult GetStorageTypeOptions()
+        {
+            var translations = new Dictionary<StorageType, string>
+    {
+        { StorageType.Undefined, "Belirsiz" },
+        { StorageType.ColdStorage, "Soğuk Hava Deposu" },
+        { StorageType.Flammable, "Yanıcı Madde" },
+        { StorageType.Fragile, "Kırılabilir Ürün" },
+        { StorageType.Standart, "Standart" },
+        { StorageType.HumidProtected, "Neme Duyarlı" }
+    };
+
+            var options = translations.ToDictionary(kv => (int)kv.Key, kv => kv.Value);
+
+            return Json(options);
+        }
+
+
 
 
         // ✅ Ana sayfa view'ı
@@ -310,6 +332,20 @@ public async Task<IActionResult> UploadProductsFromExcel(IFormFile file)
                 isFirstRow = false;
                 continue;
             }
+                var storageTypeRaw = reader.GetValue(7)?.ToString()?.Trim();
+
+    var storageTypeMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+    {
+        { "Belirsiz", "Undefined" },
+        { "Soğuk Hava Deposu", "ColdStorage" },
+        { "Yanıcı Madde", "Flammable" },
+        { "Kırılabilir Ürün", "Fragile" },
+        { "Standart", "Standart" },
+        { "Neme Duyarlı", "HumidProtected" }
+    };
+
+    var storageTypeText = storageTypeMap.TryGetValue(storageTypeRaw ?? "", out var mappedValue) ? mappedValue : "Undefined";
+
 
             rawProducts.Add(new RawProductModel
             {
@@ -319,7 +355,8 @@ public async Task<IActionResult> UploadProductsFromExcel(IFormFile file)
                 CurrencyText = reader.GetValue(3)?.ToString(),
                 Barcode = reader.GetValue(4)?.ToString(),
                 ImageUrl = reader.GetValue(5)?.ToString(),
-                Description = reader.GetValue(6)?.ToString()
+                Description = reader.GetValue(6)?.ToString(),
+                StorageTypeText = storageTypeText 
             });
         }
 

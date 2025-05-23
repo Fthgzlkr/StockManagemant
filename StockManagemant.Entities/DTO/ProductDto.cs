@@ -29,6 +29,7 @@ namespace StockManagemant.Entities.DTO
         public string? ImageUrl { get; set; }
 
         public string? Description { get; set; }
+        public StorageType StorageType { get; set; } = StorageType.Undefined;
     
 
         public bool? IsDeleted { get; set; } // Create işlemi için null olabilir, Update işlemi için kullanılabilir

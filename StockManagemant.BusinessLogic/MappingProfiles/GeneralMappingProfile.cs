@@ -36,7 +36,8 @@ namespace StockManagemant.Business.MappingProfiles
             CreateMap<WarehouseProduct,WarehouseProductDto>().ReverseMap();
 
             //Warehouse location Mappings 
-            CreateMap<WarehouseLocation ,WarehouseLocationDto>().ReverseMap();
+            CreateMap<WarehouseLocation, WarehouseLocationDto>();
+            CreateMap<WarehouseLocation, WarehouseLocationDto>().ReverseMap();
 
             // AppUser Mappings
             CreateMap<AppUser, AppUserDto>().ReverseMap();

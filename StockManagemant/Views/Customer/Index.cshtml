@@ -2,97 +2,275 @@
     ViewData["Title"] = "Müşteri Yönetimi";
     Layout = "_Layout";
 }
+
 <link rel="stylesheet" href="~/css/Product.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/GlobalStyles.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/Site.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/CustomerManagement.css" asp-append-version="true" />
 
-<h2 class="mt-4 mb-3">👤 Müşteri Yönetimi</h2>
-
-<div class="table-container mt-3">
-    <table id="customerGrid"></table>
-    <div id="pager"></div>
-
-    <div class="text-end mt-3">
-        <button id="addCustomerBtn" class="btn btn-success">
-            <i class="bi bi-plus-lg me-1"></i> Müşteri Ekle
-        </button>
+<div class="container-fluid">
+    <h2 class="mt-4 mb-3">👤 Müşteri Yönetimi</h2>
+    
+    <div class="table-container">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="table-info">
+                <i class="fas fa-info-circle me-1"></i>
+                <span class="text-muted small">Müşteri kayıtlarını görüntüleyebilir, düzenleyebilir ve silebilirsiniz</span>
+            </div>
+            <button id="addCustomerBtn" class="btn btn-success">
+                <i class="fas fa-user-plus me-2"></i> Müşteri Ekle
+            </button>
+        </div>
+        
+        <div class="grid-wrapper">
+            <table id="customerGrid"></table>
+            <div id="pager"></div>
+        </div>
     </div>
 </div>
 
-
 <script>
-    $(document).ready(function () {
-        $("#customerGrid").jqGrid({
-            url: '/Customer/GetCustomers',
-            datatype: "json",
-            mtype: "GET",
-            colNames: ['ID', 'Müşteri Adı', 'Telefon', 'Email', 'Adres', 'İşlemler'],
-            colModel: [
-                { name: 'id', index: 'id', key: true, hidden: true },
-                { name: 'name', index: 'name', sortable: true },
-                { name: 'phone', index: 'phone', sortable: true },
-                { name: 'email', index: 'email', sortable: true },
-                { name: 'address', index: 'address', sortable: true },
-                {
-                    name: "actions",
-                    align: "center",
-                    formatter: function (cellvalue, options, rowObject) {
-                        return `
-                            <div class="action-icons">
-                                <i class="fa-solid fa-pen text-primary fa-xl editCustomerBtn" data-id="${rowObject.id}" title="Düzenle"></i>
-                                <i class="fa-solid fa-trash text-danger fa-xl deleteCustomerBtn" data-id="${rowObject.id}" title="Sil"></i>
-                            </div>
-                        `;
-                    }
+$(document).ready(function () {
+    $("#customerGrid").jqGrid({
+        url: '/Customer/GetCustomers',
+        datatype: "json",
+        mtype: "GET",
+        colNames: ['ID', 'Müşteri Adı', 'Telefon', 'Email', 'Adres', 'İşlemler'],
+        colModel: [
+            { name: 'id', index: 'id', key: true, hidden: true },
+            { 
+                name: 'name', 
+                index: 'name', 
+                sortable: true,
+                width: 150,
+                formatter: function(cellvalue, options, rowObject) {
+                    return `<span class="fw-medium">${cellvalue}</span>`;
                 }
-            ],
-            pager: '#pager',
-            rowNum: 10,
-            rowList: [10, 20, 30],
-            sortname: 'id',
-            sortorder: 'desc',
-            viewrecords: true,
-            height: 'auto',
-            autowidth: true,
-            shrinkToFit: true,
-            guiStyle: "bootstrap4",
-            caption: "Müşteri Listesi",
-            jsonReader: {
-                root: "rows",
-                page: "page",
-                total: "total",
-                records: "records"
+            },
+            { 
+                name: 'phone', 
+                index: 'phone', 
+                sortable: true,
+                width: 120,
+                formatter: function(cellvalue, options, rowObject) {
+                    return cellvalue ? `<a href="tel:${cellvalue}" class="text-decoration-none">${cellvalue}</a>` : '-';
+                }
+            },
+            { 
+                name: 'email', 
+                index: 'email', 
+                sortable: true,
+                width: 180,
+                formatter: function(cellvalue, options, rowObject) {
+                    return cellvalue ? `<a href="mailto:${cellvalue}" class="text-decoration-none">${cellvalue}</a>` : '-';
+                }
+            },
+            { 
+                name: 'address', 
+                index: 'address', 
+                sortable: true,
+                width: 200,
+                formatter: function(cellvalue, options, rowObject) {
+                    return cellvalue && cellvalue.length > 50 ? 
+                        `<span title="${cellvalue}">${cellvalue.substring(0, 50)}...</span>` : 
+                        (cellvalue || '-');
+                }
+            },
+            {
+                name: "actions",
+                align: "center",
+                width: 80,
+                sortable: false,
+                formatter: function (cellvalue, options, rowObject) {
+                    return `
+                        <div class="action-icons">
+                            <i class="fa-solid fa-pen text-primary editCustomerBtn" 
+                               data-id="${rowObject.id}" 
+                               title="Müşteriyi Düzenle"
+                               role="button"
+                               tabindex="0"></i>
+                            <i class="fa-solid fa-trash text-danger deleteCustomerBtn" 
+                               data-id="${rowObject.id}" 
+                               title="Müşteriyi Sil"
+                               role="button"
+                               tabindex="0"></i>
+                        </div>
+                    `;
+                }
             }
-        });
-
-        // Müşteri Ekle
-       
-
-        // Silme
-        $(document).on("click", ".deleteCustomerBtn", function () {
-            const id = $(this).data("id");
+        ],
+        pager: '#pager',
+        rowNum: 10,
+        rowList: [10, 20, 30, 50],
+        sortname: 'id',
+        sortorder: 'desc',
+        viewrecords: true,
+        height: 'auto',
+        autowidth: true,
+        shrinkToFit: true,
+        guiStyle: "bootstrap4",
+        caption: "📋 Müşteri Kayıtları",
+        jsonReader: {
+            root: "rows",
+            page: "page",
+            total: "total",
+            records: "records"
+        },
+        loadComplete: function(data) {
+            // Grid yüklendikten sonra tooltip'leri etkinleştir
+            $('[title]').tooltip();
+            
+            // Boş durumda mesaj göster
+            if (data.records === 0) {
+                $("#customerGrid").closest('.ui-jqgrid-bdiv').append(
+                    '<div class="empty-state text-center p-4">' +
+                    '<i class="fas fa-users text-muted mb-3" style="font-size: 48px;"></i>' +
+                    '<p class="text-muted mt-2 mb-3">Henüz müşteri kaydı bulunmamaktadır.</p>' +
+                    '<button class="btn btn-outline-primary btn-sm" onclick="$(\'#addCustomerBtn\').click();">' +
+                    '<i class="fas fa-user-plus me-2"></i>İlk Müşteriyi Ekle</button>' +
+                    '</div>'
+                );
+            }
+        },
+        beforeRequest: function() {
+            // Loading state - bu satırı kaldırdım
+        },
+        loadError: function() {
+            // Error handling
             Swal.fire({
-                title: "Emin misiniz?",
-                text: "Bu müşteriyi silmek istiyor musunuz?",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonText: "Evet, Sil",
-                cancelButtonText: "İptal"
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.post(`/Customer/Delete/${id}`, function (response) {
-                        if (response.success) {
-                            Swal.fire("Başarılı", response.message, "success");
-                            $("#customerGrid").trigger("reloadGrid");
-                        } else {
-                            Swal.fire("Hata", response.message, "error");
-                        }
-                    });
-                }
+                title: "Hata",
+                text: "Müşteri verileri yüklenirken bir hata oluştu.",
+                icon: "error",
+                confirmButtonText: "Tamam"
             });
-        });
-
+        }
     });
 
-    
+    // Grid boyutlandırma
+    $(window).on('resize', function () {
+        $("#customerGrid").setGridWidth($('.table-container').width() - 30);
+    });
+
+    // Müşteri Silme İşlemi
+    $(document).on("click", ".deleteCustomerBtn", function () {
+        const id = $(this).data("id");
+        const row = $("#customerGrid").getRowData(id);
+        
+        Swal.fire({
+            title: "Emin misiniz?",
+            html: `<strong>${row.name}</strong> adlı müşteriyi silmek istiyor musunuz?<br><small class="text-muted">Bu işlem geri alınamaz.</small>`,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#dc3545",
+            cancelButtonColor: "#6c757d",
+            confirmButtonText: '<i class="fa-solid fa-trash me-1"></i>Evet, Sil',
+            cancelButtonText: '<i class="fa-solid fa-times me-1"></i>İptal',
+            reverseButtons: true,
+            focusCancel: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Loading göster
+                Swal.fire({
+                    title: 'Siliniyor...',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                
+                $.post(`/Customer/Delete/${id}`)
+                    .done(function (response) {
+                        if (response.success) {
+                            Swal.fire({
+                                title: "Başarılı!",
+                                text: response.message || "Müşteri başarıyla silindi.",
+                                icon: "success",
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                            $("#customerGrid").trigger("reloadGrid");
+                        } else {
+                            Swal.fire({
+                                title: "Hata",
+                                text: response.message || "Müşteri silinirken bir hata oluştu.",
+                                icon: "error",
+                                confirmButtonText: "Tamam"
+                            });
+                        }
+                    })
+                    .fail(function () {
+                        Swal.fire({
+                            title: "Bağlantı Hatası",
+                            text: "Sunucu ile bağlantı kurulamadı. Lütfen tekrar deneyin.",
+                            icon: "error",
+                            confirmButtonText: "Tamam"
+                        });
+                    });
+            }
+        });
+    });
+
+    // Düzenleme butonları için event (eğer varsa)
+    $(document).on("click", ".editCustomerBtn", function () {
+        const id = $(this).data("id");
+        // Orijinal modal açma kodunuz buraya gelecek
+        // Örnek: $('#editCustomerModal').modal('show'); 
+        // veya mevcut edit modal açma fonksiyonunuzu çağırın
+    });
+
+    // Müşteri Ekle butonu
+    $("#addCustomerBtn").on("click", function() {
+        // Orijinal modal açma kodunuz buraya gelecek
+        // Örnek: $('#customerModal').modal('show'); 
+        // veya mevcut modal açma fonksiyonunuzu çağırın
+    });
+
+    // Keyboard navigation
+    $(document).on('keydown', '.action-icons i', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            $(this).click();
+        }
+    });
+});
 </script>
+
+<style>
+/* Ek inline styles - acil durumlar için */
+.grid-wrapper {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.table-info {
+    font-size: 13px;
+}
+
+.empty-state {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+}
+
+/* Responsive tablo ayarları */
+@@media (max-width: 768px) {
+    .d-flex.justify-content-between {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .table-info {
+        order: 2;
+    }
+    
+    #addCustomerBtn {
+        order: 1;
+        align-self: stretch;
+    }
+}
+</style>

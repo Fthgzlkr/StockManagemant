@@ -3,123 +3,324 @@
     var warehouseId = ViewBag.WarehouseId;
 }
 
-<link rel="stylesheet" href="~/css/Site.css" asp-append-version="true" />
-
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>Depo Lokasyonları</title>
+    <title>Dinamik Depo Lokasyonları</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
-
+    <link rel="stylesheet" href="~/css/Site.css" asp-append-version="true" />
     <style>
-        .tree-wrapper {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
+        .location-tree {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
         }
-
-        .tree-card {
-            width: 100%;
-            max-width: 240px;
-            flex: 0 0 auto;
-            border: 1px solid #dee2e6;
-            border-radius: 0.5rem;
-            padding: 0.75rem;
-            background-color: #f9f9f9;
-        }
-
-        .tree-card h6 {
-            margin-bottom: 0.75rem;
-            font-size: 16px;
-            font-weight: 600;
-            color: #0d6efd;
-        }
-
-        ul.tree {
-            list-style-type: none;
-            padding-left: 1.2rem;
-        }
-
-        ul.tree li {
+        
+        .tree-node {
+            margin: 8px 0;
+            padding: 12px;
+            background: white;
+            border-radius: 6px;
+            border-left: 4px solid #007bff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             position: relative;
-            padding-left: 1.2rem;
-            margin-bottom: 6px;
+            transition: all 0.3s ease;
         }
-
-        ul.tree li::before {
-            content: "\2022";
-            position: absolute;
-            left: 0;
-            top: 0;
-            color: #aaa;
+        
+        .tree-node:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transform: translateY(-1px);
         }
-
-        .level-shelf {
-            font-weight: 600;
-            color: #333;
+        
+        .tree-node.level-1 { border-left-color: #28a745; }
+        .tree-node.level-2 { border-left-color: #ffc107; margin-left: 20px; }
+        .tree-node.level-3 { border-left-color: #dc3545; margin-left: 40px; }
+        .tree-node.level-4 { border-left-color: #6f42c1; margin-left: 60px; }
+        .tree-node.level-5 { border-left-color: #fd7e14; margin-left: 80px; }
+        
+        .node-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 8px;
         }
-
-        .level-bin {
-            font-size: 14px;
-            color: #555;
+        
+        .node-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-grow: 1;
         }
-
-        .add-corridor-icon {
-            cursor: pointer;
-            font-size: 20px;
-            color: green;
-        }
-
-        .add-input {
-            margin-top: 4px;
-        }
-
-        .action-icons {
-            float: right;
-            font-size: 14px;
-            color: #6c757d;
-        }
-        .action-icons i {
-            margin-left: 6px;
-            cursor: pointer;
-        }
-        .action-icons i:hover {
-            color: #000;
-        }
-        .editable {
+        
+        .node-title {
+            font-weight: 600;
+            color: #2c3e50;
             cursor: pointer;
             border-bottom: 1px dashed #ccc;
+            padding: 2px 4px;
+            min-width: 100px;
+            transition: all 0.2s ease;
+        }
+        
+        .node-title[contenteditable="true"]:focus {
+            outline: 2px solid #007bff;
+            border-bottom: 1px solid #007bff;
+            background: #f0f8ff;
+            border-radius: 3px;
+        }
+        
+        .storage-type-badge {
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 500;
+        }
+        
+        .level-badge {
+            background: #e9ecef;
+            color: #495057;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .action-btn {
+            border: none;
+            background: none;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .action-btn:hover {
+            background: #f8f9fa;
+            transform: scale(1.1);
+        }
+        
+        .btn-add { color: #28a745; }
+        .btn-edit { color: #ffc107; }
+        .btn-delete { color: #dc3545; }
+        
+        .add-location-form {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border: 1px dashed #2196f3;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 10px;
+            align-items: end;
+            margin-bottom: 10px;
+        }
+        
+        .form-group {
+            flex: 1;
+        }
+        
+        .form-group label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+            display: block;
+            font-weight: 500;
+        }
+        
+        .form-control-sm {
+            font-size: 14px;
+            padding: 6px 8px;
+        }
+        
+        .storage-type-colors {
+            display: flex;
+            gap: 8px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .storage-legend {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 500;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        
+        .tree-search {
+            margin-bottom: 20px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .breadcrumb {
+            background: none;
+            padding: 0;
+            margin-bottom: 15px;
+        }
+        
+        .breadcrumb-item + .breadcrumb-item::before {
+            content: ">";
+            color: #6c757d;
+        }
+        
+        .parent-storage-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 8px;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #856404;
+        }
+        
+        @@media (max-width: 768px) {
+            .tree-node {
+                margin-left: 0 !important;
+            }
+            
+            .form-row {
+                flex-direction: column;
+            }
+            
+            .node-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
         }
     </style>
 </head>
 <body>
-<div class="container-fluid p-3">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="text-primary">📦 Lokasyonlar - Depo ID: @warehouseId</h5>
-        <span class="add-corridor-icon" onclick="toggleCorridorInput()" title="Yeni Koridor Ekle">➕</span>
-    </div>
-
-    <!-- Koridor ekleme inputu gizli olarak başlar -->
-    <div id="corridorInputArea" class="mb-3" style="display: none;">
-        <div class="input-group w-50">
-            <input type="text" id="newCorridorInput" class="form-control" placeholder="Koridor adı" oninput="this.value = this.value.toUpperCase().slice(0, 2);" />
-            <button class="btn btn-success" onclick="addCorridor()">Ekle</button>
+    <div class="container-fluid p-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="text-primary mb-1">
+                    <i class="fas fa-warehouse"></i> 
+                    Dinamik Depo Lokasyon Yönetimi
+                </h4>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/">Ana Sayfa</a></li>
+                        <li class="breadcrumb-item"><a href="/Warehouse/Manage">Depolar</a></li>
+                        <li class="breadcrumb-item active">Lokasyonlar (Depo ID: <span id="warehouseIdDisplay">@warehouseId</span>)</li>
+                    </ol>
+                </nav>
+            </div>
+            <button class="btn btn-success" onclick="showAddLocationForm()">
+                <i class="fas fa-plus"></i> Yeni Lokasyon Ekle
+            </button>
         </div>
+
+        <!-- Search -->
+        <div class="tree-search">
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                <input type="text" class="form-control" id="searchInput" placeholder="Lokasyon ara..." onkeyup="searchLocations()">
+            </div>
+        </div>
+
+        <!-- Add Location Form -->
+        <div id="addLocationForm" class="add-location-form hidden">
+            <h6><i class="fas fa-plus-circle"></i> Yeni Lokasyon Ekle</h6>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Lokasyon Adı *</label>
+                    <input type="text" class="form-control form-control-sm" id="newLocationName" placeholder="Lokasyon adını girin" maxlength="50">
+                </div>
+                <div class="form-group">
+                    <label>Üst Lokasyon</label>
+                    <select class="form-control form-control-sm" id="parentLocationSelect" onchange="updateChildStorageType()">
+                        <option value="">Ana Lokasyon (Kök)</option>
+                    </select>
+                    <div id="parentStorageWarning" class="parent-storage-warning hidden">
+                        <i class="fas fa-info-circle"></i> 
+                        <span id="parentStorageText"></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Seviye</label>
+                    <select class="form-control form-control-sm" id="levelSelect">
+                        <option value="1">Seviye 1</option>
+                        <option value="2">Seviye 2</option>
+                        <option value="3">Seviye 3</option>
+                        <option value="4">Seviye 4</option>
+                        <option value="5">Seviye 5</option>
+                        
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Depolama Türü</label>
+                    <select class="form-control form-control-sm" id="storageTypeSelect">
+                        <option value="5">Standart</option>
+                        <option value="2">Soğuk Depolama</option>
+                        <option value="3">Yanıcı</option>
+                        <option value="4">Kırılgan</option>
+                        <option value="6">Nem Korumalı</option>
+                        <option value="1">Tanımsız</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-success btn-sm" onclick="addLocation()">
+                        <i class="fas fa-save"></i> Kaydet
+                    </button>
+                    <button class="btn btn-secondary btn-sm ms-1" onclick="hideAddLocationForm()">
+                        <i class="fas fa-times"></i> İptal
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Location Tree -->
+        <div class="location-tree">
+            <div id="locationTreeContainer">
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Yükleniyor...</span>
+                    </div>
+                    <p class="mt-2">Lokasyonlar yükleniyor...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Storage Type Legend -->
+        <div class="storage-type-colors">
+            <span class="storage-legend" style="background: #6c757d;">Tanımsız</span>
+            <span class="storage-legend" style="background: #17a2b8;">Soğuk Depolama</span>
+            <span class="storage-legend" style="background: #dc3545;">Yanıcı</span>
+            <span class="storage-legend" style="background: #ffc107; color: #000;">Kırılgan</span>
+            <span class="storage-legend" style="background: #28a745;">Standart</span>
+            <span class="storage-legend" style="background: #007bff;">Nem Korumalı</span>
+        </div>
+
+        <!-- Hidden inputs -->
+        <input type="hidden" id="warehouseIdHidden" value="@warehouseId">
     </div>
 
-    <div id="locationTreeContainer" class="tree-wrapper">Yükleniyor...</div>
-    <input type="hidden" id="warehouseIdHidden" value="@warehouseId" />
-</div>
-<script src="/js/warehouse-location.js"></script>
-
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/warehouse-location.js" asp-append-version="true"></script>
 </body>
 </html>

@@ -28,7 +28,6 @@
     <ProjectReference Include="../StockManagemant.Logging/StockManagemant.Logging.csproj" />
     <ProjectReference Include="..\StockManagemant.BusinessLogic\StockManagemant.BusinessLogic.csproj" />
     <ProjectReference Include="..\StockManagemant.DataAccess\StockManagemant.DataAccess.csproj" />
-    <ProjectReference Include="..\StockManagemant.Core\StockManagemant.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
