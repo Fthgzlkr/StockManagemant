@@ -15,7 +15,6 @@ builder.Configuration
     .AddEnvironmentVariables();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
 if (string.IsNullOrEmpty(connectionString))
 {
     throw new Exception("Bağlantı dizesi bulunamadı! Lütfen appsettings.json içinde doğru yapılandırmayı yaptığınızdan emin olun.");
@@ -32,13 +31,9 @@ catch (Exception ex)
     throw;
 }
 
-
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-
 builder.Services.AddRepositoriesAndManagers();
 builder.Services.AddScoped<ILogRepository, LogRepository>();
-
-
 builder.Services.AddAutoMapper(typeof(GeneralMappingProfile));
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -49,6 +44,15 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
     });
 
+// CORS EKLENDİ - Mobil erişim için
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowMobile",
+        policy => policy
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader());
+});
 
 builder.Services.AddControllersWithViews();
 
@@ -70,12 +74,12 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
 
+//  CORS EKLENDİ
+app.UseCors("AllowMobile");
+
 app.UseSession();
-
-
 app.UseAuthentication();
 app.UseAuthorization();
 

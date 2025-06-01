@@ -51,107 +51,372 @@ namespace StockManagemant.Business.Managers
             return await _warehouseProductRepository.GetTotalStockByProductIdAsync(productId);
         }
 
-        public async Task UpdateStockAsync(UpdateStockDto dto)
+    public async Task UpdateStockAsync(UpdateStockDto dto)
+{
+    // Geçici çözüm: UserId'yi 0 olarak set et veya DTO'dan al
+    int userId = dto.UserId > 0 ? dto.UserId : 0; // Şimdilik default 0
+
+    var warehouseProduct = await _warehouseProductRepository.GetByIdAsync(dto.WarehouseProductId);
+
+    if (warehouseProduct == null)
+    {
+        await _logManager.LogAsync(new AppLogDto
         {
-            var warehouseProduct = await _warehouseProductRepository.GetByIdAsync(dto.WarehouseProductId);
+            UserId = userId,
+            Action = "Stok Güncelleme",
+            Message = $"Depo ürünü bulunamadı. ID: {dto.WarehouseProductId}",
+            Level = "Error",
+            Target = dto.WarehouseProductId.ToString(),
+            Timestamp = DateTime.Now
+        });
+        throw new Exception("Depo ürünü bulunamadı.");
+    }
 
-            if (warehouseProduct == null)
-                throw new Exception("Depo ürünü bulunamadı.");
+    if (dto.StockQuantity < 0)
+    {
+        await _logManager.LogAsync(new AppLogDto
+        {
+            UserId = userId,
+            Action = "Stok Güncelleme",
+            Message = $"Negatif stok girişi engellendi. Girilen değer: {dto.StockQuantity}",
+            Level = "Warning",
+            Target = dto.WarehouseProductId.ToString(),
+            Timestamp = DateTime.Now
+        });
+        throw new Exception("Stok miktarı negatif olamaz.");
+    }
 
-            if (dto.StockQuantity < 0)
-                throw new Exception("Stok miktarı negatif olamaz.");
+    var oldQuantity = warehouseProduct.StockQuantity;
+    warehouseProduct.StockQuantity = dto.StockQuantity;
 
-            warehouseProduct.StockQuantity = dto.StockQuantity;
+    await _warehouseProductRepository.UpdateAsync(warehouseProduct);
 
-            await _warehouseProductRepository.UpdateAsync(warehouseProduct);
+    // Başarılı güncelleme logu
+    await _logManager.LogAsync(new AppLogDto
+    {
+        UserId = userId,
+        Action = "Stok Güncelleme",
+        Message = $"Stok güncellendi. Eski: {oldQuantity}, Yeni: {dto.StockQuantity}",
+        Level = "Info",
+        Target = dto.WarehouseProductId.ToString(),
+        Timestamp = DateTime.Now
+    });
+
+    // Düşük stok kontrolü
+    await CheckAndLogLowStock(warehouseProduct, userId);
+}
+
+   public async Task AddProductToWarehouseAsync(WarehouseProductDto dto)
+{
+    int userId = dto.UserId > 0 ? dto.UserId : 0;
+
+    try
+    {
+        var product = await _productRepository.GetByIdAsync(dto.ProductId);
+        if (product == null)
+        {
+            await _logManager.LogAsync(new AppLogDto
+            {
+                UserId = userId,
+                Action = "Depoya Ürün Ekleme",
+                Message = $"Ürün bulunamadı. Ürün ID: {dto.ProductId}",
+                Level = "Error",
+                Target = $"Product:{dto.ProductId}",
+                Timestamp = DateTime.Now
+            });
+            throw new Exception("Ürün bulunamadı.");
         }
 
-        public async Task AddProductToWarehouseAsync(WarehouseProductDto dto)
+        var existingWarehouseProduct = await _warehouseProductRepository
+            .FindAsync(wp => wp.ProductId == dto.ProductId && wp.WarehouseId == dto.WarehouseId);
+
+        if (existingWarehouseProduct.Any())
         {
-            var product = await _productRepository.GetByIdAsync(dto.ProductId);
-            if (product == null)
-                throw new Exception("Ürün bulunamadı.");
-
-            var existingWarehouseProduct = await _warehouseProductRepository
-                .FindAsync(wp => wp.ProductId == dto.ProductId && wp.WarehouseId == dto.WarehouseId);
-
-            if (existingWarehouseProduct.Any())
-                throw new Exception("Bu ürün zaten bu depoda mevcut!");
-
-            
-            var location = await _wareHouseLocationRepository.GetLocationByIdAsync(dto.WarehouseLocationId ?? 0);
-            if (location == null)
-                throw new Exception("Lokasyon bilgisi alınamadı.");
-
-            if (product.StorageType != StorageType.Undefined &&
-                location.StorageType != StorageType.Undefined &&
-                product.StorageType != location.StorageType)
+            await _logManager.LogAsync(new AppLogDto
             {
-                throw new Exception($"Depolama tipi uyuşmazlığı. Ürün: {product.StorageType}, Lokasyon: {location.StorageType}");
-            }
-
-            // 1. Depoya ürünü ekle
-            var warehouseProduct = new WarehouseProduct
-            {
-                ProductId = dto.ProductId,
-                WarehouseId = dto.WarehouseId,
-                StockQuantity = dto.StockQuantity,
-                WarehouseLocationId = dto.WarehouseLocationId,
-                StockCode = dto.StockCode,
-                IsDeleted = false
-            };
-
-            await _warehouseProductRepository.AddAsync(warehouseProduct);
-
-            string productName = product.Name ?? "Ürün";
-
-            // 2. Giriş Fişi oluştur
-            var receiptDto = new ReceiptDto
-            {
-                WareHouseId = dto.WarehouseId,
-                ReceiptType = ReceiptType.Entry,
-                SourceType = ReceiptSourceType.None,
-                SourceId = null,
-                SourceName = "Depo giriş sağlayıcısı",
-                Description = $"{productName} depoya eklendi.",
-            };
-
-            int receiptId = await _receiptManager.AddReceiptAsync(receiptDto);
-
-            // 3. Fiş Detayı oluştur
-            await _receiptDetailManager.AddProductToReceiptAsync(receiptId, dto.ProductId, dto.StockQuantity);
+                UserId = userId,
+                Action = "Depoya Ürün Ekleme",
+                Message = $"Ürün zaten depoda mevcut. Ürün: {product.Name}, Depo ID: {dto.WarehouseId}",
+                Level = "Warning",
+                Target = $"Product:{dto.ProductId}, Warehouse:{dto.WarehouseId}",
+                Timestamp = DateTime.Now
+            });
+            throw new Exception("Bu ürün zaten bu depoda mevcut!");
         }
 
-
-        public async Task RemoveProductFromWarehouseAsync(int warehouseProductId)
+        var location = await _wareHouseLocationRepository.GetLocationByIdAsync(dto.WarehouseLocationId ?? 0);
+        if (location == null)
         {
-            var warehouseProduct = await _warehouseProductRepository.GetByIdAsync(warehouseProductId);
-            if (warehouseProduct == null)
-                throw new Exception("Depodaki ürün bulunamadı.");
-
-            var product = await _productRepository.GetByIdAsync(warehouseProduct.ProductId);
-            if (product == null)
-                throw new Exception("İlgili ürün sistemde bulunamadı.");
-
-            // 1. Fiş oluştur (çıkış fişi)
-            var receiptDto = new ReceiptDto
+            await _logManager.LogAsync(new AppLogDto
             {
-                WareHouseId = warehouseProduct.WarehouseId,
-                ReceiptType = ReceiptType.Exit,
-                SourceType = ReceiptSourceType.None,
-                SourceId = null,
-                SourceName = "Depodan Çıkış",
-                Description = $"{product.Name} ürünü depodan kaldırıldı.",
-            };
-
-            int receiptId = await _receiptManager.AddReceiptAsync(receiptDto);
-
-            // 2. Fiş detayı oluştur
-            await _receiptDetailManager.AddProductToReceiptAsync(receiptId, warehouseProduct.ProductId, warehouseProduct.StockQuantity);
-
-            // 3. Ürünü sil
-            await _warehouseProductRepository.DeleteAsync(warehouseProductId);
+                UserId = userId,
+                Action = "Depoya Ürün Ekleme",
+                Message = $"Lokasyon bulunamadı. Lokasyon ID: {dto.WarehouseLocationId}",
+                Level = "Error",
+                Target = $"Location:{dto.WarehouseLocationId}",
+                Timestamp = DateTime.Now
+            });
+            throw new Exception("Lokasyon bilgisi alınamadı.");
         }
+
+        if (product.StorageType != StorageType.Undefined &&
+            location.StorageType != StorageType.Undefined &&
+            product.StorageType != location.StorageType)
+        {
+            await _logManager.LogAsync(new AppLogDto
+            {
+                UserId = userId,
+                Action = "Depoya Ürün Ekleme",
+                Message = $"Depolama tipi uyuşmazlığı. Ürün: {product.StorageType}, Lokasyon: {location.StorageType}",
+                Level = "Error",
+                Target = $"Product:{dto.ProductId}, Location:{dto.WarehouseLocationId}",
+                Timestamp = DateTime.Now
+            });
+            throw new Exception($"Depolama tipi uyuşmazlığı. Ürün: {product.StorageType}, Lokasyon: {location.StorageType}");
+        }
+
+        // 1. Depoya ürünü ekle
+        var warehouseProduct = new WarehouseProduct
+        {
+            ProductId = dto.ProductId,
+            WarehouseId = dto.WarehouseId,
+            StockQuantity = dto.StockQuantity,
+            WarehouseLocationId = dto.WarehouseLocationId,
+            StockCode = dto.StockCode,
+            IsDeleted = false
+        };
+
+        await _warehouseProductRepository.AddAsync(warehouseProduct);
+
+        string productName = product.Name ?? "Ürün";
+
+        // 2. Giriş Fişi oluştur
+        var receiptDto = new ReceiptDto
+        {
+            WareHouseId = dto.WarehouseId,
+            ReceiptType = ReceiptType.Entry,
+            SourceType = ReceiptSourceType.None,
+            SourceId = null,
+            SourceName = "Depo giriş sağlayıcısı",
+            Description = $"{productName} depoya eklendi.",
+        };
+
+        int receiptId = await _receiptManager.AddReceiptAsync(receiptDto);
+
+        // 3. SADECE Fiş Detayı oluştur (stok hareket işlemi yapma)
+        await _receiptDetailManager.AddReceiptDetailOnlyAsync(receiptId, dto.ProductId, dto.StockQuantity);
+
+        // Başarılı ekleme logu
+        await _logManager.LogAsync(new AppLogDto
+        {
+            UserId = userId,
+            Action = "Depoya Ürün Ekleme",
+            Message = $"Ürün depoya eklendi. Ürün: {productName}, Miktar: {dto.StockQuantity}, Fiş ID: {receiptId}",
+            Level = "Info",
+            Target = $"Product:{dto.ProductId}, Warehouse:{dto.WarehouseId}",
+            Timestamp = DateTime.Now
+        });
+
+        // Düşük stok kontrolü
+        await CheckAndLogLowStock(warehouseProduct, userId);
+    }
+    catch (Exception ex)
+    {
+        if (!ex.Message.Contains("bulunamadı") && !ex.Message.Contains("mevcut") && !ex.Message.Contains("uyuşmazlığı"))
+        {
+            await _logManager.LogAsync(new AppLogDto
+            {
+                UserId = userId,
+                Action = "Depoya Ürün Ekleme",
+                Message = $"Beklenmeyen hata: {ex.Message}",
+                Level = "Error",
+                Target = $"Product:{dto.ProductId}, Warehouse:{dto.WarehouseId}",
+                Timestamp = DateTime.Now
+            });
+        }
+        throw;
+    }
+}
+// Manager class'ının başına sabit ekle
+private const int LOW_STOCK_THRESHOLD = 20;
+
+// Düşük stok kontrolü için yardımcı metod
+private async Task CheckAndLogLowStock(WarehouseProduct warehouseProduct, int userId)
+{
+    // Sadece 20'nin altındaki stoklar için uyarı
+    if (warehouseProduct.StockQuantity < LOW_STOCK_THRESHOLD)
+    {
+        // Ürün ve depo bilgilerini al
+        var product = await _productRepository.GetByIdAsync(warehouseProduct.ProductId);
+        var warehouse = await _warehouseRepository.GetByIdAsync(warehouseProduct.WarehouseId);
+
+        string productName = product?.Name ?? "Bilinmeyen Ürün";
+        string warehouseName = warehouse?.Name ?? "Bilinmeyen Depo";
+
+        await _logManager.LogAsync(new AppLogDto
+        {
+            UserId = userId,
+            Action = "Düşük Stok Uyarısı",
+            Message = $"Düşük stok tespit edildi! Ürün: {productName}, " +
+                     $"Depo: {warehouseName}, " +
+                     $"Mevcut Stok: {warehouseProduct.StockQuantity}, " +
+                     $"Limit: {LOW_STOCK_THRESHOLD}",
+            Level = "Warning",
+            Target = $"Product:{warehouseProduct.ProductId}, Warehouse:{warehouseProduct.WarehouseId}",
+            Timestamp = DateTime.Now
+        });
+    }
+}
+
+
+       public async Task RemoveProductFromWarehouseAsync(int warehouseProductId)
+{
+    int userId = 0; // Şimdilik default değer, sonradan authentication'dan alınacak
+    
+    try
+    {
+        // DEBUG: Başlangıç logu
+        await _logManager.LogAsync(new AppLogDto
+        {
+            UserId = userId,
+            Action = "DEBUG - Depodan Ürün Çıkarma Başlangıç",
+            Message = $"Ürün çıkarma işlemi başlatıldı. WarehouseProductId: {warehouseProductId}",
+            Level = "Info",
+            Target = warehouseProductId.ToString(),
+            Timestamp = DateTime.Now
+        });
+
+        var warehouseProduct = await _warehouseProductRepository.GetByIdAsync(warehouseProductId);
+        if (warehouseProduct == null)
+        {
+            await _logManager.LogAsync(new AppLogDto
+            {
+                UserId = userId,
+                Action = "Depodan Ürün Çıkarma",
+                Message = $"Depodaki ürün bulunamadı. WarehouseProductId: {warehouseProductId}",
+                Level = "Error",
+                Target = warehouseProductId.ToString(),
+                Timestamp = DateTime.Now
+            });
+            throw new Exception("Depodaki ürün bulunamadı.");
+        }
+
+        var product = await _productRepository.GetByIdAsync(warehouseProduct.ProductId);
+        if (product == null)
+        {
+            await _logManager.LogAsync(new AppLogDto
+            {
+                UserId = userId,
+                Action = "Depodan Ürün Çıkarma",
+                Message = $"İlgili ürün sistemde bulunamadı. ProductId: {warehouseProduct.ProductId}",
+                Level = "Error",
+                Target = $"Product:{warehouseProduct.ProductId}",
+                Timestamp = DateTime.Now
+            });
+            throw new Exception("İlgili ürün sistemde bulunamadı.");
+        }
+
+        // DEBUG: Ürün bilgileri logu
+        await _logManager.LogAsync(new AppLogDto
+        {
+            UserId = userId,
+            Action = "DEBUG - Ürün Bilgileri",
+            Message = $"Çıkarılacak ürün: {product.Name}, Mevcut Stok: {warehouseProduct.StockQuantity}, Depo: {warehouseProduct.WarehouseId}",
+            Level = "Info",
+            Target = $"Product:{warehouseProduct.ProductId}, Warehouse:{warehouseProduct.WarehouseId}",
+            Timestamp = DateTime.Now
+        });
+
+        // 1. Fiş oluştur (çıkış fişi)
+        var receiptDto = new ReceiptDto
+        {
+            WareHouseId = warehouseProduct.WarehouseId,
+            ReceiptType = ReceiptType.Exit,
+            SourceType = ReceiptSourceType.None,
+            SourceId = null,
+            SourceName = "Depodan Çıkış",
+            Description = $"{product.Name} ürünü depodan kaldırıldı.",
+        };
+
+        int receiptId = await _receiptManager.AddReceiptAsync(receiptDto);
+
+        // DEBUG: Fiş oluşturuldu logu
+        await _logManager.LogAsync(new AppLogDto
+        {
+            UserId = userId,
+            Action = "DEBUG - Çıkış Fişi Oluşturuldu",
+            Message = $"Çıkış fişi oluşturuldu. ReceiptId: {receiptId}",
+            Level = "Info",
+            Target = $"Receipt:{receiptId}",
+            Timestamp = DateTime.Now
+        });
+
+        // 2. Fiş detayı oluştur
+        await _receiptDetailManager.AddProductToReceiptAsync(receiptId, warehouseProduct.ProductId, warehouseProduct.StockQuantity);
+
+        // DEBUG: Fiş detayı oluşturuldu logu
+        await _logManager.LogAsync(new AppLogDto
+        {
+            UserId = userId,
+            Action = "DEBUG - Fiş Detayı Oluşturuldu",
+            Message = $"Fiş detayı oluşturuldu. ProductId: {warehouseProduct.ProductId}, Quantity: {warehouseProduct.StockQuantity}",
+            Level = "Info",
+            Target = $"Receipt:{receiptId}, Product:{warehouseProduct.ProductId}",
+            Timestamp = DateTime.Now
+        });
+
+        // 3. Ürünü sil
+        await _warehouseProductRepository.DeleteAsync(warehouseProductId);
+
+        // Başarılı çıkarma logu
+        await _logManager.LogAsync(new AppLogDto
+        {
+            UserId = userId,
+            Action = "Depodan Ürün Çıkarma",
+            Message = $"Ürün depodan başarıyla çıkarıldı. Ürün: {product.Name}, Çıkarılan Miktar: {warehouseProduct.StockQuantity}, Fiş ID: {receiptId}",
+            Level = "Info",
+            Target = $"Product:{warehouseProduct.ProductId}, Warehouse:{warehouseProduct.WarehouseId}",
+            Timestamp = DateTime.Now
+        });
+
+        // DEBUG: İşlem tamamlandı logu
+        await _logManager.LogAsync(new AppLogDto
+        {
+            UserId = userId,
+            Action = "DEBUG - Ürün Çıkarma Tamamlandı",
+            Message = $"Ürün çıkarma işlemi başarıyla tamamlandı. WarehouseProductId: {warehouseProductId}",
+            Level = "Info",
+            Target = warehouseProductId.ToString(),
+            Timestamp = DateTime.Now
+        });
+    }
+    catch (Exception ex)
+    {
+        // Genel hata logu
+        await _logManager.LogAsync(new AppLogDto
+        {
+            UserId = userId,
+            Action = "Depodan Ürün Çıkarma",
+            Message = $"Ürün çıkarma hatası: {ex.Message}",
+            Level = "Error",
+            Target = warehouseProductId.ToString(),
+            Timestamp = DateTime.Now
+        });
+
+        // DEBUG: Detaylı hata logu
+        await _logManager.LogAsync(new AppLogDto
+        {
+            UserId = userId,
+            Action = "DEBUG - Hata Detayı",
+            Message = $"Hata detayı: {ex.Message}, StackTrace: {ex.StackTrace}",
+            Level = "Error",
+            Target = warehouseProductId.ToString(),
+            Timestamp = DateTime.Now
+        });
+        
+        throw;
+    }
+}
 
         public async Task RestoreWarehouseProductAsync(int warehouseProductId)
         {

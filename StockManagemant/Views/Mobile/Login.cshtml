@@ -1,0 +1,45 @@
+@{
+    ViewData["Title"] = "Giriş";
+    Layout = "~/Views/Shared/_MobileLayout.cshtml";
+}
+
+<div class="login-container">
+    <div class="login-header">
+        <h1>🔐 Giriş</h1>
+        <p>Mobil stok takip sistemine hoş geldiniz</p>
+    </div>
+    
+    @if (!string.IsNullOrEmpty(ViewBag.Error))
+    {
+        <div class="alert alert-error">
+            ❌ @ViewBag.Error
+        </div>
+    }
+    
+    @if (!string.IsNullOrEmpty(ViewBag.Success))
+    {
+        <div class="alert alert-success">
+            ✅ @ViewBag.Success
+        </div>
+    }
+    
+    <form method="post" class="login-form">
+        <div class="form-group">
+            <label for="username">👤 Kullanıcı Adı:</label>
+            <input type="text" id="username" name="username" class="form-control" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="password">🔑 Şifre:</label>
+            <input type="password" id="password" name="password" class="form-control" required>
+        </div>
+        
+        <button type="submit" class="login-button">
+            🚀 Giriş Yap
+        </button>
+    </form>
+    
+    <div class="login-footer">
+        <p>Sadece yetkili personel erişebilir</p>
+    </div>
+</div>

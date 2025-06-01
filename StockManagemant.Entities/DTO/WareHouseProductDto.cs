@@ -10,6 +10,7 @@ namespace StockManagemant.Entities.DTO
     {
         [Required]
         public int ProductId { get; set; } // Ürün ID
+         public int UserId { get; set; } = 0;
 
         public int? WarehouseProductId { get; set; }
 
@@ -43,6 +44,7 @@ namespace StockManagemant.Entities.DTO
     {
         [Required]
         public int WarehouseProductId { get; set; }
+        public int UserId { get; set; } = 0;
 
         [Required]
         [Range(0, int.MaxValue, ErrorMessage = "Stok miktarı negatif olamaz.")]

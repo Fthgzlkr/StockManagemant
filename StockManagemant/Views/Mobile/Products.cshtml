@@ -1,0 +1,113 @@
+@{
+    ViewData["Title"] = "Ürün İşlemleri";
+    Layout = "~/Views/Shared/_MobileLayout.cshtml";
+}
+
+<div class="mobile-page">
+    <!-- Header -->
+    <div class="page-header">
+        <a href="/Mobile" class="back-btn">← Geri</a>
+        <h1>📱 Ürün İşlemleri</h1>
+        <div class="header-user">@User.Identity.Name</div>
+    </div>
+
+    <!-- Ana İşlemler -->
+    <div class="action-tabs">
+        <button class="tab-btn active" onclick="showTab('search')">🔍 Ürün Ara</button>
+        <button class="tab-btn" onclick="showTab('add')">➕ Ürün Ekle</button>
+    </div>
+
+    <!-- ÜRÜN ARAMA TAB -->
+    <div id="search-tab" class="tab-content active">
+        <div class="search-section">
+            <h3>Barkod ile Ürün Bul</h3>
+            
+            <div class="barcode-input-group">
+                <input type="text" id="search-barcode" class="form-control" placeholder="Barkod girin veya tarayın...">
+                <button class="scan-btn" onclick="openScanner('search')">📷</button>
+            </div>
+            
+            <button class="btn btn-primary" onclick="searchProduct()">🔍 Ürün Ara</button>
+        </div>
+
+        <!-- Ürün Sonucu -->
+        <div id="product-result" class="product-card hidden">
+            <!-- Ürün detayları buraya gelecek -->
+        </div>
+    </div>
+
+    <!-- ÜRÜN EKLEME TAB -->
+    <div id="add-tab" class="tab-content">
+        <div class="add-section">
+            <h3>Yeni Ürün Ekle</h3>
+            
+            <form id="add-product-form">
+                <div class="form-group">
+                    <label>📊 Barkod:</label>
+                    <div class="barcode-input-group">
+                        <input type="text" id="new-barcode" class="form-control" required>
+                        <button type="button" class="scan-btn" onclick="openScanner('add')">📷</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>📝 Ürün Adı:</label>
+                    <input type="text" id="new-name" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label>🏷️ Kategori:</label>
+                    <select id="new-category" class="form-control" required>
+                        <option value="">Kategori seçin...</option>
+                        <!-- Kategoriler API'den gelecek -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>💰 Fiyat:</label>
+                    <input type="number" step="0.01" id="new-price" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label>💱 Para Birimi:</label>
+                    <select id="new-currency" class="form-control" required>
+                        <option value="">Para birimi seçin...</option>
+                        <option value="0">TL</option>
+                        <option value="1">USD</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>📦 Depolama Tipi:</label>
+                    <select id="new-storage-type" class="form-control" required>
+                        <option value="">Depolama tipi seçin...</option>
+                        <!-- Storage types API'den gelecek -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>🖼️ Resim URL:</label>
+                    <input type="url" id="new-image-url" class="form-control" placeholder="https://example.com/image.jpg">
+                </div>
+
+                <div class="form-group">
+                    <label>📄 Açıklama:</label>
+                    <textarea id="new-description" class="form-control" rows="3"></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-success">💾 Ürün Kaydet</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Loading & Messages -->
+    <div id="loading" class="loading hidden">
+        🔄 İşlem yapılıyor...
+    </div>
+
+    <div id="message" class="message hidden">
+        <!-- Başarı/Hata mesajları -->
+    </div>
+</div>
+
+<script src="~/js/mobile.js" asp-append-version="true"></script>

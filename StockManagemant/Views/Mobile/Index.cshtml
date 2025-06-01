@@ -1,0 +1,155 @@
+@{
+    ViewData["Title"] = "Ana Menü";
+    Layout = "~/Views/Shared/_MobileLayout.cshtml";
+}
+
+<div class="mobile-app">
+    <!-- Header -->
+    <div class="app-header">
+        <div class="header-content">
+            <h1>📦 Stok Takip</h1>
+            <p>Hoş geldiniz, <strong>@User.Identity.Name</strong></p>
+            <span class="user-role">@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value</span>
+        </div>
+        <button class="logout-btn" onclick="logout()">
+            🚪 Çıkış
+        </button>
+    </div>
+    
+    <!-- Ana Menü -->
+    <div class="main-menu">
+        <div class="menu-grid">
+            <!-- Ürünler -->
+            <a href="/Mobile/Products" class="menu-item">
+                <div class="menu-icon">📱</div>
+                <div class="menu-title">Ürünler</div>
+                <div class="menu-desc">Ürün ekle, bul, düzenle</div>
+            </a>
+            
+            <!-- Depo İşlemleri -->
+            <a href="/Mobile/Warehouse" class="menu-item">
+                <div class="menu-icon">🏪</div>
+                <div class="menu-title">Depo İşlemleri</div>
+                <div class="menu-desc">Stok takip ve güncelleme</div>
+            </a>
+            
+            <!-- Barkod Tarama -->
+            <button class="menu-item" onclick="openBarcodeScanner()">
+                <div class="menu-icon">📷</div>
+                <div class="menu-title">Barkod Tarama</div>
+                <div class="menu-desc">Hızlı ürün bulma</div>
+            </button>
+            
+            <!-- Raporlar -->
+            <button class="menu-item" onclick="showReports()">
+                <div class="menu-icon">📊</div>
+                <div class="menu-title">Raporlar</div>
+                <div class="menu-desc">Stok durumu ve loglar</div>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Hızlı İşlemler -->
+    <div class="quick-actions">
+        <h3>⚡ Hızlı İşlemler</h3>
+        <div class="quick-grid">
+            <button class="quick-btn" onclick="quickStockUpdate()">
+                <span>📝</span>
+                Stok Güncelle
+            </button>
+            <button class="quick-btn" onclick="quickProductAdd()">
+                <span>➕</span>
+                Ürün Ekle
+            </button>
+            <button class="quick-btn" onclick="quickSearch()">
+                <span>🔍</span>
+                Hızlı Ara
+            </button>
+        </div>
+    </div>
+    
+    <!-- Debug/Test Alanı -->
+    <div class="debug-section" style="margin-top: 30px;">
+        <details>
+            <summary style="cursor: pointer; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+                🔧 Test & Debug
+            </summary>
+            <div style="padding: 15px; background: #fff; border: 1px solid #dee2e6; border-radius: 0 0 5px 5px;">
+                <button class="test-button" onclick="testBasic()">✅ JavaScript Test</button>
+                <button class="test-button" onclick="testAPI()">🔌 API Test</button>
+                <div id="result" class="test-result">Test sonuçları burada görünecek...</div>
+            </div>
+        </details>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Logout fonksiyonu
+        function logout() {
+            if (confirm('Çıkış yapmak istediğinizden emin misiniz?')) {
+                window.location.href = '/Mobile/Logout';
+            }
+        }
+        
+        // Barkod tarama
+        function openBarcodeScanner() {
+            alert('Barkod tarama özelliği yakında eklenecek! 📷');
+        }
+        
+        // Raporlar
+        function showReports() {
+            alert('Raporlar sayfası yakında hazır olacak! 📊');
+        }
+        
+        // Hızlı işlemler
+        function quickStockUpdate() {
+            alert('Hızlı stok güncelleme özelliği geliştiriliyor! 📝');
+        }
+        
+        function quickProductAdd() {
+            window.location.href = '/Mobile/Products';
+        }
+        
+        function quickSearch() {
+            alert('Hızlı arama özelliği yakında! 🔍');
+        }
+        
+        // Test fonksiyonları (mevcut)
+        function testBasic() {
+            document.getElementById('result').innerHTML = 
+                '✅ JavaScript çalışıyor!<br>' +
+                'Kullanıcı: @User.Identity.Name<br>' +
+                'Rol: @User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value<br>' +
+                'Tarih: ' + new Date().toLocaleString('tr-TR') + '<br>' +
+                'Ekran: ' + window.innerWidth + 'x' + window.innerHeight;
+        }
+        
+        async function testAPI() {
+            document.getElementById('result').innerHTML = '🔄 API test ediliyor...';
+            
+            try {
+                const response = await fetch('/api/Product');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('result').innerHTML = 
+                        '✅ API çalışıyor!<br>' +
+                        'Durum: ' + response.status + '<br>' +
+                        'Veri: ' + JSON.stringify(data).substring(0, 100) + '...';
+                } else {
+                    document.getElementById('result').innerHTML = 
+                        '❌ API Hatası: ' + response.status;
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    '❌ Bağlantı Hatası: ' + error.message;
+            }
+        }
+        
+        // Sayfa yüklendiğinde
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Mobil uygulama yüklendi');
+        });
+    </script>
+}

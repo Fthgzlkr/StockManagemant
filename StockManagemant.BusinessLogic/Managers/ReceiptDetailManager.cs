@@ -90,6 +90,40 @@ namespace StockManagemant.Business.Managers
             await _receiptDetailRepository.UpdateReceiptTotal(receiptId);
         }
 
+// ReceiptDetailManager'a bu metodu ekleyin:
+public async Task AddReceiptDetailOnlyAsync(int receiptId, int productId, int quantity)
+{
+    // Validasyonlar
+    if (quantity <= 0) 
+        throw new Exception("Hata: Ürün miktarı sıfırdan büyük olmalıdır!");
+
+    var product = await _productRepository.GetByIdAsync(productId);
+    if (product == null) 
+        throw new Exception("Hata: Ürün bulunamadı!");
+
+    var receipt = await _receiptRepository.GetByIdAsync(receiptId);
+    if (receipt == null) 
+        throw new Exception("Hata: Fiş bulunamadı!");
+
+    // Ürün fiyatını al
+    decimal productPriceAtSale = product.Price ?? 0;
+
+    // SADECE Fiş Detayı oluştur - Stok işlemi YAPMA
+    var receiptDetail = new ReceiptDetail
+    {
+        ReceiptId = receiptId,
+        ProductId = productId,
+        Quantity = quantity,
+        ProductPriceAtSale = productPriceAtSale,
+        SubTotal = quantity * productPriceAtSale
+    };
+
+    // Fiş detayını kaydet
+    await _receiptDetailRepository.AddAsync(receiptDetail);
+    
+    // Fiş toplamını güncelle
+    await _receiptDetailRepository.UpdateReceiptTotal(receiptId);
+}
         // Fişten ürün kaldırma 
         public async Task RemoveProductFromReceiptAsync(int receiptDetailId)
         {

@@ -15,7 +15,7 @@ using System.Collections.Generic;
 
 namespace StockManagemant.Controllers
 {
-
+     [Authorize]
     public class WarehouseProductController : Controller
     {
         private readonly IWarehouseProductManager _warehouseProductManager;
@@ -126,22 +126,7 @@ namespace StockManagemant.Controllers
 
 
         //Depo ürünü stok yönetimi 
-        [HttpPost]
-        public async Task<IActionResult> UpdateStock([FromBody] UpdateStockDto dto)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
 
-            try
-            {
-                await _warehouseProductManager.UpdateStockAsync(dto);
-                return Ok(new { success = true, message = "Stok başarıyla güncellendi." });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { success = false, message = $"Stok güncellenirken hata oluştu: {ex.Message}" });
-            }
-        }
 
 
 

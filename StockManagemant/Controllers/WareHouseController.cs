@@ -9,7 +9,7 @@ using AutoMapper;
 
 namespace StockManagemant.Web.Controllers
 {
-    
+     [Authorize]
     public class WarehouseController : Controller
     {
          private readonly IWarehouseManager _warehouseManager;

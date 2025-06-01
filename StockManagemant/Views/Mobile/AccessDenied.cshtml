@@ -1,0 +1,24 @@
+@{
+    ViewData["Title"] = "Erişim Engellendi";
+    Layout = "~/Views/Shared/_MobileLayout.cshtml";
+}
+
+<div class="login-container">
+    <div class="login-header">
+        <h1>🚫 Erişim Engellendi</h1>
+        <p>Bu uygulamayı kullanma yetkiniz bulunmuyor.</p>
+    </div>
+    
+    <div class="alert alert-error">
+        ❌ Sadece Admin ve Operator yetkili kullanıcılar bu mobil uygulamayı kullanabilir.
+    </div>
+    
+    <div style="text-align: center; margin-top: 30px;">
+        <a href="/Mobile/Logout" class="btn btn-secondary" style="display: inline-block; margin-right: 10px;">
+            🚪 Çıkış Yap
+        </a>
+        <a href="/Auth/Login" class="btn btn-light" style="display: inline-block;">
+            🌐 Web Sitesine Git
+        </a>
+    </div>
+</div>

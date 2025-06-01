@@ -6,7 +6,8 @@ using StockManagemant.Entities.DTO;
 using AutoMapper;
 
 namespace StockManagemant.Web.Controllers
-{
+{ 
+       [Authorize]
     public class WarehouseLocationController : Controller
     {
         private readonly IWareHouseLocationManager _locationManager;

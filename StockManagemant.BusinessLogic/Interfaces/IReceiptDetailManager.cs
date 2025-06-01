@@ -11,6 +11,7 @@ namespace StockManagemant.Business.Managers
 
         Task<List<ReceiptDetailDto>> GetReceiptDetailsByReceiptIdAsync(int receiptId);
         Task AddProductToReceiptAsync(int receiptId, int productId, int quantity);
+        Task AddReceiptDetailOnlyAsync(int receiptId, int productId, int quantity);
         Task RemoveProductFromReceiptAsync(int receiptDetailId);
         Task UpdateProductQuantityInReceiptAsync(int receiptDetailId, int newQuantity);
         Task DeleteDetailsByReceiptIdAsync(int receiptId);

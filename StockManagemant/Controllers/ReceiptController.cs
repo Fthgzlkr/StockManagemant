@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace StockManagemant.Controllers
 {
-
+     [Authorize]
     public class ReceiptController : Controller
     {
         private readonly IReceiptManager _receiptManager;

@@ -10,7 +10,7 @@ using System.ComponentModel;
 
 namespace StockManagemant.Controllers
 { 
-      
+       [Authorize]
        public class ProductController : Controller
     {
         private readonly IProductManager _productManager;
